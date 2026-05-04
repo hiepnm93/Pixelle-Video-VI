@@ -1,78 +1,68 @@
-# 🎬 视频示例库 / Video Gallery
+# 🎬 Thư viện video mẫu / Video Gallery
 
-展示使用 Pixelle-Video 制作的各类视频案例，包含完整的制作参数和资源下载。
-
-Showcase of videos created with Pixelle-Video, including complete production parameters and downloadable resources.
+Trưng bày các video case study đa dạng được tạo bằng Pixelle-Video, kèm đầy đủ thông số sản xuất và tài nguyên có thể tải về.
 
 ---
 
-## 📚 案例列表 / Cases
+## 📚 Danh sách case
 
 <div class="grid cards" markdown>
 
--   :material-book-open-variant:{ .lg .middle } **阅读习惯养成**
+-   :material-book-open-variant:{ .lg .middle } **Xây dựng thói quen đọc sách**
 
     ---
 
-    ![视频缩略图](https://via.placeholder.com/400x225?text=Reading+Habit)
+    ![Thumbnail video](https://via.placeholder.com/400x225?text=Reading+Habit)
     
-    **时长 Duration**: 45s | **分镜 Scenes**: 5 | **尺寸 Size**: 1080x1920
+    **Thời lượng**: 45s | **Phân cảnh**: 5 | **Kích thước**: 1080x1920
     
-    一个关于为什么要养成阅读习惯的教育科普视频。
+    Một video giáo dục - khoa học phổ thông về lý do nên xây dựng thói quen đọc sách.
     
-    An educational video about why we should develop reading habits.
-    
-    [:octicons-arrow-right-24: 查看详情 View Details](reading-habit/)
+    [:octicons-arrow-right-24: Xem chi tiết](reading-habit/)
 
--   :material-chart-line:{ .lg .middle } **提高工作效率**
+-   :material-chart-line:{ .lg .middle } **Nâng cao hiệu suất công việc**
 
     ---
 
-    ![视频缩略图](https://via.placeholder.com/400x225?text=Work+Efficiency)
+    ![Thumbnail video](https://via.placeholder.com/400x225?text=Work+Efficiency)
     
-    **时长 Duration**: 30s | **分镜 Scenes**: 3 | **尺寸 Size**: 1920x1080
+    **Thời lượng**: 30s | **Phân cảnh**: 3 | **Kích thước**: 1920x1080
     
-    关于如何提高工作效率的实用技巧分享。
+    Chia sẻ các mẹo thực tế giúp nâng cao hiệu suất làm việc.
     
-    Practical tips on improving work efficiency.
-    
-    [:octicons-arrow-right-24: 查看详情 View Details](#) *(即将推出 Coming soon)*
+    [:octicons-arrow-right-24: Xem chi tiết](#) *(Sắp ra mắt)*
 
--   :material-food-apple:{ .lg .middle } **健康饮食**
+-   :material-food-apple:{ .lg .middle } **Ăn uống lành mạnh**
 
     ---
 
-    ![视频缩略图](https://via.placeholder.com/400x225?text=Healthy+Diet)
+    ![Thumbnail video](https://via.placeholder.com/400x225?text=Healthy+Diet)
     
-    **时长 Duration**: 60s | **分镜 Scenes**: 6 | **尺寸 Size**: 1080x1080
+    **Thời lượng**: 60s | **Phân cảnh**: 6 | **Kích thước**: 1080x1080
     
-    健康饮食的重要性和实用建议。
+    Tầm quan trọng của ăn uống lành mạnh và những lời khuyên thiết thực.
     
-    The importance of healthy eating and practical advice.
-    
-    [:octicons-arrow-right-24: 查看详情 View Details](#) *(即将推出 Coming soon)*
+    [:octicons-arrow-right-24: Xem chi tiết](#) *(Sắp ra mắt)*
 
 </div>
 
 ---
 
-## 🎯 如何使用这些案例 / How to Use
+## 🎯 Cách sử dụng các case này
 
-每个案例都包含：/ Each case includes:
+Mỗi case bao gồm:
 
-- **📹 成品视频 Video**: OSS 托管的完整视频 / Complete video hosted on OSS
-- **⚙️ 工作流文件 Workflows**: ComfyUI 工作流 JSON / ComfyUI workflow JSON files
-- **📝 配置文件 Config**: 完整的生成配置 / Complete generation configuration
-- **🎨 提示词 Prompts**: 所有使用的提示词 / All prompts used
-- **📥 一键复现 Reproduce**: 可直接导入使用 / Can be imported directly
+- **📹 Video thành phẩm**: Video hoàn chỉnh được host trên OSS
+- **⚙️ File workflow**: Các file JSON workflow ComfyUI
+- **📝 File cấu hình**: Cấu hình tạo video đầy đủ
+- **🎨 Prompt**: Toàn bộ prompt đã sử dụng
+- **📥 Tái tạo một chạm**: Có thể import và sử dụng trực tiếp
 
 ---
 
-## 💡 贡献你的案例 / Contribute Your Case
+## 💡 Đóng góp case của bạn
 
-制作了优秀的视频？欢迎分享！/ Created an awesome video? Share it with us!
+Đã làm được một video xuất sắc? Hãy chia sẻ với chúng tôi!
 
-查看 [贡献指南](../en/development/contributing.md) 了解如何提交你的案例。
-
-See [Contributing Guide](../en/development/contributing.md) to learn how to submit your case.
+Xem [Hướng dẫn đóng góp](../en/development/contributing.md) để biết cách gửi case của bạn.
 

@@ -1,105 +1,105 @@
 # Windows Package Builder
 
-Automated build system for creating Windows portable packages of Pixelle-Video.
+Hệ thống build tự động dùng để tạo gói portable Windows cho Pixelle-Video.
 
-## Quick Start
+## Bắt đầu nhanh
 
-### Prerequisites
+### Yêu cầu trước khi cài
 
-- Python 3.11+ (for running the build script)
+- Python 3.11+ (để chạy script build)
 - PyYAML: `pip install pyyaml`
-- Internet connection (for downloading Python, FFmpeg, etc.)
+- Kết nối Internet (để tải Python, FFmpeg, v.v.)
 
-### Build Package
+### Build gói
 
 ```bash
-# Basic build
+# Build cơ bản
 python packaging/windows/build.py
 
-# Build with China mirrors (faster in China)
+# Build dùng mirror Trung Quốc (nhanh hơn ở TQ)
 python packaging/windows/build.py --cn-mirror
 
-# Custom output directory
+# Tuỳ chỉnh thư mục output
 python packaging/windows/build.py --output /path/to/output
 ```
 
-## Configuration
+## Cấu hình
 
-Edit `config/build_config.yaml` to customize:
+Chỉnh sửa `config/build_config.yaml` để tuỳ chỉnh:
 
-- Python version
-- FFmpeg version
-- Excluded files/folders
-- Build options
-- Mirror settings
+- Phiên bản Python
+- Phiên bản FFmpeg
+- File/thư mục bị loại trừ
+- Tuỳ chọn build
+- Cài đặt mirror
 
 ## Output
 
-The build process creates:
+Quá trình build sẽ tạo ra:
 
 ```
 dist/windows/
-├── Pixelle-Video-v*-win64/             # Build directory (version number varies)
+├── Pixelle-Video-v*-win64/             # Thư mục build (số phiên bản thay đổi)
 │   ├── python/                         # Python embedded
-│   ├── tools/                          # FFmpeg, etc.
-│   ├── Pixelle-Video/                  # Project files
-│   ├── data/                           # User data (empty)
-│   ├── output/                         # Output (empty)
-│   ├── start.bat                       # Main launcher
-│   ├── start_api.bat                   # API launcher
-│   ├── start_web.bat                   # Web launcher
-│   └── README.txt                      # User guide
-├── Pixelle-Video-v*-win64.zip          # ZIP package (version number varies)
-└── Pixelle-Video-v*-win64.zip.sha256   # Checksum (version number varies)
+│   ├── tools/                          # FFmpeg, v.v.
+│   ├── Pixelle-Video/                  # File của dự án
+│   ├── data/                           # Dữ liệu người dùng (rỗng)
+│   ├── output/                         # Output (rỗng)
+│   ├── start.bat                       # Launcher chính
+│   ├── start_api.bat                   # Launcher API
+│   ├── start_web.bat                   # Launcher Web
+│   └── README.txt                      # Hướng dẫn người dùng
+├── Pixelle-Video-v*-win64.zip          # Gói ZIP (số phiên bản thay đổi)
+└── Pixelle-Video-v*-win64.zip.sha256   # Checksum (số phiên bản thay đổi)
 ```
 
-## Build Process
+## Quy trình build
 
-The builder performs these steps:
+Builder thực hiện các bước sau:
 
-1. **Download Phase**
-   - Python embedded distribution
+1. **Giai đoạn tải**
+   - Bản phân phối Python embedded
    - FFmpeg portable
-   - Cached in `.cache/` for reuse
+   - Cache lại trong `.cache/` để tái sử dụng
 
-2. **Extract Phase**
-   - Extract Python to `build/python/`
-   - Extract FFmpeg to `build/tools/ffmpeg/`
+2. **Giai đoạn giải nén**
+   - Giải nén Python vào `build/python/`
+   - Giải nén FFmpeg vào `build/tools/ffmpeg/`
 
-3. **Prepare Phase**
-   - Enable site-packages in Python
-   - Install pip
-   - Install uv (if configured)
+3. **Giai đoạn chuẩn bị**
+   - Bật site-packages trong Python
+   - Cài pip
+   - Cài uv (nếu được cấu hình)
 
-4. **Install Phase**
-   - Install project dependencies using uv/pip
-   - Pre-install all packages
+4. **Giai đoạn cài đặt**
+   - Cài các dependency của dự án bằng uv/pip
+   - Cài trước toàn bộ package
 
-5. **Copy Phase**
-   - Copy project files (excluding test/docs/cache)
-   - Generate launcher scripts from templates
-   - Create empty directories
+5. **Giai đoạn copy**
+   - Copy file dự án (loại trừ test/docs/cache)
+   - Tạo các script launcher từ template
+   - Tạo các thư mục rỗng
 
-6. **Package Phase**
-   - Create ZIP archive
-   - Generate SHA256 checksum
+6. **Giai đoạn đóng gói**
+   - Tạo file ZIP
+   - Tạo checksum SHA256
 
 ## Templates
 
-Launcher script templates in `templates/`:
+Các template script launcher trong `templates/`:
 
-- `start.bat` - Main Web UI launcher
-- `start_api.bat` - API server launcher  
-- `start_web.bat` - Web UI only launcher
-- `README.txt` - User documentation
+- `start.bat` - Launcher Web UI chính
+- `start_api.bat` - Launcher API server
+- `start_web.bat` - Launcher chỉ chạy Web UI
+- `README.txt` - Tài liệu cho người dùng
 
-Templates support placeholders:
-- `{VERSION}` - Project version
-- `{BUILD_DATE}` - Build timestamp
+Template hỗ trợ các placeholder:
+- `{VERSION}` - Phiên bản dự án
+- `{BUILD_DATE}` - Timestamp build
 
 ## Cache
 
-Downloaded files are cached in `.cache/`:
+Các file đã tải được cache trong `.cache/`:
 
 ```
 .cache/
@@ -108,62 +108,62 @@ Downloaded files are cached in `.cache/`:
 └── get-pip.py
 ```
 
-Delete cache to force re-download.
+Xoá cache để bắt buộc tải lại.
 
-## Troubleshooting
+## Khắc phục sự cố
 
-### Build fails with "PyYAML not found"
+### Build báo "PyYAML not found"
 
 ```bash
 pip install pyyaml
 ```
 
-### Downloads are slow
+### Tải xuống chậm
 
-Use China mirrors:
+Dùng mirror Trung Quốc:
 
 ```bash
 python build.py --cn-mirror
 ```
 
-### Dependencies installation fails
+### Cài dependency thất bại
 
-Check:
-1. Internet connection
-2. PyPI mirrors accessibility
-3. Project dependencies in `pyproject.toml`
+Kiểm tra:
+1. Kết nối Internet
+2. Có vào được mirror PyPI không
+3. Các dependency dự án trong `pyproject.toml`
 
-### ZIP creation fails
+### Tạo ZIP thất bại
 
-Ensure:
-1. Sufficient disk space
-2. Write permissions to output directory
-3. No files are locked by other processes
+Đảm bảo:
+1. Đủ dung lượng đĩa
+2. Có quyền ghi vào thư mục output
+3. Không có file nào đang bị process khác khoá
 
-## Advanced Usage
+## Sử dụng nâng cao
 
-### Custom Configuration
+### Cấu hình tuỳ chỉnh
 
-Create custom config file:
+Tạo file cấu hình tuỳ chỉnh:
 
 ```bash
 cp config/build_config.yaml config/my_config.yaml
-# Edit my_config.yaml
+# Chỉnh sửa my_config.yaml
 python build.py --config config/my_config.yaml
 ```
 
-### Skip ZIP Creation
+### Bỏ qua bước tạo ZIP
 
-Edit `build_config.yaml`:
+Chỉnh `build_config.yaml`:
 
 ```yaml
 build:
   create_zip: false
 ```
 
-### Include Chrome Portable
+### Bao gồm Chrome Portable
 
-Edit `build_config.yaml`:
+Chỉnh `build_config.yaml`:
 
 ```yaml
 chrome:
@@ -171,11 +171,11 @@ chrome:
   download_url: "https://path/to/chrome-portable.zip"
 ```
 
-## Maintenance
+## Bảo trì
 
-### Update Python Version
+### Cập nhật phiên bản Python
 
-Edit `config/build_config.yaml`:
+Chỉnh `config/build_config.yaml`:
 
 ```yaml
 python:
@@ -183,9 +183,9 @@ python:
   download_url: "https://www.python.org/ftp/python/3.11.10/python-3.11.10-embed-amd64.zip"
 ```
 
-### Update FFmpeg Version
+### Cập nhật phiên bản FFmpeg
 
-Edit `config/build_config.yaml`:
+Chỉnh `config/build_config.yaml`:
 
 ```yaml
 ffmpeg:
@@ -193,24 +193,24 @@ ffmpeg:
   download_url: "https://github.com/BtbN/FFmpeg-Builds/releases/download/..."
 ```
 
-## Distribution
+## Phân phối
 
-To distribute the package:
+Để phân phối gói:
 
-1. Upload ZIP file to release page
-2. Include SHA256 checksum for verification
-3. Provide installation instructions
+1. Upload file ZIP lên trang release
+2. Đính kèm checksum SHA256 để xác minh
+3. Cung cấp hướng dẫn cài đặt
 
-Users verify download:
+Người dùng xác minh file đã tải:
 
 ```bash
 # Windows PowerShell
 Get-FileHash Pixelle-Video-v*-win64.zip -Algorithm SHA256
 ```
 
-Compare with `.sha256` file.
+So sánh với file `.sha256`.
 
-## License
+## Giấy phép
 
-Same as Pixelle-Video project license.
+Giống với giấy phép của dự án Pixelle-Video.
 

@@ -22,7 +22,7 @@ from typing import Dict, Optional
 from loguru import logger
 
 _locales: Dict[str, dict] = {}
-_current_language: str = "en_US"  # Default fallback to English
+_current_language: str = "vi_VN"  # Default to Vietnamese
 
 
 def load_locales() -> Dict[str, dict]:
@@ -234,16 +234,22 @@ def detect_system_language() -> str:
         logger.info("No system language detected, using fallback")
     except Exception as e:
         logger.warning(f"Failed to detect system language: {e}")
-    
-    # Fallback to English
+
+    # Fallback to Vietnamese (preferred default)
+    if "vi_VN" in _locales:
+        return "vi_VN"
     return "en_US"
 
 
 # Auto-load locales on import
 load_locales()
 
-# Auto-detect and set system language
-_detected_language = detect_system_language()
-_current_language = _detected_language
-logger.info(f"Default language initialized to: {_current_language}")
+# Default language: prefer Vietnamese if available, otherwise auto-detect from system
+if "vi_VN" in _locales:
+    _current_language = "vi_VN"
+    logger.info(f"Default language initialized to: {_current_language} (Tiếng Việt)")
+else:
+    _detected_language = detect_system_language()
+    _current_language = _detected_language
+    logger.info(f"Default language initialized to: {_current_language}")
 

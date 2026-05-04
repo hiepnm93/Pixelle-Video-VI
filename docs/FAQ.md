@@ -1,62 +1,62 @@
-# 🙋‍♀️ Pixelle-Video FAQ
+# 🙋‍♀️ Câu hỏi thường gặp (FAQ) Pixelle-Video
 
-### How to integrate custom local workflows?
+### Làm sao để tích hợp workflow tự phát triển ở local?
 
-If you want to integrate your own ComfyUI workflows, please follow these specifications:
+Nếu bạn muốn tích hợp các workflow ComfyUI tự phát triển, vui lòng tuân theo các quy ước sau:
 
-1.  **Run Locally First**: Ensure the workflow runs correctly in your local ComfyUI.
-2.  **Parameter Binding**: Find the Text node (CLIP Text Encode or similar text input node) where prompt words need to be dynamically passed by the program.
-    -   Edit the **Title** of that node.
-    -   Change the title to `$prompt.text!` or `$prompt.value!` (depending on the input type accepted by the node).
-     <img src="https://github.com/user-attachments/assets/ddb1962c-9272-486f-84ab-8019c3fb5bf4" width="600" alt="参数绑定示例" />
+1.  **Chạy thử ở local trước**: Đảm bảo workflow chạy bình thường trong ComfyUI ở máy của bạn.
+2.  **Gắn (bind) tham số**: Tìm node Text (CLIP Text Encode hoặc node nhập văn bản tương tự) cần được chương trình truyền prompt động vào.
+    -   Chỉnh sửa **Title** của node đó.
+    -   Đổi title thành `$prompt.text!` hoặc `$prompt.value!` (tuỳ vào kiểu input mà node chấp nhận).
+     <img src="https://github.com/user-attachments/assets/ddb1962c-9272-486f-84ab-8019c3fb5bf4" width="600" alt="Ví dụ gắn tham số" />
 
-    -   *Reference Example: Check the editing method of existing JSON files in the `workflows/selfhost/` directory.*
-3.  **Export Format**: Export the modified workflow as **API Format** (Save (API Format)).
-4.  **File Naming**: Place the exported JSON file into the `workflows/` directory and adhere to the following naming prefixes:
-    -   **Image Workflows**: Prefix must be `image_` (e.g., `image_my_style.json`)
-    -   **Video Workflows**: Prefix must be `video_`
-    -   **TTS Workflows**: Prefix must be `tts_`
+    -   *Ví dụ tham khảo: xem cách chỉnh sửa của các file JSON hiện có trong thư mục `workflows/selfhost/`.*
+3.  **Định dạng xuất**: Xuất workflow đã chỉnh sửa ở **định dạng API** (Save (API Format)).
+4.  **Đặt tên file**: Đặt file JSON đã xuất vào thư mục `workflows/` và tuân thủ các tiền tố tên sau:
+    -   **Workflow tạo ảnh**: tiền tố bắt buộc là `image_` (ví dụ `image_my_style.json`)
+    -   **Workflow tạo video**: tiền tố bắt buộc là `video_`
+    -   **Workflow TTS**: tiền tố bắt buộc là `tts_`
 
-### How to debug RunningHub workflows locally?
+### Làm sao để debug workflow RunningHub ở local?
 
-If you want to test workflows locally that were originally intended for RunningHub cloud usage:
+Nếu bạn muốn test ở local các workflow vốn được dùng trên cloud RunningHub:
 
-1.  **Get ID**: Open the RunningHub workflow file and find the ID.
-2.  **Load Workflow**: Paste the ID onto the end of the RunningHub URL (e.g., https://www.runninghub.cn/workflow/1983513964837543938) to enter the workflow page.
-  <img src="https://github.com/user-attachments/assets/e5330b3a-5475-44f2-81e4-057d33fdf71b" width="600" alt="参数绑定示例" />
+1.  **Lấy ID**: Mở file workflow RunningHub và tìm ID.
+2.  **Tải workflow**: Dán ID vào sau URL của RunningHub (ví dụ: https://www.runninghub.cn/workflow/1983513964837543938) để vào trang workflow.
+  <img src="https://github.com/user-attachments/assets/e5330b3a-5475-44f2-81e4-057d33fdf71b" width="600" alt="Ví dụ gắn tham số" />
 
 
-3.  **Download to Local**: Download the workflow as a JSON file from the workbench.
-4.  **Local Testing**: Drag the downloaded file into your local ComfyUI canvas for testing and debugging.
+3.  **Tải về máy**: Trong workbench, tải workflow xuống dưới dạng file JSON.
+4.  **Test ở local**: Kéo file đã tải vào canvas ComfyUI ở máy của bạn để test và debug.
 
-### Common Errors and Solutions
+### Các lỗi thường gặp và cách khắc phục
 
-#### 1. TTS (Text-to-Speech) Errors
--   **Reason**: The default Edge-TTS calls Microsoft's free interface, which may fail frequently due to network instability.
--   **Solution**:
-    -   Check your network connection.
-    -   It is recommended to switch to **ComfyUI TTS** workflows (select workflows with the `tts_` prefix) for higher stability.
+#### 1. Lỗi TTS (Text-to-Speech)
+-   **Nguyên nhân**: Edge-TTS mặc định gọi tới interface miễn phí của Microsoft, có thể bị fail thường xuyên do mạng không ổn định.
+-   **Giải pháp**:
+    -   Kiểm tra kết nối mạng.
+    -   Khuyến nghị chuyển sang dùng workflow **ComfyUI TTS** (chọn workflow có tiền tố `tts_`) để có độ ổn định cao hơn.
 
-#### 2. LLM (Large Language Model) Errors
--   **Troubleshooting Steps**:
-    1.  Check if the **Base URL** is correct (ensure no extra spaces or incorrect suffixes).
-    2.  Check if the **API Key** is valid and has sufficient balance.
-    3.  Check if the **Model Name** is spelled correctly.
-    -   *Tip: Please consult the official API documentation of your model provider (e.g., OpenAI, DeepSeek, Alibaba Cloud, etc.) for accurate configuration.*
+#### 2. Lỗi LLM (Large Language Model)
+-   **Các bước kiểm tra**:
+    1.  Kiểm tra **Base URL** đã đúng chưa (đảm bảo không có khoảng trắng thừa hoặc hậu tố sai).
+    2.  Kiểm tra **API Key** còn hợp lệ và còn số dư hay không.
+    3.  Kiểm tra **Model Name** đã viết đúng chính tả chưa.
+    -   *Mẹo: Vui lòng tham khảo tài liệu API chính thức của nhà cung cấp model bạn đang dùng (ví dụ OpenAI, DeepSeek, Alibaba Cloud, v.v.) để có cấu hình chính xác.*
 
-#### 3. Error Message "Could not find a Chrome executable..."
--   **Reason**: Your computer system lacks the Chrome browser core, causing features dependent on the browser to fail.
--   **Solution**: Please download and install the Google Chrome browser.
+#### 3. Thông báo lỗi "Could not find a Chrome executable..."
+-   **Nguyên nhân**: Hệ thống máy tính của bạn thiếu nhân trình duyệt Chrome, khiến các tính năng phụ thuộc vào trình duyệt không chạy được.
+-   **Giải pháp**: Vui lòng tải và cài đặt trình duyệt Google Chrome.
 
-### Where are generated videos saved?
+### Video đã tạo được lưu ở đâu?
 
-All generated videos are automatically saved in the `output/` folder within the project directory. Upon completion, the interface will display the video duration, file size, number of shots, and a download link.
+Tất cả video đã tạo sẽ được tự động lưu vào thư mục `output/` trong thư mục dự án. Sau khi hoàn tất, giao diện sẽ hiển thị thời lượng video, kích thước file, số phân cảnh và link tải xuống.
 
-### Community Resources
+### Tài nguyên cộng đồng
 
--   **GitHub Repository**: https://github.com/AIDC-AI/Pixelle-Video
--   **Issue Reporting**: Submit bugs or feature requests via GitHub Issues.
--   **Community Support**: Join discussion groups for help and experience sharing.
--   **Contribution**: The project is under the MIT license and welcomes contributions.
+-   **Repository GitHub**: https://github.com/AIDC-AI/Pixelle-Video
+-   **Báo lỗi**: Gửi bug hoặc đề xuất tính năng qua GitHub Issues.
+-   **Hỗ trợ cộng đồng**: Tham gia các nhóm thảo luận để được trợ giúp và chia sẻ kinh nghiệm.
+-   **Đóng góp**: Dự án phát hành theo giấy phép MIT, hoan nghênh mọi đóng góp.
 
-💡 **Tip**: If you cannot find the answer you need in this FAQ, please submit an issue on GitHub or join the community discussion. We will continue to update this FAQ based on user feedback!
+💡 **Mẹo**: Nếu bạn không tìm thấy câu trả lời cần thiết trong FAQ này, vui lòng tạo issue trên GitHub hoặc tham gia thảo luận cộng đồng. Chúng tôi sẽ tiếp tục cập nhật FAQ này dựa trên phản hồi của người dùng!

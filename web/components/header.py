@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Header components for web UI
+Component header cho web UI
 """
 
 import streamlit as st
@@ -21,7 +21,7 @@ from web.utils.streamlit_helpers import safe_rerun
 
 
 def render_header():
-    """Render page header with title and language selector"""
+    """Render header trang với tiêu đề và bộ chọn ngôn ngữ"""
     col1, col2 = st.columns([4, 1])
     with col1:
         st.markdown(f"<h3>{tr('app.title')}</h3>", unsafe_allow_html=True)
@@ -30,11 +30,11 @@ def render_header():
 
 
 def render_language_selector():
-    """Render language selector at the top"""
+    """Render bộ chọn ngôn ngữ ở đầu trang"""
     languages = get_available_languages()
     lang_options = [f"{code} - {name}" for code, name in languages.items()]
     
-    current_lang = st.session_state.get("language", "zh_CN")
+    current_lang = st.session_state.get("language", "vi_VN")
     current_index = list(languages.keys()).index(current_lang) if current_lang in languages else 0
     
     selected = st.selectbox(
