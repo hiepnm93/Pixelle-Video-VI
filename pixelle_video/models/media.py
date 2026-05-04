@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Media generation result models
+Các model kết quả tạo media
 """
 
 from typing import Literal, Optional
@@ -20,42 +20,42 @@ from pydantic import BaseModel, Field
 
 class MediaResult(BaseModel):
     """
-    Media generation result from workflow execution
-    
-    Supports both image and video outputs from ComfyUI workflows.
-    The media_type indicates what kind of media was generated.
-    
-    Attributes:
-        media_type: Type of media generated ("image" or "video")
-        url: URL or path to the generated media
-        duration: Duration in seconds (only for video, None for image)
-    
-    Examples:
-        # Image result
+    Kết quả tạo media từ việc thực thi workflow
+
+    Hỗ trợ cả output ảnh và video từ các workflow của ComfyUI.
+    media_type cho biết loại media nào đã được tạo.
+
+    Thuộc tính:
+        media_type: Loại media được tạo ("image" hoặc "video")
+        url: URL hoặc đường dẫn tới media được tạo
+        duration: Độ dài tính bằng giây (chỉ áp dụng cho video, None với ảnh)
+
+    Ví dụ:
+        # Kết quả ảnh
         MediaResult(media_type="image", url="http://example.com/image.png")
-        
-        # Video result
+
+        # Kết quả video
         MediaResult(media_type="video", url="http://example.com/video.mp4", duration=5.2)
     """
-    
+
     media_type: Literal["image", "video"] = Field(
-        description="Type of generated media"
+        description="Loại media được tạo"
     )
     url: str = Field(
-        description="URL or path to the generated media file"
+        description="URL hoặc đường dẫn tới file media được tạo"
     )
     duration: Optional[float] = Field(
         None,
-        description="Duration in seconds (only applicable for video)"
+        description="Độ dài tính bằng giây (chỉ áp dụng cho video)"
     )
-    
+
     @property
     def is_image(self) -> bool:
-        """Check if this is an image result"""
+        """Kiểm tra đây có phải là kết quả ảnh không"""
         return self.media_type == "image"
-    
+
     @property
     def is_video(self) -> bool:
-        """Check if this is a video result"""
+        """Kiểm tra đây có phải là kết quả video không"""
         return self.media_type == "video"
 

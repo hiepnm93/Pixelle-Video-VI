@@ -11,22 +11,22 @@
 # limitations under the License.
 
 """
-Pixelle-Video FastAPI Application
+Ứng dụng FastAPI của Pixelle-Video
 
-Main FastAPI app with all routers and middleware.
+Ứng dụng FastAPI chính với tất cả router và middleware.
 
-Run this script to start the FastAPI server:
+Chạy script này để khởi động FastAPI server:
     uv run python api/app.py
-    
-Or with custom settings:
+
+Hoặc với cấu hình tuỳ chỉnh:
     uv run python api/app.py --host 0.0.0.0 --port 8080 --reload
 """
 
 import sys
 from pathlib import Path
 
-# Add project root to sys.path for module imports
-# This ensures imports work correctly in both development and packaged environments
+# Thêm thư mục gốc của dự án vào sys.path để import module
+# Điều này đảm bảo import hoạt động đúng cả trong môi trường phát triển và đóng gói
 _script_dir = Path(__file__).resolve().parent
 _project_root = _script_dir.parent
 if str(_project_root) not in sys.path:
@@ -42,7 +42,7 @@ from api.config import api_config
 from api.tasks import task_manager
 from api.dependencies import shutdown_pixelle_video
 
-# Import routers
+# Import các router
 from api.routers import (
     health_router,
     llm_router,
@@ -60,46 +60,46 @@ from api.routers import (
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
-    Application lifespan manager
-    
-    Handles startup and shutdown events.
+    Trình quản lý vòng đời của ứng dụng
+
+    Xử lý các sự kiện khởi động và tắt.
     """
-    # Startup
-    logger.info("🚀 Starting Pixelle-Video API...")
+    # Khởi động
+    logger.info("🚀 Đang khởi động Pixelle-Video API...")
     await task_manager.start()
-    logger.info("✅ Pixelle-Video API started successfully\n")
-    
+    logger.info("✅ Pixelle-Video API đã khởi động thành công\n")
+
     yield
-    
-    # Shutdown
-    logger.info("🛑 Shutting down Pixelle-Video API...")
+
+    # Tắt
+    logger.info("🛑 Đang tắt Pixelle-Video API...")
     await task_manager.stop()
     await shutdown_pixelle_video()
-    logger.info("✅ Pixelle-Video API shutdown complete")
+    logger.info("✅ Pixelle-Video API đã tắt hoàn tất")
 
 
-# Create FastAPI app
+# Tạo ứng dụng FastAPI
 app = FastAPI(
     title="Pixelle-Video API",
     description="""
-    ## Pixelle-Video - AI Video Generation Platform API
-    
-    ### Features
-    - 🤖 **LLM**: Large language model integration
-    - 🔊 **TTS**: Text-to-speech synthesis
-    - 🎨 **Image**: AI image generation
-    - 📝 **Content**: Automated content generation
-    - 🎬 **Video**: End-to-end video generation
-    
-    ### Video Generation Modes
-    - **Sync**: `/api/video/generate/sync` - For small videos (< 30s)
-    - **Async**: `/api/video/generate/async` - For large videos with task tracking
-    
-    ### Getting Started
-    1. Check health: `GET /health`
-    2. Generate narrations: `POST /api/content/narration`
-    3. Generate video: `POST /api/video/generate/sync` or `/async`
-    4. Track task progress: `GET /api/tasks/{task_id}`
+    ## Pixelle-Video - API nền tảng tạo video bằng AI
+
+    ### Tính năng
+    - 🤖 **LLM**: Tích hợp mô hình ngôn ngữ lớn
+    - 🔊 **TTS**: Tổng hợp giọng nói từ văn bản
+    - 🎨 **Image**: Tạo ảnh bằng AI
+    - 📝 **Content**: Tạo nội dung tự động
+    - 🎬 **Video**: Tạo video đầu cuối
+
+    ### Chế độ tạo video
+    - **Sync**: `/api/video/generate/sync` - Cho video nhỏ (< 30s)
+    - **Async**: `/api/video/generate/async` - Cho video lớn, có theo dõi task
+
+    ### Bắt đầu
+    1. Kiểm tra trạng thái: `GET /health`
+    2. Tạo lời thoại: `POST /api/content/narration`
+    3. Tạo video: `POST /api/video/generate/sync` hoặc `/async`
+    4. Theo dõi tiến trình task: `GET /api/tasks/{task_id}`
     """,
     version="0.1.0",
     docs_url=api_config.docs_url,
@@ -108,7 +108,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Add CORS middleware
+# Thêm middleware CORS
 if api_config.cors_enabled:
     app.add_middleware(
         CORSMiddleware,
@@ -117,13 +117,13 @@ if api_config.cors_enabled:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    logger.info(f"CORS enabled for origins: {api_config.cors_origins}")
+    logger.info(f"Đã bật CORS cho các origin: {api_config.cors_origins}")
 
-# Include routers
-# Health check (no prefix)
+# Đăng ký các router
+# Health check (không có prefix)
 app.include_router(health_router)
 
-# API routers (with /api prefix)
+# Các router API (có prefix /api)
 app.include_router(llm_router, prefix=api_config.api_prefix)
 app.include_router(tts_router, prefix=api_config.api_prefix)
 app.include_router(image_router, prefix=api_config.api_prefix)
@@ -137,7 +137,7 @@ app.include_router(frame_router, prefix=api_config.api_prefix)
 
 @app.get("/")
 async def root():
-    """Root endpoint with API information"""
+    """Endpoint gốc trả về thông tin API"""
     return {
         "service": "Pixelle-Video API",
         "version": "0.1.0",
@@ -160,28 +160,28 @@ async def root():
 if __name__ == "__main__":
     import uvicorn
     
-    # Parse command line arguments
-    parser = argparse.ArgumentParser(description="Start Pixelle-Video API Server")
-    parser.add_argument("--host", default="0.0.0.0", help="Host to bind to")
-    parser.add_argument("--port", type=int, default=8000, help="Port to bind to")
-    parser.add_argument("--reload", action="store_true", help="Enable auto-reload")
-    
+    # Phân tích tham số dòng lệnh
+    parser = argparse.ArgumentParser(description="Khởi động Pixelle-Video API Server")
+    parser.add_argument("--host", default="0.0.0.0", help="Host để gắn server")
+    parser.add_argument("--port", type=int, default=8000, help="Port để gắn server")
+    parser.add_argument("--reload", action="store_true", help="Bật tự động reload")
+
     args = parser.parse_args()
-    
-    # Print startup banner
+
+    # In banner khởi động
     print(f"""
 ╔══════════════════════════════════════════════════════════════╗
 ║                    Pixelle-Video API Server                      ║
 ╚══════════════════════════════════════════════════════════════╝
 
-Starting server at http://{args.host}:{args.port}
+Đang khởi động server tại http://{args.host}:{args.port}
 API Docs: http://{args.host}:{args.port}/docs
 ReDoc: http://{args.host}:{args.port}/redoc
 
-Press Ctrl+C to stop the server
+Nhấn Ctrl+C để dừng server
 """)
-    
-    # Start server
+
+    # Khởi động server
     uvicorn.run(
         "api.app:app",
         host=args.host,

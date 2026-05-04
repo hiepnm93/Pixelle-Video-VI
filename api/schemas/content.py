@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Content generation API schemas
+Các schema cho API tạo nội dung
 """
 
 from typing import List, Optional
@@ -19,16 +19,16 @@ from pydantic import BaseModel, Field
 
 
 # ============================================================================
-# Narration Generation
+# Tạo lời thoại
 # ============================================================================
 
 class NarrationGenerateRequest(BaseModel):
-    """Narration generation request"""
-    text: str = Field(..., description="Source text to generate narrations from")
-    n_scenes: int = Field(5, ge=1, le=20, description="Number of scenes")
-    min_words: int = Field(5, ge=1, le=100, description="Minimum words per narration")
-    max_words: int = Field(20, ge=1, le=200, description="Maximum words per narration")
-    
+    """Yêu cầu tạo lời thoại"""
+    text: str = Field(..., description="Văn bản nguồn để tạo lời thoại")
+    n_scenes: int = Field(5, ge=1, le=20, description="Số lượng cảnh")
+    min_words: int = Field(5, ge=1, le=100, description="Số từ tối thiểu mỗi lời thoại")
+    max_words: int = Field(20, ge=1, le=200, description="Số từ tối đa mỗi lời thoại")
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -41,22 +41,22 @@ class NarrationGenerateRequest(BaseModel):
 
 
 class NarrationGenerateResponse(BaseModel):
-    """Narration generation response"""
+    """Phản hồi tạo lời thoại"""
     success: bool = True
     message: str = "Success"
-    narrations: List[str] = Field(..., description="Generated narrations")
+    narrations: List[str] = Field(..., description="Các lời thoại đã tạo")
 
 
 # ============================================================================
-# Image Prompt Generation
+# Tạo prompt ảnh
 # ============================================================================
 
 class ImagePromptGenerateRequest(BaseModel):
-    """Image prompt generation request"""
-    narrations: List[str] = Field(..., description="List of narrations")
-    min_words: int = Field(30, ge=10, le=100, description="Minimum words per prompt")
-    max_words: int = Field(60, ge=10, le=200, description="Maximum words per prompt")
-    
+    """Yêu cầu tạo prompt ảnh"""
+    narrations: List[str] = Field(..., description="Danh sách lời thoại")
+    min_words: int = Field(30, ge=10, le=100, description="Số từ tối thiểu mỗi prompt")
+    max_words: int = Field(60, ge=10, le=200, description="Số từ tối đa mỗi prompt")
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -71,21 +71,21 @@ class ImagePromptGenerateRequest(BaseModel):
 
 
 class ImagePromptGenerateResponse(BaseModel):
-    """Image prompt generation response"""
+    """Phản hồi tạo prompt ảnh"""
     success: bool = True
     message: str = "Success"
-    image_prompts: List[str] = Field(..., description="Generated image prompts")
+    image_prompts: List[str] = Field(..., description="Các prompt ảnh đã tạo")
 
 
 # ============================================================================
-# Title Generation
+# Tạo tiêu đề
 # ============================================================================
 
 class TitleGenerateRequest(BaseModel):
-    """Title generation request"""
-    text: str = Field(..., description="Source text")
-    style: Optional[str] = Field(None, description="Title style (e.g., 'engaging', 'formal')")
-    
+    """Yêu cầu tạo tiêu đề"""
+    text: str = Field(..., description="Văn bản nguồn")
+    style: Optional[str] = Field(None, description="Phong cách tiêu đề (ví dụ: 'engaging', 'formal')")
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -96,8 +96,7 @@ class TitleGenerateRequest(BaseModel):
 
 
 class TitleGenerateResponse(BaseModel):
-    """Title generation response"""
+    """Phản hồi tạo tiêu đề"""
     success: bool = True
     message: str = "Success"
-    title: str = Field(..., description="Generated title")
-
+    title: str = Field(..., description="Tiêu đề đã tạo")

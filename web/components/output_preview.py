@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Output preview components for web UI (right column)
+Component xem trước output cho web UI (cột phải)
 """
 
 import base64
@@ -28,21 +28,21 @@ from pixelle_video.config import config_manager
 
 
 def render_output_preview(pixelle_video, video_params):
-    """Render output preview section (right column)"""
-    # Check if batch mode
+    """Render phần xem trước output (cột phải)"""
+    # Kiểm tra có ở chế độ batch không
     is_batch = video_params.get("batch_mode", False)
-    
+
     if is_batch:
-        # Batch generation mode
+        # Chế độ sinh hàng loạt
         render_batch_output(pixelle_video, video_params)
     else:
-        # Single video generation mode (original logic)
+        # Chế độ sinh một video (logic gốc)
         render_single_output(pixelle_video, video_params)
 
 
 def render_single_output(pixelle_video, video_params):
-    """Render single video generation output (original logic, unchanged)"""
-    # Extract parameters from video_params dict
+    """Render output sinh một video (logic gốc, không đổi)"""
+    # Trích xuất các tham số từ dict video_params
     text = video_params.get("text", "")
     mode = video_params.get("mode", "generate")
     title = video_params.get("title")
@@ -64,38 +64,38 @@ def render_single_output(pixelle_video, video_params):
     
     with st.container(border=True):
         st.markdown(f"**{tr('section.video_generation')}**")
-        
-        # Check if system is configured
+
+        # Kiểm tra hệ thống đã cấu hình chưa
         if not config_manager.validate():
             st.warning(tr("settings.not_configured"))
-        
-        # Generate Button
+
+        # Nút Tạo
         if st.button(tr("btn.generate"), type="primary", use_container_width=True):
-            # Validate system configuration
+            # Kiểm tra cấu hình hệ thống
             if not config_manager.validate():
                 st.error(tr("settings.not_configured"))
                 st.stop()
-            
-            # Validate input
+
+            # Kiểm tra dữ liệu nhập
             if not text:
                 st.error(tr("error.input_required"))
                 st.stop()
-            
-            # Show progress
+
+            # Hiển thị tiến trình
             progress_bar = st.progress(0)
             status_text = st.empty()
-            
-            # Record start time for generation
+
+            # Ghi nhận thời gian bắt đầu cho việc sinh video
             import time
             start_time = time.time()
-            
+
             try:
-                # Progress callback to update UI
+                # Callback tiến trình để cập nhật UI
                 def update_progress(event: ProgressEvent):
-                    """Update progress bar and status text from ProgressEvent"""
-                    # Translate event to user-facing message
+                    """Cập nhật thanh tiến trình và text trạng thái từ ProgressEvent"""
+                    # Dịch event thành thông điệp hiển thị cho người dùng
                     if event.event_type == "frame_step":
-                        # Frame step: "分镜 3/5 - 步骤 2/4: 生成插图"
+                        # Frame step: "Phân cảnh 3/5 - Bước 2/4: Sinh hình minh hoạ"
                         action_key = f"progress.step_{event.action}"
                         action_text = tr(action_key)
                         message = tr(
@@ -106,25 +106,25 @@ def render_single_output(pixelle_video, video_params):
                             action=action_text
                         )
                     elif event.event_type == "processing_frame":
-                        # Processing frame: "分镜 3/5"
+                        # Processing frame: "Phân cảnh 3/5"
                         message = tr(
                             "progress.frame",
                             current=event.frame_current,
                             total=event.frame_total
                         )
                     else:
-                        # Simple events: use i18n key directly
+                        # Sự kiện đơn giản: dùng key i18n trực tiếp
                         message = tr(f"progress.{event.event_type}")
-                    
-                    # Append extra_info if available (e.g., batch progress)
+
+                    # Nối thêm extra_info nếu có (ví dụ: tiến trình batch)
                     if event.extra_info:
                         message = f"{message} - {event.extra_info}"
-                    
+
                     status_text.text(message)
-                    progress_bar.progress(min(int(event.progress * 100), 99))  # Cap at 99% until complete
-                
-                # Generate video (directly pass parameters)
-                # Note: media_width and media_height are auto-determined from template
+                    progress_bar.progress(min(int(event.progress * 100), 99))  # Giới hạn ở 99% cho đến khi hoàn tất
+
+                # Sinh video (truyền trực tiếp các tham số)
+                # Lưu ý: media_width và media_height được xác định tự động từ template
                 video_params = {
                     "text": text,
                     "mode": mode,
@@ -141,7 +141,7 @@ def render_single_output(pixelle_video, video_params):
                     "media_height": st.session_state.get('template_media_height'),
                 }
                 
-                # Add TTS parameters based on mode
+                # Thêm tham số TTS theo chế độ
                 video_params["tts_inference_mode"] = tts_mode
                 if tts_mode == "local":
                     video_params["tts_voice"] = selected_voice
@@ -150,28 +150,28 @@ def render_single_output(pixelle_video, video_params):
                     video_params["tts_workflow"] = tts_workflow_key
                     if ref_audio_path:
                         video_params["ref_audio"] = str(ref_audio_path)
-                
-                # Add custom template parameters if any
+
+                # Thêm tham số template tuỳ chỉnh nếu có
                 if custom_values_for_video:
                     video_params["template_params"] = custom_values_for_video
-                
+
                 result = run_async(pixelle_video.generate_video(**video_params))
-                
-                # Calculate total generation time
+
+                # Tính tổng thời gian sinh video
                 total_generation_time = time.time() - start_time
-                
+
                 progress_bar.progress(100)
                 status_text.text(tr("status.success"))
-                
-                # Display success message
+
+                # Hiển thị thông báo thành công
                 st.success(tr("status.video_generated", path=result.video_path))
-                
+
                 st.markdown("---")
-                
-                # Video information (compact display)
+
+                # Thông tin video (hiển thị gọn)
                 file_size_mb = result.file_size / (1024 * 1024)
-                
-                # Parse video size from template path
+
+                # Phân tích kích thước video từ đường dẫn template
                 from pixelle_video.utils.template_util import parse_template_size, resolve_template_path
                 template_path = resolve_template_path(result.storyboard.config.frame_template)
                 video_width, video_height = parse_template_size(template_path)
@@ -185,17 +185,17 @@ def render_single_output(pixelle_video, video_params):
                 st.caption(info_text)
                 
                 st.markdown("---")
-                
-                # Video preview
+
+                # Xem trước video
                 if os.path.exists(result.video_path):
                     st.video(result.video_path)
-                    
-                    # Download button
+
+                    # Nút tải xuống
                     with open(result.video_path, "rb") as video_file:
                         video_bytes = video_file.read()
                         video_filename = os.path.basename(result.video_path)
                         st.download_button(
-                            label="⬇️ 下载视频" if get_language() == "zh_CN" else "⬇️ Download Video",
+                            label="⬇️ Tải video" if get_language() == "vi_VN" else ("⬇️ 下载视频" if get_language() == "zh_CN" else "⬇️ Download Video"),
                             data=video_bytes,
                             file_name=video_filename,
                             mime="video/mp4",
@@ -203,7 +203,7 @@ def render_single_output(pixelle_video, video_params):
                         )
                 else:
                     st.error(tr("status.video_not_found", path=result.video_path))
-                
+
             except Exception as e:
                 status_text.text("")
                 progress_bar.empty()
@@ -213,39 +213,39 @@ def render_single_output(pixelle_video, video_params):
 
 
 def render_batch_output(pixelle_video, video_params):
-    """Render batch generation output (minimal, redirect to History)"""
+    """Render output sinh hàng loạt (tối giản, chuyển hướng sang Lịch sử)"""
     topics = video_params.get("topics", [])
-    
+
     with st.container(border=True):
         st.markdown(f"**{tr('batch.section_generation')}**")
-        
-        # Check if topics are provided
+
+        # Kiểm tra đã có chủ đề chưa
         if not topics:
             st.warning(tr("batch.no_topics"))
             return
-        
-        # Check system configuration
+
+        # Kiểm tra cấu hình hệ thống
         if not config_manager.validate():
             st.warning(tr("settings.not_configured"))
             return
-        
+
         batch_count = len(topics)
-        
-        # Display batch info
+
+        # Hiển thị thông tin batch
         st.info(tr("batch.prepare_info", count=batch_count))
-        
-        # Estimated time (optional)
-        estimated_minutes = batch_count * 3  # Assume 3 minutes per video
+
+        # Thời gian ước tính (tuỳ chọn)
+        estimated_minutes = batch_count * 3  # Ước tính 3 phút mỗi video
         st.caption(tr("batch.estimated_time", minutes=estimated_minutes))
         
-        # Generate button with batch semantics
+        # Nút sinh video với ngữ nghĩa batch
         if st.button(
             tr("batch.generate_button", count=batch_count),
             type="primary",
             use_container_width=True,
             help=tr("batch.generate_help")
         ):
-            # Prepare shared config
+            # Chuẩn bị cấu hình dùng chung
             shared_config = {
                 "title_prefix": video_params.get("title_prefix"),
                 "n_scenes": video_params.get("n_scenes") or 5,
@@ -259,7 +259,7 @@ def render_batch_output(pixelle_video, video_params):
                 "media_height": video_params.get("media_height"),
             }
             
-            # Add TTS parameters based on mode (only add non-None values)
+            # Thêm tham số TTS theo chế độ (chỉ thêm các giá trị khác None)
             if shared_config["tts_inference_mode"] == "local":
                 tts_voice = video_params.get("tts_voice")
                 tts_speed = video_params.get("tts_speed")
@@ -274,39 +274,39 @@ def render_batch_output(pixelle_video, video_params):
                 ref_audio = video_params.get("ref_audio")
                 if ref_audio:
                     shared_config["ref_audio"] = str(ref_audio)
-            
-            # Add template parameters
+
+            # Thêm tham số template
             if video_params.get("template_params"):
                 shared_config["template_params"] = video_params["template_params"]
-            
-            # UI containers
+
+            # Container UI
             overall_progress_container = st.container()
             current_task_container = st.container()
-            
-            # Overall progress UI
+
+            # UI tiến trình tổng thể
             overall_progress_bar = overall_progress_container.progress(0)
             overall_status = overall_progress_container.empty()
-            
-            # Current task progress UI
+
+            # UI tiến trình tác vụ hiện tại
             current_task_title = current_task_container.empty()
             current_task_progress = current_task_container.progress(0)
             current_task_status = current_task_container.empty()
-            
-            # Overall progress callback
+
+            # Callback tiến trình tổng thể
             def update_overall_progress(current, total, topic):
                 progress = (current - 1) / total
                 overall_progress_bar.progress(progress)
                 overall_status.markdown(
                     f"📊 **{tr('batch.overall_progress')}**: {current}/{total} ({int(progress * 100)}%)"
                 )
-            
-            # Single task progress callback factory
+
+            # Factory tạo callback tiến trình cho từng tác vụ
             def make_task_progress_callback(task_idx, topic):
                 def callback(event: ProgressEvent):
-                    # Display current task title
+                    # Hiển thị tiêu đề tác vụ hiện tại
                     current_task_title.markdown(f"🎬 **{tr('batch.current_task')} {task_idx}**: {topic}")
-                    
-                    # Update task detailed progress
+
+                    # Cập nhật tiến trình chi tiết của tác vụ
                     if event.event_type == "frame_step":
                         action_key = f"progress.step_{event.action}"
                         action_text = tr(action_key)
@@ -330,14 +330,14 @@ def render_batch_output(pixelle_video, video_params):
                     current_task_status.text(message)
                 
                 return callback
-            
-            # Execute batch generation
+
+            # Thực thi sinh hàng loạt
             from web.utils.batch_manager import SimpleBatchManager
             import time
-            
+
             batch_manager = SimpleBatchManager()
             start_time = time.time()
-            
+
             batch_result = batch_manager.execute_batch(
                 pixelle_video=pixelle_video,
                 topics=topics,
@@ -345,36 +345,36 @@ def render_batch_output(pixelle_video, video_params):
                 overall_progress_callback=update_overall_progress,
                 task_progress_callback_factory=make_task_progress_callback
             )
-            
+
             total_time = time.time() - start_time
-            
-            # Clear progress displays
+
+            # Xoá hiển thị tiến trình
             overall_progress_bar.progress(1.0)
             overall_status.markdown(f"✅ **{tr('batch.completed')}**")
             current_task_title.empty()
             current_task_progress.empty()
             current_task_status.empty()
-            
-            # Display results summary
+
+            # Hiển thị tổng kết kết quả
             st.markdown("---")
             st.markdown(f"**{tr('batch.results_title')}**")
-            
+
             col1, col2, col3 = st.columns(3)
             col1.metric(tr("batch.total"), batch_result["total_count"])
             col2.metric(f"✅ {tr('batch.success')}", batch_result["success_count"])
             col3.metric(f"❌ {tr('batch.failed')}", batch_result["failed_count"])
-            
-            # Display total time
+
+            # Hiển thị tổng thời gian
             minutes = int(total_time / 60)
             seconds = int(total_time % 60)
             st.caption(f"⏱️ {tr('batch.total_time')}: {minutes}{tr('batch.minutes')}{seconds}{tr('batch.seconds')}")
-            
-            # Redirect to History page
+
+            # Chuyển hướng sang trang Lịch sử
             st.markdown("---")
             st.success(tr("batch.success_message"))
             st.info(tr("batch.view_in_history"))
-            
-            # Button to go to History page using JavaScript URL navigation
+
+            # Nút chuyển sang trang Lịch sử bằng cách điều hướng URL JavaScript
             st.markdown(
                 f"""
                 <a href="/History" target="_blank">
@@ -397,16 +397,16 @@ def render_batch_output(pixelle_video, video_params):
                 unsafe_allow_html=True
             )
             
-            # Show failed tasks if any
+            # Hiển thị các tác vụ thất bại nếu có
             if batch_result["errors"]:
                 st.markdown("---")
                 st.markdown(f"#### {tr('batch.failed_list')}")
-                
+
                 for item in batch_result["errors"]:
                     with st.expander(f"🔴 {tr('batch.task')} {item['index']}: {item['topic']}", expanded=False):
                         st.error(f"**{tr('batch.error')}**: {item['error']}")
-                        
-                        # Detailed error (collapsed)
+
+                        # Lỗi chi tiết (đã thu gọn)
                         with st.expander(tr("batch.error_detail")):
                             st.code(item['traceback'], language="python")
     

@@ -11,17 +11,17 @@
 # limitations under the License.
 
 """
-TTS Voice Configuration
+Cấu hình giọng nói TTS
 
-Defines available voices for local Edge TTS inference.
+Định nghĩa các giọng nói có sẵn cho Edge TTS chạy local.
 """
 
 from typing import List, Dict, Any
 
 
-# Edge TTS voice presets for local inference
+# Preset giọng Edge TTS cho inference local
 EDGE_TTS_VOICES: List[Dict[str, Any]] = [
-    # Chinese voices
+    # Giọng tiếng Trung
     {
         "id": "zh-CN-XiaoxiaoNeural",
         "label_key": "tts.voice.zh_CN_XiaoxiaoNeural",
@@ -155,7 +155,7 @@ EDGE_TTS_VOICES: List[Dict[str, Any]] = [
         "gender": "male"
     },
     
-    # English voices
+    # Giọng các ngôn ngữ khác
     {
         "id": "ru-RU-DmitryNeural",
         "label_key": "tts.voice.ru-RU-DmitryNeural",
@@ -197,42 +197,42 @@ EDGE_TTS_VOICES: List[Dict[str, Any]] = [
 
 def get_voice_display_name(voice_id: str, tr_func=None, locale: str = "zh_CN") -> str:
     """
-    Get display name for voice
-    
+    Lấy tên hiển thị cho giọng nói
+
     Args:
-        voice_id: Voice ID (e.g., "zh-CN-YunjianNeural")
-        tr_func: Translation function (optional)
-        locale: Current locale (default: "zh_CN")
-    
+        voice_id: ID của giọng (ví dụ: "zh-CN-YunjianNeural")
+        tr_func: Hàm dịch (tuỳ chọn)
+        locale: Locale hiện tại (mặc định: "zh_CN")
+
     Returns:
-        Display name (translated label if in Chinese, otherwise voice ID)
+        Tên hiển thị (label đã dịch nếu là tiếng Trung, ngược lại trả về voice ID)
     """
-    # Find voice config
+    # Tìm cấu hình giọng
     voice_config = next((v for v in EDGE_TTS_VOICES if v["id"] == voice_id), None)
-    
+
     if not voice_config:
         return voice_id
-    
-    # If Chinese locale and translation function available, use translated label
+
+    # Nếu locale là tiếng Trung và có hàm dịch, dùng label đã dịch
     if locale == "zh_CN" and tr_func:
         label_key = voice_config["label_key"]
         return tr_func(label_key)
-    
-    # For other locales, return voice ID
+
+    # Với các locale khác, trả về voice ID
     return voice_id
 
 
 def speed_to_rate(speed: float) -> str:
     """
-    Convert speed multiplier to Edge TTS rate parameter
-    
+    Chuyển đổi hệ số tốc độ sang tham số rate của Edge TTS
+
     Args:
-        speed: Speed multiplier (1.0 = normal, 1.2 = 120%)
-    
+        speed: Hệ số tốc độ (1.0 = bình thường, 1.2 = 120%)
+
     Returns:
-        Rate string (e.g., "+20%", "-10%")
-    
-    Examples:
+        Chuỗi rate (ví dụ: "+20%", "-10%")
+
+    Ví dụ:
         1.0 → "+0%"
         1.2 → "+20%"
         0.8 → "-20%"

@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Base schemas
+Các schema cơ sở
 """
 
 from typing import Any, Optional
@@ -19,14 +19,14 @@ from pydantic import BaseModel
 
 
 class BaseResponse(BaseModel):
-    """Base API response"""
+    """Phản hồi API cơ sở"""
     success: bool = True
     message: str = "Success"
     data: Optional[Any] = None
 
 
 class ErrorResponse(BaseModel):
-    """Error response"""
+    """Phản hồi lỗi"""
     success: bool = False
     message: str
     error: Optional[str] = None

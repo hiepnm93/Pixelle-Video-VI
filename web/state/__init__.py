@@ -1,2 +1,2 @@
-"""State management for web UI"""
+"""Quản lý state cho web UI"""
 

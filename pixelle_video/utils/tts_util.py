@@ -11,10 +11,10 @@
 # limitations under the License.
 
 """
-Edge TTS Utility - Temporarily not used
+Tiện ích Edge TTS - Tạm thời không sử dụng
 
-This is the original edge-tts implementation, kept here for potential future use.
-Currently, TTS service uses ComfyUI workflows only.
+Đây là implementation edge-tts gốc, giữ lại để có thể dùng sau.
+Hiện tại, service TTS chỉ dùng workflow ComfyUI.
 """
 
 import asyncio
@@ -27,38 +27,38 @@ from loguru import logger
 from aiohttp import WSServerHandshakeError, ClientResponseError
 
 
-# Use certifi bundle for SSL verification instead of disabling it
+# Dùng bundle certifi để xác minh SSL thay vì tắt nó
 _USE_CERTIFI_SSL = True
 
-# Retry configuration for Edge TTS (to handle 401 errors and NoAudioReceived)
-_RETRY_COUNT = 5           # Default retry count
-_RETRY_BASE_DELAY = 1.0     # Base retry delay in seconds (for exponential backoff)
-_MAX_RETRY_DELAY = 10.0     # Maximum retry delay in seconds
+# Cấu hình retry cho Edge TTS (để xử lý lỗi 401 và NoAudioReceived)
+_RETRY_COUNT = 5           # Số lần retry mặc định
+_RETRY_BASE_DELAY = 1.0     # Độ trễ retry cơ sở (giây, cho exponential backoff)
+_MAX_RETRY_DELAY = 10.0     # Độ trễ retry tối đa (giây)
 
-# Rate limiting configuration
-_REQUEST_DELAY = 0.5        # Minimum delay before each request (seconds)
-_MAX_CONCURRENT_REQUESTS = 3  # Maximum concurrent requests
+# Cấu hình rate limiting
+_REQUEST_DELAY = 0.5        # Độ trễ tối thiểu trước mỗi request (giây)
+_MAX_CONCURRENT_REQUESTS = 3  # Số request đồng thời tối đa
 
-# Global semaphore for rate limiting (created per event loop)
+# Semaphore toàn cục cho rate limiting (tạo riêng cho mỗi event loop)
 _request_semaphore = None
 _semaphore_loop = None
 
 
 def _get_request_semaphore():
-    """Get or create request semaphore for current event loop"""
+    """Lấy hoặc tạo semaphore request cho event loop hiện tại"""
     global _request_semaphore, _semaphore_loop
-    
+
     try:
         current_loop = asyncio.get_running_loop()
     except RuntimeError:
-        # No running loop
+        # Không có loop đang chạy
         return asyncio.Semaphore(_MAX_CONCURRENT_REQUESTS)
-    
-    # If semaphore doesn't exist or belongs to different loop, create new one
+
+    # Nếu semaphore chưa tồn tại hoặc thuộc loop khác, tạo mới
     if _request_semaphore is None or _semaphore_loop != current_loop:
         _request_semaphore = asyncio.Semaphore(_MAX_CONCURRENT_REQUESTS)
         _semaphore_loop = current_loop
-    
+
     return _request_semaphore
 
 
@@ -73,84 +73,84 @@ async def edge_tts(
     retry_base_delay: float = _RETRY_BASE_DELAY,
 ) -> bytes:
     """
-    Convert text to speech using Microsoft Edge TTS
-    
-    This service is free and requires no API key.
-    Supports 400+ voices across 100+ languages.
-    
-    Returns audio data as bytes (MP3 format).
-    
-    Includes automatic retry mechanism with exponential backoff and jitter
-    to handle 401 authentication errors and temporary network issues.
-    Also includes concurrent request limiting and rate limiting.
-    
+    Chuyển văn bản thành giọng nói dùng Microsoft Edge TTS
+
+    Service này miễn phí và không yêu cầu API key.
+    Hỗ trợ 400+ giọng nói trên 100+ ngôn ngữ.
+
+    Trả về dữ liệu audio dạng bytes (định dạng MP3).
+
+    Bao gồm cơ chế retry tự động với exponential backoff và jitter
+    để xử lý lỗi xác thực 401 và sự cố mạng tạm thời.
+    Cũng bao gồm giới hạn request đồng thời và rate limiting.
+
     Args:
-        text: Text to convert to speech
-        voice: Voice ID (e.g., [Chinese] zh-CN Yunjian, [English] en-US Jenny)
-        rate: Speech rate (e.g., +0%, +50%, -20%)
-        volume: Speech volume (e.g., +0%, +50%, -20%)
-        pitch: Speech pitch (e.g., +0Hz, +10Hz, -5Hz)
-        output_path: Optional output file path to save audio
-        retry_count: Number of retries on failure (default: 5)
-        retry_base_delay: Base delay for exponential backoff (default: 1.0s)
-    
+        text: Văn bản cần chuyển thành giọng nói
+        voice: ID giọng (vd: [Chinese] zh-CN Yunjian, [English] en-US Jenny)
+        rate: Tốc độ đọc (vd: +0%, +50%, -20%)
+        volume: Âm lượng (vd: +0%, +50%, -20%)
+        pitch: Cao độ (vd: +0Hz, +10Hz, -5Hz)
+        output_path: Đường dẫn file output tuỳ chọn để lưu audio
+        retry_count: Số lần retry khi thất bại (mặc định: 5)
+        retry_base_delay: Độ trễ cơ sở cho exponential backoff (mặc định: 1.0s)
+
     Returns:
-        Audio data as bytes (MP3 format)
-    
-    Popular Chinese voices:
-    - [Chinese] zh-CN Yunjian (male, default)
-    - [Chinese] zh-CN Xiaoxiao (female)
-    - [Chinese] zh-CN Yunxi (male)
-    - [Chinese] zh-CN Xiaoyi (female)
-    
-    Popular English voices:
-    - [English] en-US Jenny (female)
-    - [English] en-US Guy (male)
-    - [English] en-GB Sonia (female, British)
-    
-    Example:
+        Dữ liệu audio dạng bytes (định dạng MP3)
+
+    Giọng tiếng Trung phổ biến:
+    - [Chinese] zh-CN Yunjian (nam, mặc định)
+    - [Chinese] zh-CN Xiaoxiao (nữ)
+    - [Chinese] zh-CN Yunxi (nam)
+    - [Chinese] zh-CN Xiaoyi (nữ)
+
+    Giọng tiếng Anh phổ biến:
+    - [English] en-US Jenny (nữ)
+    - [English] en-US Guy (nam)
+    - [English] en-GB Sonia (nữ, Anh)
+
+    Ví dụ:
         audio_bytes = await edge_tts(
             text="你好，世界！",
             voice="[Chinese] zh-CN Yunjian",
             rate="+20%"
         )
     """
-    logger.debug(f"Calling Edge TTS with voice: {voice}, rate: {rate}, retry_count: {retry_count}")
-    
-    # Use semaphore to limit concurrent requests
+    logger.debug(f"Đang gọi Edge TTS với voice: {voice}, rate: {rate}, retry_count: {retry_count}")
+
+    # Dùng semaphore để giới hạn request đồng thời
     request_semaphore = _get_request_semaphore()
     async with request_semaphore:
-        # Add a small random delay before each request to avoid rate limiting
+        # Thêm độ trễ ngẫu nhiên nhỏ trước mỗi request để tránh rate limiting
         pre_delay = _REQUEST_DELAY + random.uniform(0, 0.3)
-        logger.debug(f"Waiting {pre_delay:.2f}s before request (rate limiting)")
+        logger.debug(f"Đang đợi {pre_delay:.2f}s trước request (rate limiting)")
         await asyncio.sleep(pre_delay)
-        
+
         last_error = None
-        
-        # Retry loop
-        for attempt in range(retry_count + 1):  # +1 because first attempt is not a retry
+
+        # Vòng lặp retry
+        for attempt in range(retry_count + 1):  # +1 vì lần thử đầu không phải retry
             if attempt > 0:
-                # Exponential backoff with jitter
-                # delay = base * (2 ^ attempt) + random jitter
+                # Exponential backoff kèm jitter
+                # delay = base * (2 ^ attempt) + jitter ngẫu nhiên
                 exponential_delay = retry_base_delay * (2 ** (attempt - 1))
                 jitter = random.uniform(0, retry_base_delay)
                 retry_delay = min(exponential_delay + jitter, _MAX_RETRY_DELAY)
-                
-                logger.info(f"🔄 Retrying Edge TTS (attempt {attempt + 1}/{retry_count + 1}) after {retry_delay:.2f}s delay...")
+
+                logger.info(f"🔄 Đang thử lại Edge TTS (lần {attempt + 1}/{retry_count + 1}) sau {retry_delay:.2f}s...")
                 await asyncio.sleep(retry_delay)
-            
+
             try:
-                # Create communicate instance with certifi SSL context
+                # Tạo instance communicate với SSL context certifi
                 if _USE_CERTIFI_SSL:
-                    if attempt == 0:  # Only log info once
-                        logger.debug("Using certifi SSL certificates for secure Edge TTS connection")
-                    # Create SSL context with certifi bundle
+                    if attempt == 0:  # Chỉ log info một lần
+                        logger.debug("Đang dùng chứng chỉ SSL certifi cho kết nối Edge TTS an toàn")
+                    # Tạo SSL context với bundle certifi
                     import certifi
                     ssl_context = ssl.create_default_context(cafile=certifi.where())
                 else:
                     ssl_context = None
-                
-                # Create communicate instance
+
+                # Tạo instance communicate
                 communicate = edge_tts_sdk.Communicate(
                     text=text,
                     voice=voice,
@@ -158,191 +158,191 @@ async def edge_tts(
                     volume=volume,
                     pitch=pitch,
                 )
-                
-                # Collect audio chunks
+
+                # Thu thập các chunk audio
                 audio_chunks = []
                 async for chunk in communicate.stream():
                     if chunk["type"] == "audio":
                         audio_chunks.append(chunk["data"])
-                
+
                 audio_data = b"".join(audio_chunks)
-                
+
                 if attempt > 0:
-                    logger.success(f"✅ Retry succeeded on attempt {attempt + 1}")
-                
-                logger.info(f"Generated {len(audio_data)} bytes of audio data")
-                
-                # Save to file if output_path is provided
+                    logger.success(f"✅ Retry thành công ở lần {attempt + 1}")
+
+                logger.info(f"Đã sinh {len(audio_data)} byte dữ liệu audio")
+
+                # Lưu ra file nếu có output_path
                 if output_path:
                     with open(output_path, "wb") as f:
                         f.write(audio_data)
-                    logger.info(f"Audio saved to: {output_path}")
-                
+                    logger.info(f"Đã lưu audio tới: {output_path}")
+
                 return audio_data
-            
+
             except (WSServerHandshakeError, ClientResponseError) as e:
-                # Network/authentication errors - retry
+                # Lỗi mạng/xác thực - retry
                 last_error = e
                 error_code = getattr(e, 'status', 'unknown')
                 error_msg = str(e)
-                
-                # Log more detailed information for 401 errors
+
+                # Log thông tin chi tiết hơn cho lỗi 401
                 if error_code == 401 or '401' in error_msg:
-                    logger.warning(f"⚠️  Edge TTS 401 Authentication Error (attempt {attempt + 1}/{retry_count + 1})")
-                    logger.debug(f"Error details: {error_msg}")
-                    logger.debug(f"This is usually caused by rate limiting. Will retry with exponential backoff...")
+                    logger.warning(f"⚠️  Lỗi xác thực Edge TTS 401 (lần {attempt + 1}/{retry_count + 1})")
+                    logger.debug(f"Chi tiết lỗi: {error_msg}")
+                    logger.debug(f"Thường do rate limiting. Sẽ retry với exponential backoff...")
                 else:
-                    logger.warning(f"⚠️  Edge TTS error (attempt {attempt + 1}/{retry_count + 1}): {error_code} - {e}")
-                
+                    logger.warning(f"⚠️  Lỗi Edge TTS (lần {attempt + 1}/{retry_count + 1}): {error_code} - {e}")
+
                 if attempt >= retry_count:
-                    # Last attempt failed
-                    logger.error(f"❌ All {retry_count + 1} attempts failed. Last error: {error_code}")
+                    # Lần thử cuối thất bại
+                    logger.error(f"❌ Tất cả {retry_count + 1} lần thử đều thất bại. Lỗi cuối: {error_code}")
                     raise
-                # Otherwise, continue to next retry
-            
+                # Ngược lại, tiếp tục retry tiếp theo
+
             except NoAudioReceived as e:
-                # NoAudioReceived is often a temporary issue - retry with longer delay
+                # NoAudioReceived thường là vấn đề tạm thời - retry với delay dài hơn
                 last_error = e
-                logger.warning(f"⚠️  Edge TTS NoAudioReceived (attempt {attempt + 1}/{retry_count + 1})")
-                logger.debug(f"This is usually a temporary Microsoft service issue. Will retry with longer delay...")
-                
+                logger.warning(f"⚠️  Edge TTS NoAudioReceived (lần {attempt + 1}/{retry_count + 1})")
+                logger.debug(f"Thường là vấn đề tạm thời của service Microsoft. Sẽ retry với delay dài hơn...")
+
                 if attempt >= retry_count:
-                    logger.error(f"❌ All {retry_count + 1} attempts failed due to NoAudioReceived")
+                    logger.error(f"❌ Tất cả {retry_count + 1} lần thử thất bại do NoAudioReceived")
                     raise
-                # Add extra delay for NoAudioReceived errors
+                # Thêm delay phụ cho lỗi NoAudioReceived
                 await asyncio.sleep(2.0)
-            
+
             except Exception as e:
-                # Other errors - don't retry, raise immediately
-                logger.error(f"Edge TTS error (non-retryable): {type(e).__name__} - {e}")
+                # Lỗi khác - không retry, raise ngay
+                logger.error(f"Lỗi Edge TTS (không thể retry): {type(e).__name__} - {e}")
                 raise
-        
-        # Should not reach here, but just in case
+
+        # Không nên tới đây, nhưng phòng trường hợp
         if last_error:
             raise last_error
         else:
-            raise RuntimeError("Edge TTS failed without error (unexpected)")
+            raise RuntimeError("Edge TTS thất bại mà không có lỗi (bất ngờ)")
 
 
 def get_audio_duration(audio_path: str) -> float:
     """
-    Get audio file duration in seconds
-    
+    Lấy thời lượng file audio tính bằng giây
+
     Args:
-        audio_path: Path to audio file
-    
+        audio_path: Đường dẫn file audio
+
     Returns:
-        Duration in seconds
+        Thời lượng tính bằng giây
     """
     try:
-        # Try using ffmpeg-python
+        # Thử dùng ffmpeg-python
         import ffmpeg
         probe = ffmpeg.probe(audio_path)
         duration = float(probe['format']['duration'])
         return duration
     except Exception as e:
-        logger.warning(f"Failed to get audio duration: {e}, using estimate")
-        # Fallback: estimate based on file size (very rough)
+        logger.warning(f"Không thể lấy thời lượng audio: {e}, dùng ước tính")
+        # Dự phòng: ước tính dựa trên kích thước file (rất thô)
         import os
         file_size = os.path.getsize(audio_path)
-        # Assume ~16kbps for MP3, so 2KB per second
+        # Giả định ~16kbps cho MP3, nên 2KB mỗi giây
         estimated_duration = file_size / 2000
-        return max(1.0, estimated_duration)  # At least 1 second
+        return max(1.0, estimated_duration)  # Tối thiểu 1 giây
 
 
 async def list_voices(locale: str = None, retry_count: int = _RETRY_COUNT, retry_base_delay: float = _RETRY_BASE_DELAY) -> list[str]:
     """
-    List all available voices for Edge TTS
-    
-    Returns a list of voice IDs (ShortName).
-    Optionally filter by locale.
-    
-    Includes automatic retry mechanism with exponential backoff and jitter
-    to handle network errors and rate limiting.
-    
+    Liệt kê tất cả giọng có sẵn cho Edge TTS
+
+    Trả về danh sách ID giọng (ShortName).
+    Có thể lọc theo locale.
+
+    Bao gồm cơ chế retry tự động với exponential backoff và jitter
+    để xử lý lỗi mạng và rate limiting.
+
     Args:
-        locale: Filter by locale (e.g., zh-CN, en-US, ja-JP)
-        retry_count: Number of retries on failure (default: 5)
-        retry_base_delay: Base delay for exponential backoff (default: 1.0s)
-    
+        locale: Lọc theo locale (vd: zh-CN, en-US, ja-JP)
+        retry_count: Số lần retry khi thất bại (mặc định: 5)
+        retry_base_delay: Độ trễ cơ sở cho exponential backoff (mặc định: 1.0s)
+
     Returns:
-        List of voice IDs
-    
-    Example:
-        # List all voices
+        Danh sách ID giọng
+
+    Ví dụ:
+        # Liệt kê tất cả giọng
         voices = await list_voices()
-        # Returns: ['[Chinese] zh-CN Yunjian', '[Chinese] zh-CN Xiaoxiao', ...]
-        
-        # List Chinese voices only
+        # Trả về: ['[Chinese] zh-CN Yunjian', '[Chinese] zh-CN Xiaoxiao', ...]
+
+        # Chỉ liệt kê giọng tiếng Trung
         voices = await list_voices(locale="zh-CN")
-        # Returns: ['[Chinese] zh-CN Yunjian', '[Chinese] zh-CN Xiaoxiao', ...]
+        # Trả về: ['[Chinese] zh-CN Yunjian', '[Chinese] zh-CN Xiaoxiao', ...]
     """
-    logger.debug(f"Fetching Edge TTS voices, locale filter: {locale}, retry_count: {retry_count}")
-    
-    # Use semaphore to limit concurrent requests
+    logger.debug(f"Đang lấy danh sách giọng Edge TTS, lọc locale: {locale}, retry_count: {retry_count}")
+
+    # Dùng semaphore để giới hạn request đồng thời
     request_semaphore = _get_request_semaphore()
     async with request_semaphore:
-        # Add a small random delay before each request to avoid rate limiting
+        # Thêm delay ngẫu nhiên nhỏ trước mỗi request để tránh rate limiting
         pre_delay = _REQUEST_DELAY + random.uniform(0, 0.3)
-        logger.debug(f"Waiting {pre_delay:.2f}s before request (rate limiting)")
+        logger.debug(f"Đang đợi {pre_delay:.2f}s trước request (rate limiting)")
         await asyncio.sleep(pre_delay)
-        
+
         last_error = None
-        
-        # Retry loop
+
+        # Vòng lặp retry
         for attempt in range(retry_count + 1):
             if attempt > 0:
-                # Exponential backoff with jitter
+                # Exponential backoff kèm jitter
                 exponential_delay = retry_base_delay * (2 ** (attempt - 1))
                 jitter = random.uniform(0, retry_base_delay)
                 retry_delay = min(exponential_delay + jitter, _MAX_RETRY_DELAY)
-                
-                logger.info(f"🔄 Retrying list voices (attempt {attempt + 1}/{retry_count + 1}) after {retry_delay:.2f}s delay...")
+
+                logger.info(f"🔄 Đang thử lại list voices (lần {attempt + 1}/{retry_count + 1}) sau {retry_delay:.2f}s...")
                 await asyncio.sleep(retry_delay)
-            
+
             try:
-                # Get all voices (edge-tts handles SSL internally)
+                # Lấy tất cả giọng (edge-tts xử lý SSL nội bộ)
                 voices = await edge_tts_sdk.list_voices()
-                
-                # Filter by locale if specified
+
+                # Lọc theo locale nếu chỉ định
                 if locale:
                     voices = [v for v in voices if v["Locale"].startswith(locale)]
-                
-                # Extract voice IDs (ShortName)
+
+                # Trích xuất ID giọng (ShortName)
                 voice_ids = [voice["ShortName"] for voice in voices]
-                
+
                 if attempt > 0:
-                    logger.success(f"✅ Retry succeeded on attempt {attempt + 1}")
-                
-                logger.info(f"Found {len(voice_ids)} voices" + (f" for locale '{locale}'" if locale else ""))
+                    logger.success(f"✅ Retry thành công ở lần {attempt + 1}")
+
+                logger.info(f"Tìm thấy {len(voice_ids)} giọng" + (f" cho locale '{locale}'" if locale else ""))
                 return voice_ids
-            
+
             except (WSServerHandshakeError, ClientResponseError) as e:
-                # Network/authentication errors - retry
+                # Lỗi mạng/xác thực - retry
                 last_error = e
                 error_code = getattr(e, 'status', 'unknown')
                 error_msg = str(e)
-                
-                # Log more detailed information for 401 errors
+
+                # Log thông tin chi tiết hơn cho lỗi 401
                 if error_code == 401 or '401' in error_msg:
-                    logger.warning(f"⚠️  Edge TTS 401 Authentication Error (list_voices attempt {attempt + 1}/{retry_count + 1})")
-                    logger.debug(f"Error details: {error_msg}")
-                    logger.debug(f"This is usually caused by rate limiting. Will retry with exponential backoff...")
+                    logger.warning(f"⚠️  Lỗi xác thực Edge TTS 401 (list_voices lần {attempt + 1}/{retry_count + 1})")
+                    logger.debug(f"Chi tiết lỗi: {error_msg}")
+                    logger.debug(f"Thường do rate limiting. Sẽ retry với exponential backoff...")
                 else:
-                    logger.warning(f"⚠️  List voices error (attempt {attempt + 1}/{retry_count + 1}): {error_code} - {e}")
-                
+                    logger.warning(f"⚠️  Lỗi list voices (lần {attempt + 1}/{retry_count + 1}): {error_code} - {e}")
+
                 if attempt >= retry_count:
-                    logger.error(f"❌ All {retry_count + 1} attempts failed. Last error: {error_code}")
+                    logger.error(f"❌ Tất cả {retry_count + 1} lần thử thất bại. Lỗi cuối: {error_code}")
                     raise
-            
+
             except Exception as e:
-                # Other errors - don't retry, raise immediately
-                logger.error(f"List voices error (non-retryable): {type(e).__name__} - {e}")
+                # Lỗi khác - không retry, raise ngay
+                logger.error(f"Lỗi list voices (không thể retry): {type(e).__name__} - {e}")
                 raise
-        
-        # Should not reach here, but just in case
+
+        # Không nên tới đây, nhưng phòng trường hợp
         if last_error:
             raise last_error
         else:
-            raise RuntimeError("List voices failed without error (unexpected)")
+            raise RuntimeError("List voices thất bại mà không có lỗi (bất ngờ)")
 

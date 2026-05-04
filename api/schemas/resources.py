@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Resource discovery API schemas
+Các schema cho API khám phá tài nguyên
 """
 
 from typing import List, Optional
@@ -19,51 +19,50 @@ from pydantic import BaseModel, Field
 
 
 class WorkflowInfo(BaseModel):
-    """Workflow information"""
-    name: str = Field(..., description="Workflow filename")
-    display_name: str = Field(..., description="Display name with source info")
-    source: str = Field(..., description="Source (runninghub or selfhost)")
-    path: str = Field(..., description="Full path to workflow file")
-    key: str = Field(..., description="Workflow key (source/name)")
-    workflow_id: Optional[str] = Field(None, description="RunningHub workflow ID (if applicable)")
+    """Thông tin workflow"""
+    name: str = Field(..., description="Tên file workflow")
+    display_name: str = Field(..., description="Tên hiển thị kèm thông tin nguồn")
+    source: str = Field(..., description="Nguồn (runninghub hoặc selfhost)")
+    path: str = Field(..., description="Đường dẫn đầy đủ tới file workflow")
+    key: str = Field(..., description="Khoá workflow (source/name)")
+    workflow_id: Optional[str] = Field(None, description="ID workflow của RunningHub (nếu có)")
 
 
 class WorkflowListResponse(BaseModel):
-    """Workflow list response"""
+    """Phản hồi danh sách workflow"""
     success: bool = True
     message: str = "Success"
-    workflows: List[WorkflowInfo] = Field(..., description="List of available workflows")
+    workflows: List[WorkflowInfo] = Field(..., description="Danh sách workflow có sẵn")
 
 
 class TemplateInfo(BaseModel):
-    """Template information"""
-    name: str = Field(..., description="Template filename")
-    display_name: str = Field(..., description="Display name")
-    size: str = Field(..., description="Size (e.g., 1080x1920)")
-    width: int = Field(..., description="Width in pixels")
-    height: int = Field(..., description="Height in pixels")
-    orientation: str = Field(..., description="Orientation (portrait/landscape/square)")
-    path: str = Field(..., description="Full path to template file")
-    key: str = Field(..., description="Template key (size/name)")
+    """Thông tin template"""
+    name: str = Field(..., description="Tên file template")
+    display_name: str = Field(..., description="Tên hiển thị")
+    size: str = Field(..., description="Kích thước (ví dụ: 1080x1920)")
+    width: int = Field(..., description="Chiều rộng tính bằng pixel")
+    height: int = Field(..., description="Chiều cao tính bằng pixel")
+    orientation: str = Field(..., description="Hướng (portrait/landscape/square)")
+    path: str = Field(..., description="Đường dẫn đầy đủ tới file template")
+    key: str = Field(..., description="Khoá template (size/name)")
 
 
 class TemplateListResponse(BaseModel):
-    """Template list response"""
+    """Phản hồi danh sách template"""
     success: bool = True
     message: str = "Success"
-    templates: List[TemplateInfo] = Field(..., description="List of available templates")
+    templates: List[TemplateInfo] = Field(..., description="Danh sách template có sẵn")
 
 
 class BGMInfo(BaseModel):
-    """BGM information"""
-    name: str = Field(..., description="BGM filename")
-    path: str = Field(..., description="Full path to BGM file")
-    source: str = Field(..., description="Source (default or custom)")
+    """Thông tin BGM"""
+    name: str = Field(..., description="Tên file BGM")
+    path: str = Field(..., description="Đường dẫn đầy đủ tới file BGM")
+    source: str = Field(..., description="Nguồn (default hoặc custom)")
 
 
 class BGMListResponse(BaseModel):
-    """BGM list response"""
+    """Phản hồi danh sách BGM"""
     success: bool = True
     message: str = "Success"
-    bgm_files: List[BGMInfo] = Field(..., description="List of available BGM files")
-
+    bgm_files: List[BGMInfo] = Field(..., description="Danh sách file BGM có sẵn")

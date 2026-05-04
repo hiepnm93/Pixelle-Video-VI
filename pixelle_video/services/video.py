@@ -11,17 +11,17 @@
 # limitations under the License.
 
 """
-Video Processing Service
+Service xử lý Video
 
-High-performance video composition service built on ffmpeg-python.
+Service ghép video hiệu năng cao dựa trên ffmpeg-python.
 
-Features:
-- Video concatenation
-- Audio/video merging
-- Background music addition
-- Image to video conversion
+Tính năng:
+- Ghép video
+- Ghép audio/video
+- Thêm nhạc nền
+- Chuyển ảnh thành video
 
-Note: Requires FFmpeg to be installed on the system.
+Lưu ý: Yêu cầu cài đặt FFmpeg trên hệ thống.
 """
 
 import os
@@ -43,56 +43,56 @@ from pixelle_video.utils.os_util import (
 
 def check_ffmpeg() -> None:
     """
-    Check if FFmpeg is installed on the system
-    
+    Kiểm tra FFmpeg đã được cài đặt trên hệ thống chưa
+
     Raises:
-        RuntimeError: If FFmpeg is not found
+        RuntimeError: Nếu không tìm thấy FFmpeg
     """
     if not shutil.which("ffmpeg"):
         raise RuntimeError(
-            "FFmpeg not found. Please install it:\n"
+            "Không tìm thấy FFmpeg. Vui lòng cài đặt:\n"
             "  macOS: brew install ffmpeg\n"
             "  Ubuntu/Debian: apt-get install ffmpeg\n"
             "  Windows: https://ffmpeg.org/download.html"
         )
 
 
-# Check FFmpeg availability on module import
+# Kiểm tra FFmpeg có sẵn khi import module
 check_ffmpeg()
 
 
 class VideoService:
     """
-    Video compositor for common video processing tasks
-    
-    Uses ffmpeg-python for high-performance video processing.
-    All operations preserve video quality when possible (stream copy).
-    
-    Examples:
+    Bộ ghép video cho các tác vụ xử lý video thông dụng
+
+    Dùng ffmpeg-python cho xử lý video hiệu năng cao.
+    Mọi thao tác giữ nguyên chất lượng video khi có thể (stream copy).
+
+    Ví dụ:
         >>> compositor = VideoCompositor()
-        >>> 
-        >>> # Concatenate videos
+        >>>
+        >>> # Ghép video
         >>> compositor.concat_videos(
         ...     ["intro.mp4", "main.mp4", "outro.mp4"],
         ...     "final.mp4"
         ... )
-        >>> 
-        >>> # Add voiceover
+        >>>
+        >>> # Thêm voiceover
         >>> compositor.merge_audio_video(
         ...     "visual.mp4",
         ...     "voiceover.mp3",
         ...     "final.mp4"
         ... )
-        >>> 
-        >>> # Add background music
+        >>>
+        >>> # Thêm nhạc nền
         >>> compositor.add_bgm(
         ...     "video.mp4",
         ...     "music.mp3",
         ...     "final.mp4",
         ...     bgm_volume=0.3
         ... )
-        >>> 
-        >>> # Create video from image + audio
+        >>>
+        >>> # Tạo video từ ảnh + audio
         >>> compositor.create_video_from_image(
         ...     "frame.png",
         ...     "narration.mp3",
@@ -110,53 +110,53 @@ class VideoService:
         bgm_mode: Literal["once", "loop"] = "loop"
     ) -> str:
         """
-        Concatenate multiple videos into one
-        
+        Ghép nhiều video thành một
+
         Args:
-            videos: List of video file paths to concatenate
-            output: Output video file path
-            method: Concatenation method
-                - "demuxer": Fast, no re-encoding (requires identical formats)
-                - "filter": Slower but handles different formats
-            bgm_path: Background music file path (optional)
-                - None: No BGM
-                - Filename (e.g., "default.mp3", "happy.mp3"): Use built-in BGM from bgm/ folder
-                - Custom path: Use custom BGM file
-            bgm_volume: BGM volume level (0.0-1.0), default 0.2
-            bgm_mode: BGM playback mode
-                - "once": Play BGM once
-                - "loop": Loop BGM to match video duration
-        
+            videos: Danh sách đường dẫn file video cần ghép
+            output: Đường dẫn file video output
+            method: Phương pháp ghép
+                - "demuxer": Nhanh, không re-encode (yêu cầu định dạng giống nhau)
+                - "filter": Chậm hơn nhưng xử lý được nhiều định dạng khác nhau
+            bgm_path: Đường dẫn file nhạc nền (tuỳ chọn)
+                - None: Không có BGM
+                - Tên file (vd: "default.mp3", "happy.mp3"): Dùng BGM có sẵn trong thư mục bgm/
+                - Đường dẫn tuỳ chỉnh: Dùng file BGM tuỳ chỉnh
+            bgm_volume: Mức âm lượng BGM (0.0-1.0), mặc định 0.2
+            bgm_mode: Chế độ phát BGM
+                - "once": Phát BGM một lần
+                - "loop": Lặp BGM cho khớp thời lượng video
+
         Returns:
-            Path to the output video file
-        
+            Đường dẫn file video output
+
         Raises:
-            ValueError: If videos list is empty
-            RuntimeError: If FFmpeg execution fails
-        
-        Note:
-            - demuxer method requires all videos to have identical:
-              resolution, codec, fps, etc.
-            - filter method re-encodes videos, slower but more compatible
+            ValueError: Nếu danh sách video rỗng
+            RuntimeError: Nếu thực thi FFmpeg thất bại
+
+        Lưu ý:
+            - Phương pháp demuxer yêu cầu tất cả video phải giống nhau:
+              độ phân giải, codec, fps, v.v.
+            - Phương pháp filter sẽ re-encode video, chậm hơn nhưng tương thích hơn
         """
         if not videos:
-            raise ValueError("Videos list cannot be empty")
-        
+            raise ValueError("Danh sách video không được rỗng")
+
         if len(videos) == 1:
-            logger.info(f"Only one video provided, copying to {output}")
+            logger.info(f"Chỉ có một video, đang copy tới {output}")
             shutil.copy(videos[0], output)
             return output
-        
-        logger.info(f"Concatenating {len(videos)} videos using {method} method")
-        
-        # Step 1: Concatenate videos
+
+        logger.info(f"Đang ghép {len(videos)} video bằng phương pháp {method}")
+
+        # Bước 1: Ghép video
         if bgm_path:
-            # If BGM needed, concatenate to temp file first
+            # Nếu cần BGM, ghép vào file tạm trước
             temp_output = output.replace('.mp4', '_no_bgm.mp4')
             concat_result = self._concat_demuxer(videos, temp_output) if method == "demuxer" else self._concat_filter(videos, temp_output)
-            
-            # Step 2: Add BGM
-            logger.info(f"Adding BGM: {bgm_path} (volume={bgm_volume}, mode={bgm_mode})")
+
+            # Bước 2: Thêm BGM
+            logger.info(f"Đang thêm BGM: {bgm_path} (âm lượng={bgm_volume}, chế độ={bgm_mode})")
             final_result = self._add_bgm_to_video(
                 video=concat_result,
                 bgm_path=bgm_path,
@@ -164,14 +164,14 @@ class VideoService:
                 volume=bgm_volume,
                 mode=bgm_mode
             )
-            
-            # Clean up temp file
+
+            # Dọn dẹp file tạm
             if os.path.exists(temp_output):
                 os.unlink(temp_output)
-            
+
             return final_result
         else:
-            # No BGM, direct concatenation
+            # Không có BGM, ghép trực tiếp
             if method == "demuxer":
                 return self._concat_demuxer(videos, output)
             else:
@@ -179,9 +179,9 @@ class VideoService:
     
     def _concat_demuxer(self, videos: List[str], output: str) -> str:
         """
-        Concatenate using concat demuxer (fast, no re-encoding)
-        
-        FFmpeg equivalent:
+        Ghép bằng concat demuxer (nhanh, không re-encode)
+
+        Tương đương FFmpeg:
             ffmpeg -f concat -safe 0 -i filelist.txt -c copy output.mp4
         """
         # Create temporary file list
@@ -198,7 +198,7 @@ class VideoService:
             filelist = f.name
         
         try:
-            logger.debug(f"Created filelist: {filelist}")
+            logger.debug(f"Đã tạo filelist: {filelist}")
             (
                 ffmpeg
                 .input(filelist, format='concat', safe=0)
@@ -206,21 +206,21 @@ class VideoService:
                 .overwrite_output()
                 .run(capture_stdout=True, capture_stderr=True)
             )
-            logger.success(f"Videos concatenated successfully: {output}")
+            logger.success(f"Đã ghép video thành công: {output}")
             return output
         except ffmpeg.Error as e:
             error_msg = e.stderr.decode() if e.stderr else str(e)
-            logger.error(f"FFmpeg concat error: {error_msg}")
-            raise RuntimeError(f"Failed to concatenate videos: {error_msg}")
+            logger.error(f"Lỗi FFmpeg concat: {error_msg}")
+            raise RuntimeError(f"Không thể ghép video: {error_msg}")
         finally:
             if os.path.exists(filelist):
                 os.unlink(filelist)
-    
+
     def _concat_filter(self, videos: List[str], output: str) -> str:
         """
-        Concatenate using concat filter (slower but handles different formats)
-        
-        FFmpeg equivalent:
+        Ghép bằng concat filter (chậm hơn nhưng xử lý được nhiều định dạng)
+
+        Tương đương FFmpeg:
             ffmpeg -i v1.mp4 -i v2.mp4 -filter_complex "[0:v][0:a][1:v][1:a]concat=n=2:v=1:a=1[v][a]"
                    -map "[v]" -map "[a]" output.mp4
         """
@@ -240,11 +240,11 @@ class VideoService:
                 '-filter_complex', filter_complex,
                 '-map', '[v]',
                 '-map', '[a]',
-                '-y',  # Overwrite output
+                '-y',  # Ghi đè output
                 output
             ])
-            
-            # Run command
+
+            # Chạy lệnh
             import subprocess
             result = subprocess.run(
                 cmd,
@@ -252,51 +252,51 @@ class VideoService:
                 text=True,
                 check=True
             )
-            
-            logger.success(f"Videos concatenated successfully: {output}")
+
+            logger.success(f"Đã ghép video thành công: {output}")
             return output
         except subprocess.CalledProcessError as e:
             error_msg = e.stderr if e.stderr else str(e)
-            logger.error(f"FFmpeg concat filter error: {error_msg}")
-            raise RuntimeError(f"Failed to concatenate videos: {error_msg}")
+            logger.error(f"Lỗi FFmpeg concat filter: {error_msg}")
+            raise RuntimeError(f"Không thể ghép video: {error_msg}")
         except Exception as e:
-            logger.error(f"Concatenation error: {e}")
-            raise RuntimeError(f"Failed to concatenate videos: {e}")
-    
+            logger.error(f"Lỗi ghép: {e}")
+            raise RuntimeError(f"Không thể ghép video: {e}")
+
     def _get_video_duration(self, video: str) -> float:
-        """Get video duration in seconds"""
+        """Lấy thời lượng video tính bằng giây"""
         try:
             probe = ffmpeg.probe(video)
             duration = float(probe['format']['duration'])
             return duration
         except Exception as e:
-            logger.warning(f"Failed to get video duration: {e}")
+            logger.warning(f"Không thể lấy thời lượng video: {e}")
             return 0.0
-    
+
     def _get_audio_duration(self, audio: str) -> float:
-        """Get audio duration in seconds"""
+        """Lấy thời lượng audio tính bằng giây"""
         try:
             probe = ffmpeg.probe(audio)
             duration = float(probe['format']['duration'])
             return duration
         except Exception as e:
-            logger.warning(f"Failed to get audio duration: {e}, using estimate")
-            # Fallback: estimate based on file size (very rough)
+            logger.warning(f"Không thể lấy thời lượng audio: {e}, dùng ước tính")
+            # Dự phòng: ước tính dựa trên kích thước file (rất thô)
             import os
             file_size = os.path.getsize(audio)
-            # Assume ~16kbps for MP3, so 2KB per second
+            # Giả định ~16kbps cho MP3, nên 2KB mỗi giây
             estimated_duration = file_size / 2000
-            return max(1.0, estimated_duration)  # At least 1 second
-    
+            return max(1.0, estimated_duration)  # Tối thiểu 1 giây
+
     def has_audio_stream(self, video: str) -> bool:
         """
-        Check if video has audio stream
-        
+        Kiểm tra video có audio stream không
+
         Args:
-            video: Video file path
-        
+            video: Đường dẫn file video
+
         Returns:
-            True if video has audio stream, False otherwise
+            True nếu video có audio stream, False nếu không
         """
         try:
             probe = ffmpeg.probe(video)
@@ -305,7 +305,7 @@ class VideoService:
             logger.debug(f"Video {video} has_audio={has_audio}")
             return has_audio
         except Exception as e:
-            logger.warning(f"Failed to probe video audio streams: {e}, assuming no audio")
+            logger.warning(f"Không thể probe audio stream: {e}, giả định không có audio")
             return False
     
     def merge_audio_video(
@@ -321,98 +321,98 @@ class VideoService:
         duration_tolerance: float = 0.3,  # Tolerance for video being longer than audio (seconds)
     ) -> str:
         """
-        Merge audio with video with intelligent duration adjustment
-        
-        Automatically handles duration mismatches between video and audio:
-        - If video < audio: Pad video to match audio (avoid black screen)
-        - If video > audio (within tolerance): Keep as-is (acceptable)
-        - If video > audio (exceeds tolerance): Trim video to match audio
-        
-        Automatically handles videos with or without audio streams.
-        - If video has no audio: adds the audio track
-        - If video has audio and replace_audio=True: replaces with new audio
-        - If video has audio and replace_audio=False: mixes both audio tracks
-        
+        Ghép audio với video kèm điều chỉnh thời lượng thông minh
+
+        Tự động xử lý chênh lệch thời lượng giữa video và audio:
+        - Nếu video < audio: Đệm video cho khớp audio (tránh màn hình đen)
+        - Nếu video > audio (trong dung sai): Giữ nguyên (chấp nhận được)
+        - Nếu video > audio (vượt dung sai): Cắt video cho khớp audio
+
+        Tự động xử lý video có hoặc không có audio stream.
+        - Nếu video không có audio: thêm track audio
+        - Nếu video có audio và replace_audio=True: thay thế bằng audio mới
+        - Nếu video có audio và replace_audio=False: trộn cả hai track audio
+
         Args:
-            video: Video file path
-            audio: Audio file path
-            output: Output video file path
-            replace_audio: If True, replace video's audio; if False, mix with original
-            audio_volume: Volume of the new audio (0.0 to 1.0+)
-            video_volume: Volume of original video audio (0.0 to 1.0+)
-                         Only used when replace_audio=False
-            pad_strategy: Strategy to pad video if audio is longer
-                         - "freeze": Freeze last frame (default)
-                         - "black": Fill with black screen
-            auto_adjust_duration: Enable intelligent duration adjustment (default: True)
-            duration_tolerance: Tolerance for video being longer than audio in seconds (default: 0.3)
-                              Videos within this tolerance won't be trimmed
-        
+            video: Đường dẫn file video
+            audio: Đường dẫn file audio
+            output: Đường dẫn file video output
+            replace_audio: Nếu True, thay thế audio của video; nếu False, trộn với audio gốc
+            audio_volume: Âm lượng audio mới (0.0 đến 1.0+)
+            video_volume: Âm lượng audio gốc của video (0.0 đến 1.0+)
+                         Chỉ dùng khi replace_audio=False
+            pad_strategy: Chiến lược đệm video nếu audio dài hơn
+                         - "freeze": Đóng băng frame cuối (mặc định)
+                         - "black": Lấp đầy bằng màn hình đen
+            auto_adjust_duration: Bật điều chỉnh thời lượng thông minh (mặc định: True)
+            duration_tolerance: Dung sai cho việc video dài hơn audio (giây, mặc định: 0.3)
+                              Video trong khoảng dung sai này sẽ không bị cắt
+
         Returns:
-            Path to the output video file
-        
+            Đường dẫn file video output
+
         Raises:
-            RuntimeError: If FFmpeg execution fails
-        
-        Note:
-            - Uses the longer duration between video and audio
-            - When audio is longer, video is padded using pad_strategy
-            - When video is longer, audio is looped or extended
-            - Automatically detects if video has audio
-            - When video is silent, audio is added regardless of replace_audio
-            - When replace_audio=True and video has audio, original audio is removed
-            - When replace_audio=False and video has audio, original and new audio are mixed
+            RuntimeError: Nếu thực thi FFmpeg thất bại
+
+        Lưu ý:
+            - Dùng thời lượng dài hơn giữa video và audio
+            - Khi audio dài hơn, video được đệm dùng pad_strategy
+            - Khi video dài hơn, audio được lặp hoặc kéo dài
+            - Tự động phát hiện video có audio không
+            - Khi video không có tiếng, audio được thêm bất kể replace_audio
+            - Khi replace_audio=True và video có audio, audio gốc bị xoá
+            - Khi replace_audio=False và video có audio, audio gốc và mới được trộn
         """
-        # Get durations of video and audio
+        # Lấy thời lượng video và audio
         video_duration = self._get_video_duration(video)
         audio_duration = self._get_audio_duration(audio)
-        
-        logger.info(f"Video duration: {video_duration:.2f}s, Audio duration: {audio_duration:.2f}s")
-        
-        # Intelligent duration adjustment (if enabled)
+
+        logger.info(f"Thời lượng video: {video_duration:.2f}s, Thời lượng audio: {audio_duration:.2f}s")
+
+        # Điều chỉnh thời lượng thông minh (nếu được bật)
         if auto_adjust_duration:
             diff = video_duration - audio_duration
-            
+
             if diff < 0:
-                # Video shorter than audio → Must pad to avoid black screen
-                logger.warning(f"⚠️ Video shorter than audio by {abs(diff):.2f}s, padding required")
+                # Video ngắn hơn audio → Phải đệm để tránh màn hình đen
+                logger.warning(f"⚠️ Video ngắn hơn audio {abs(diff):.2f}s, cần đệm")
                 video = self._pad_video_to_duration(video, audio_duration, pad_strategy)
-                video_duration = audio_duration  # Update duration after padding
-                logger.info(f"📌 Padded video to {audio_duration:.2f}s")
-            
+                video_duration = audio_duration  # Cập nhật thời lượng sau khi đệm
+                logger.info(f"📌 Đã đệm video tới {audio_duration:.2f}s")
+
             elif diff > duration_tolerance:
-                # Video significantly longer than audio → Trim
-                logger.info(f"⚠️ Video longer than audio by {diff:.2f}s (tolerance: {duration_tolerance}s)")
+                # Video dài hơn audio đáng kể → Cắt
+                logger.info(f"⚠️ Video dài hơn audio {diff:.2f}s (dung sai: {duration_tolerance}s)")
                 video = self._trim_video_to_duration(video, audio_duration)
-                video_duration = audio_duration  # Update duration after trimming
-                logger.info(f"✂️ Trimmed video to {audio_duration:.2f}s")
-            
+                video_duration = audio_duration  # Cập nhật thời lượng sau khi cắt
+                logger.info(f"✂️ Đã cắt video tới {audio_duration:.2f}s")
+
             else:  # 0 <= diff <= duration_tolerance
-                # Video slightly longer but within tolerance → Keep as-is
-                logger.info(f"✅ Duration acceptable: video={video_duration:.2f}s, audio={audio_duration:.2f}s (diff={diff:.2f}s)")
-        
-        # Determine target duration (max of both)
+                # Video dài hơn một chút nhưng trong dung sai → Giữ nguyên
+                logger.info(f"✅ Thời lượng chấp nhận được: video={video_duration:.2f}s, audio={audio_duration:.2f}s (chênh={diff:.2f}s)")
+
+        # Xác định thời lượng đích (max của cả hai)
         target_duration = max(video_duration, audio_duration)
-        logger.info(f"Target output duration: {target_duration:.2f}s")
-        
-        # Check if video has audio stream
+        logger.info(f"Thời lượng output đích: {target_duration:.2f}s")
+
+        # Kiểm tra video có audio stream không
         video_has_audio = self.has_audio_stream(video)
-        
-        # Prepare video stream (potentially with padding)
+
+        # Chuẩn bị video stream (có thể có đệm)
         input_video = ffmpeg.input(video)
         video_stream = input_video.video
-        
-        # Pad video if audio is longer
+
+        # Đệm video nếu audio dài hơn
         if audio_duration > video_duration:
             pad_duration = audio_duration - video_duration
-            logger.info(f"Audio is longer, padding video by {pad_duration:.2f}s using '{pad_strategy}' strategy")
-            
+            logger.info(f"Audio dài hơn, đệm video {pad_duration:.2f}s bằng chiến lược '{pad_strategy}'")
+
             if pad_strategy == "freeze":
-                # Freeze last frame: tpad filter
+                # Đóng băng frame cuối: filter tpad
                 video_stream = video_stream.filter('tpad', stop_mode='clone', stop_duration=pad_duration)
             else:  # black
-                # Generate black frames for padding duration
-                # Get video properties
+                # Sinh frame đen cho thời lượng đệm
+                # Lấy thuộc tính video
                 probe = ffmpeg.probe(video)
                 video_info = next(s for s in probe['streams'] if s['codec_type'] == 'video')
                 width = int(video_info['width'])
@@ -421,31 +421,31 @@ class VideoService:
                 fps_num, fps_den = map(int, fps_str.split('/'))
                 fps = fps_num / fps_den if fps_den != 0 else 30
                 
-                # Create black video for padding
+                # Tạo video đen để đệm
                 black_video_path = self._get_unique_temp_path("black_pad", os.path.basename(output))
                 black_input = ffmpeg.input(
                     f'color=c=black:s={width}x{height}:r={fps}',
                     f='lavfi',
                     t=pad_duration
                 )
-                
-                # Concatenate original video with black padding
+
+                # Ghép video gốc với phần đệm đen
                 video_stream = ffmpeg.concat(video_stream, black_input.video, v=1, a=0)
-        
-        # Prepare audio stream (pad if needed to match target duration)
+
+        # Chuẩn bị audio stream (đệm nếu cần để khớp thời lượng đích)
         input_audio = ffmpeg.input(audio)
         audio_stream = input_audio.audio.filter('volume', audio_volume)
-        
-        # Pad audio with silence if video is longer
+
+        # Đệm audio bằng im lặng nếu video dài hơn
         if video_duration > audio_duration:
             pad_duration = video_duration - audio_duration
-            logger.info(f"Video is longer, padding audio with {pad_duration:.2f}s silence")
-            # Use apad to add silence at the end
+            logger.info(f"Video dài hơn, đệm audio bằng {pad_duration:.2f}s im lặng")
+            # Dùng apad để thêm im lặng ở cuối
             audio_stream = audio_stream.filter('apad', whole_dur=target_duration)
-        
+
         if not video_has_audio:
-            logger.info(f"Video has no audio stream, adding audio track")
-            # Video is silent, just add the audio
+            logger.info(f"Video không có audio stream, đang thêm track audio")
+            # Video không có tiếng, chỉ cần thêm audio
             try:
                 (
                     ffmpeg
@@ -453,34 +453,34 @@ class VideoService:
                         video_stream,
                         audio_stream,
                         output,
-                        vcodec='libx264',  # Re-encode video if padded
+                        vcodec='libx264',  # Re-encode video nếu được đệm
                         acodec='aac',
                         audio_bitrate='192k'
                     )
                     .overwrite_output()
                     .run(capture_stdout=True, capture_stderr=True)
                 )
-                
-                logger.success(f"Audio added to silent video: {output}")
+
+                logger.success(f"Đã thêm audio vào video không tiếng: {output}")
                 return output
             except ffmpeg.Error as e:
                 error_msg = e.stderr.decode() if e.stderr else str(e)
-                logger.error(f"FFmpeg error adding audio to silent video: {error_msg}")
-                raise RuntimeError(f"Failed to add audio to video: {error_msg}")
-        
-        # Video has audio, proceed with merging
-        logger.info(f"Merging audio with video (replace={replace_audio})")
-        
+                logger.error(f"Lỗi FFmpeg khi thêm audio vào video không tiếng: {error_msg}")
+                raise RuntimeError(f"Không thể thêm audio vào video: {error_msg}")
+
+        # Video có audio, tiếp tục ghép
+        logger.info(f"Đang ghép audio với video (replace={replace_audio})")
+
         try:
             if replace_audio:
-                # Replace audio: use only new audio, ignore original
+                # Thay thế audio: chỉ dùng audio mới, bỏ qua audio gốc
                 (
                     ffmpeg
                     .output(
                         video_stream,
                         audio_stream,
                         output,
-                        vcodec='libx264',  # Re-encode video if padded
+                        vcodec='libx264',  # Re-encode video nếu được đệm
                         acodec='aac',
                         audio_bitrate='192k'
                     )
@@ -488,7 +488,7 @@ class VideoService:
                     .run(capture_stdout=True, capture_stderr=True)
                 )
             else:
-                # Mix audio: combine original and new audio
+                # Trộn audio: kết hợp audio gốc và audio mới
                 mixed_audio = ffmpeg.filter(
                     [
                         input_video.audio.filter('volume', video_volume),
@@ -496,29 +496,29 @@ class VideoService:
                     ],
                     'amix',
                     inputs=2,
-                    duration='longest'  # Use longest audio
+                    duration='longest'  # Dùng audio dài nhất
                 )
-                
+
                 (
                     ffmpeg
                     .output(
                         video_stream,
                         mixed_audio,
                         output,
-                        vcodec='libx264',  # Re-encode video if padded
+                        vcodec='libx264',  # Re-encode video nếu được đệm
                         acodec='aac',
                         audio_bitrate='192k'
                     )
                     .overwrite_output()
                     .run(capture_stdout=True, capture_stderr=True)
                 )
-            
-            logger.success(f"Audio merged successfully: {output}")
+
+            logger.success(f"Đã ghép audio thành công: {output}")
             return output
         except ffmpeg.Error as e:
             error_msg = e.stderr.decode() if e.stderr else str(e)
-            logger.error(f"FFmpeg merge error: {error_msg}")
-            raise RuntimeError(f"Failed to merge audio and video: {error_msg}")
+            logger.error(f"Lỗi ghép FFmpeg: {error_msg}")
+            raise RuntimeError(f"Không thể ghép audio và video: {error_msg}")
     
     def overlay_image_on_video(
         self,
@@ -528,69 +528,69 @@ class VideoService:
         scale_mode: str = "contain"
     ) -> str:
         """
-        Overlay a transparent image on top of video
-        
+        Phủ một ảnh trong suốt lên trên video
+
         Args:
-            video: Base video file path
-            overlay_image: Transparent overlay image path (e.g., rendered HTML with transparent background)
-            output: Output video file path
-            scale_mode: How to scale the base video to fit the overlay size
-                - "contain": Scale video to fit within overlay dimensions (letterbox/pillarbox)
-                - "cover": Scale video to cover overlay dimensions (may crop)
-                - "stretch": Stretch video to exact overlay dimensions
-        
+            video: Đường dẫn file video gốc
+            overlay_image: Đường dẫn ảnh overlay trong suốt (vd: HTML đã render với nền trong suốt)
+            output: Đường dẫn file video output
+            scale_mode: Cách scale video gốc cho khớp kích thước overlay
+                - "contain": Scale video vừa khít trong overlay (letterbox/pillarbox)
+                - "cover": Scale video phủ kín overlay (có thể bị cắt)
+                - "stretch": Kéo giãn video đúng kích thước overlay
+
         Returns:
-            Path to the output video file
-        
+            Đường dẫn file video output
+
         Raises:
-            RuntimeError: If FFmpeg execution fails
-        
-        Note:
-            - Overlay image should have transparent background
-            - Video is scaled to match overlay dimensions based on scale_mode
-            - Final video size matches overlay image size
-            - Video codec is re-encoded to support overlay
+            RuntimeError: Nếu thực thi FFmpeg thất bại
+
+        Lưu ý:
+            - Ảnh overlay phải có nền trong suốt
+            - Video được scale cho khớp kích thước overlay dựa trên scale_mode
+            - Kích thước video cuối khớp với kích thước ảnh overlay
+            - Codec video được re-encode để hỗ trợ overlay
         """
-        logger.info(f"Overlaying image on video (scale_mode={scale_mode})")
+        logger.info(f"Đang phủ ảnh lên video (scale_mode={scale_mode})")
         
         try:
-            # Get overlay image dimensions
+            # Lấy kích thước ảnh overlay
             overlay_probe = ffmpeg.probe(overlay_image)
             overlay_stream = next(s for s in overlay_probe['streams'] if s['codec_type'] == 'video')
             overlay_width = int(overlay_stream['width'])
             overlay_height = int(overlay_stream['height'])
-            
-            logger.debug(f"Overlay dimensions: {overlay_width}x{overlay_height}")
-            
+
+            logger.debug(f"Kích thước overlay: {overlay_width}x{overlay_height}")
+
             input_video = ffmpeg.input(video)
             input_overlay = ffmpeg.input(overlay_image)
-            
-            # Scale video to fit overlay size using scale_mode
+
+            # Scale video để khớp kích thước overlay dùng scale_mode
             if scale_mode == "contain":
-                # Scale to fit (letterbox/pillarbox if aspect ratio differs)
-                # Use scale filter with force_original_aspect_ratio=decrease and pad to center
+                # Scale vừa khít (letterbox/pillarbox nếu tỉ lệ khác nhau)
+                # Dùng filter scale với force_original_aspect_ratio=decrease và pad ở giữa
                 scaled_video = (
                     input_video
                     .filter('scale', overlay_width, overlay_height, force_original_aspect_ratio='decrease')
                     .filter('pad', overlay_width, overlay_height, '(ow-iw)/2', '(oh-ih)/2', color='black')
                 )
             elif scale_mode == "cover":
-                # Scale to cover (crop if aspect ratio differs)
+                # Scale phủ kín (cắt nếu tỉ lệ khác nhau)
                 scaled_video = (
                     input_video
                     .filter('scale', overlay_width, overlay_height, force_original_aspect_ratio='increase')
                     .filter('crop', overlay_width, overlay_height)
                 )
             else:  # stretch
-                # Stretch to exact dimensions
+                # Kéo giãn đúng kích thước
                 scaled_video = input_video.filter('scale', overlay_width, overlay_height)
-            
-            # Overlay the transparent image on top of the scaled video
+
+            # Phủ ảnh trong suốt lên trên video đã scale
             output_stream = ffmpeg.overlay(scaled_video, input_overlay)
-            
+
             (
                 ffmpeg
-                .output(output_stream, output, 
+                .output(output_stream, output,
                         vcodec='libx264',
                         pix_fmt='yuv420p',
                         preset='medium',
@@ -598,13 +598,13 @@ class VideoService:
                 .overwrite_output()
                 .run(capture_stdout=True, capture_stderr=True)
             )
-            
-            logger.success(f"Image overlaid on video: {output}")
+
+            logger.success(f"Đã phủ ảnh lên video: {output}")
             return output
         except ffmpeg.Error as e:
             error_msg = e.stderr.decode() if e.stderr else str(e)
-            logger.error(f"FFmpeg overlay error: {error_msg}")
-            raise RuntimeError(f"Failed to overlay image on video: {error_msg}")
+            logger.error(f"Lỗi FFmpeg overlay: {error_msg}")
+            raise RuntimeError(f"Không thể phủ ảnh lên video: {error_msg}")
     
     def create_video_from_image(
         self,
@@ -614,72 +614,72 @@ class VideoService:
         fps: int = 30,
     ) -> str:
         """
-        Create video from static image and audio
-        
+        Tạo video từ ảnh tĩnh và audio
+
         Args:
-            image: Image file path
-            audio: Audio file path
-            output: Output video path
-            fps: Frames per second
-        
+            image: Đường dẫn file ảnh
+            audio: Đường dẫn file audio
+            output: Đường dẫn video output
+            fps: Số khung hình mỗi giây
+
         Returns:
-            Path to the output video
-        
+            Đường dẫn video output
+
         Raises:
-            RuntimeError: If FFmpeg execution fails
-        
-        Note:
-            - Image is displayed as static frame for the duration of audio
-            - Video duration matches audio duration
-            - Useful for creating video segments from storyboard frames
-        
-        Example:
+            RuntimeError: Nếu thực thi FFmpeg thất bại
+
+        Lưu ý:
+            - Ảnh được hiển thị như frame tĩnh trong suốt thời lượng audio
+            - Thời lượng video khớp với thời lượng audio
+            - Hữu ích cho việc tạo segment video từ frame của storyboard
+
+        Ví dụ:
             >>> compositor.create_video_from_image(
             ...     "frame.png",
             ...     "narration.mp3",
             ...     "segment.mp4"
             ... )
         """
-        logger.info("Creating video from image and audio")
-        
+        logger.info("Đang tạo video từ ảnh và audio")
+
         try:
-            # Get audio duration to ensure exact video duration match
+            # Lấy thời lượng audio để đảm bảo thời lượng video khớp chính xác
             probe = ffmpeg.probe(audio)
             audio_duration = float(probe['format']['duration'])
-            logger.debug(f"Audio duration: {audio_duration:.3f}s")
-            
-            # Input image with loop (loop=1 means loop indefinitely)
-            # Use framerate to set input framerate
+            logger.debug(f"Thời lượng audio: {audio_duration:.3f}s")
+
+            # Input ảnh với loop (loop=1 nghĩa là lặp vô hạn)
+            # Dùng framerate để đặt framerate input
             input_image = ffmpeg.input(image, loop=1, framerate=fps)
             input_audio = ffmpeg.input(audio)
-            
-            # Combine image and audio
-            # Use -t to explicitly set video duration = audio duration
+
+            # Kết hợp ảnh và audio
+            # Dùng -t để đặt rõ thời lượng video = thời lượng audio
             (
                 ffmpeg
                 .output(
                     input_image,
                     input_audio,
                     output,
-                    t=audio_duration,  # Force video duration to match audio exactly
+                    t=audio_duration,  # Buộc thời lượng video khớp chính xác audio
                     vcodec='libx264',
                     acodec='aac',
                     pix_fmt='yuv420p',
                     audio_bitrate='192k',
                     preset='medium',
                     crf=23,
-                    **{'b:v': '2M'}  # Video bitrate
+                    **{'b:v': '2M'}  # Bitrate video
                 )
                 .overwrite_output()
                 .run(capture_stdout=True, capture_stderr=True)
             )
-            
-            logger.success(f"Video created from image: {output} (duration: {audio_duration:.3f}s)")
+
+            logger.success(f"Đã tạo video từ ảnh: {output} (thời lượng: {audio_duration:.3f}s)")
             return output
         except ffmpeg.Error as e:
             error_msg = e.stderr.decode() if e.stderr else str(e)
-            logger.error(f"FFmpeg error creating video from image: {error_msg}")
-            raise RuntimeError(f"Failed to create video from image: {error_msg}")
+            logger.error(f"Lỗi FFmpeg khi tạo video từ ảnh: {error_msg}")
+            raise RuntimeError(f"Không thể tạo video từ ảnh: {error_msg}")
     
     def add_bgm(
         self,
@@ -692,60 +692,60 @@ class VideoService:
         fade_out: float = 0.0,
     ) -> str:
         """
-        Add background music to video
-        
+        Thêm nhạc nền vào video
+
         Args:
-            video: Video file path
-            bgm: Background music file path
-            output: Output video file path
-            bgm_volume: BGM volume relative to original (0.0 to 1.0+)
-            loop: If True, loop BGM to match video duration
-            fade_in: BGM fade-in duration in seconds
-            fade_out: BGM fade-out duration in seconds (not yet implemented)
-        
+            video: Đường dẫn file video
+            bgm: Đường dẫn file nhạc nền
+            output: Đường dẫn file video output
+            bgm_volume: Âm lượng BGM tương đối so với gốc (0.0 đến 1.0+)
+            loop: Nếu True, lặp BGM cho khớp thời lượng video
+            fade_in: Thời lượng fade-in BGM (giây)
+            fade_out: Thời lượng fade-out BGM (giây, chưa triển khai)
+
         Returns:
-            Path to the output video file
-        
+            Đường dẫn file video output
+
         Raises:
-            RuntimeError: If FFmpeg execution fails
-        
-        Note:
-            - BGM is mixed with original video audio
-            - If loop=True, BGM repeats until video ends
-            - Fade effects are applied to BGM only
+            RuntimeError: Nếu thực thi FFmpeg thất bại
+
+        Lưu ý:
+            - BGM được trộn với audio gốc của video
+            - Nếu loop=True, BGM lặp tới khi video kết thúc
+            - Hiệu ứng fade chỉ áp dụng cho BGM
         """
-        logger.info(f"Adding BGM to video (volume={bgm_volume}, loop={loop})")
-        
+        logger.info(f"Đang thêm BGM vào video (âm lượng={bgm_volume}, loop={loop})")
+
         try:
             input_video = ffmpeg.input(video)
-            
-            # Configure BGM input with looping if needed
+
+            # Cấu hình input BGM với loop nếu cần
             bgm_input = ffmpeg.input(
                 bgm,
-                stream_loop=-1 if loop else 0  # -1 = infinite loop
+                stream_loop=-1 if loop else 0  # -1 = lặp vô hạn
             )
-            
-            # Apply volume adjustment to BGM
+
+            # Áp dụng điều chỉnh âm lượng cho BGM
             bgm_audio = bgm_input.audio.filter('volume', bgm_volume)
-            
-            # Apply fade effects if specified
+
+            # Áp dụng hiệu ứng fade nếu được chỉ định
             if fade_in > 0:
                 bgm_audio = bgm_audio.filter('afade', type='in', duration=fade_in)
-            # Note: fade_out at the end requires knowing the duration, which is complex
-            # For now, we skip fade_out in this implementation
-            # A more advanced implementation would need to:
-            # 1. Get video duration
-            # 2. Calculate fade_out start time
-            # 3. Apply fade filter with specific start_time
-            
-            # Mix original audio with BGM
+            # Lưu ý: fade_out ở cuối yêu cầu biết thời lượng, điều này phức tạp
+            # Hiện tại bỏ qua fade_out trong implementation này
+            # Một implementation nâng cao hơn sẽ cần:
+            # 1. Lấy thời lượng video
+            # 2. Tính thời điểm bắt đầu fade_out
+            # 3. Áp dụng filter fade với start_time cụ thể
+
+            # Trộn audio gốc với BGM
             mixed_audio = ffmpeg.filter(
                 [input_video.audio, bgm_audio],
                 'amix',
                 inputs=2,
-                duration='first'  # Use video's duration
+                duration='first'  # Dùng thời lượng của video
             )
-            
+
             (
                 ffmpeg
                 .output(
@@ -759,13 +759,13 @@ class VideoService:
                 .overwrite_output()
                 .run(capture_stdout=True, capture_stderr=True)
             )
-            
-            logger.success(f"BGM added successfully: {output}")
+
+            logger.success(f"Đã thêm BGM thành công: {output}")
             return output
         except ffmpeg.Error as e:
             error_msg = e.stderr.decode() if e.stderr else str(e)
-            logger.error(f"FFmpeg BGM error: {error_msg}")
-            raise RuntimeError(f"Failed to add BGM: {error_msg}")
+            logger.error(f"Lỗi FFmpeg BGM: {error_msg}")
+            raise RuntimeError(f"Không thể thêm BGM: {error_msg}")
     
     def _add_bgm_to_video(
         self,
@@ -776,25 +776,25 @@ class VideoService:
         mode: Literal["once", "loop"] = "loop"
     ) -> str:
         """
-        Internal helper to add BGM to video with path resolution
-        
+        Helper nội bộ để thêm BGM vào video kèm phân giải đường dẫn
+
         Args:
-            video: Video file path
-            bgm_path: BGM path (can be preset name or custom path)
-            output: Output file path
-            volume: BGM volume (0.0-1.0)
-            mode: "once" or "loop"
-        
+            video: Đường dẫn file video
+            bgm_path: Đường dẫn BGM (có thể là tên preset hoặc đường dẫn tuỳ chỉnh)
+            output: Đường dẫn file output
+            volume: Âm lượng BGM (0.0-1.0)
+            mode: "once" hoặc "loop"
+
         Returns:
-            Path to output video
-        
+            Đường dẫn video output
+
         Raises:
-            FileNotFoundError: If BGM file not found
+            FileNotFoundError: Nếu không tìm thấy file BGM
         """
-        # Resolve BGM path (raises FileNotFoundError if not found)
+        # Phân giải đường dẫn BGM (raise FileNotFoundError nếu không tìm thấy)
         resolved_bgm = self._resolve_bgm_path(bgm_path)
-        
-        # Add BGM using existing method
+
+        # Thêm BGM bằng method có sẵn
         loop = (mode == "loop")
         return self.add_bgm(
             video=video,
@@ -807,18 +807,18 @@ class VideoService:
     
     def _get_unique_temp_path(self, prefix: str, original_filename: str) -> str:
         """
-        Generate unique temporary file path to avoid concurrent conflicts
-        
+        Sinh đường dẫn file tạm duy nhất để tránh xung đột khi chạy song song
+
         Args:
-            prefix: Prefix for the temp file (e.g., "trimmed", "padded", "black_pad")
-            original_filename: Original filename to preserve in temp path
-        
+            prefix: Tiền tố cho file tạm (vd: "trimmed", "padded", "black_pad")
+            original_filename: Tên file gốc để giữ trong đường dẫn tạm
+
         Returns:
-            Unique temporary file path with format: temp/{prefix}_{uuid}_{original_filename}
-        
-        Example:
+            Đường dẫn file tạm duy nhất theo định dạng: temp/{prefix}_{uuid}_{original_filename}
+
+        Ví dụ:
             >>> self._get_unique_temp_path("trimmed", "video.mp4")
-            >>> # Returns: "temp/trimmed_a3f2d8c1_video.mp4"
+            >>> # Trả về: "temp/trimmed_a3f2d8c1_video.mp4"
         """
         from pixelle_video.utils.os_util import get_temp_path
         
@@ -827,86 +827,86 @@ class VideoService:
     
     def _resolve_bgm_path(self, bgm_path: str) -> str:
         """
-        Resolve BGM path (filename or custom path) with custom override support
-        
-        Search priority:
-            1. Direct path (absolute or relative)
-            2. data/bgm/{filename} (custom)
-            3. bgm/{filename} (default)
-        
+        Phân giải đường dẫn BGM (tên file hoặc đường dẫn tuỳ chỉnh) kèm hỗ trợ ghi đè tuỳ chỉnh
+
+        Thứ tự ưu tiên tìm kiếm:
+            1. Đường dẫn trực tiếp (tuyệt đối hoặc tương đối)
+            2. data/bgm/{filename} (tuỳ chỉnh)
+            3. bgm/{filename} (mặc định)
+
         Args:
-            bgm_path: Can be:
-                - Filename with extension (e.g., "default.mp3", "happy.mp3"): auto-resolved from bgm/ or data/bgm/
-                - Custom file path (absolute or relative)
-        
+            bgm_path: Có thể là:
+                - Tên file kèm phần mở rộng (vd: "default.mp3", "happy.mp3"): tự động phân giải từ bgm/ hoặc data/bgm/
+                - Đường dẫn file tuỳ chỉnh (tuyệt đối hoặc tương đối)
+
         Returns:
-            Resolved absolute path
-        
+            Đường dẫn tuyệt đối đã phân giải
+
         Raises:
-            FileNotFoundError: If BGM file not found
+            FileNotFoundError: Nếu không tìm thấy file BGM
         """
-        # Try direct path first (absolute or relative)
+        # Thử đường dẫn trực tiếp trước (tuyệt đối hoặc tương đối)
         if os.path.exists(bgm_path):
             return os.path.abspath(bgm_path)
-        
-        # Try as filename in resource directories (custom > default)
+
+        # Thử như tên file trong các thư mục resource (tuỳ chỉnh > mặc định)
         if resource_exists("bgm", bgm_path):
             return get_resource_path("bgm", bgm_path)
-        
-        # Not found - provide helpful error message
+
+        # Không tìm thấy - cung cấp thông báo lỗi hữu ích
         tried_paths = [
             os.path.abspath(bgm_path),
-            f"data/bgm/{bgm_path} or bgm/{bgm_path}"
+            f"data/bgm/{bgm_path} hoặc bgm/{bgm_path}"
         ]
-        
-        # List available BGM files
+
+        # Liệt kê các file BGM có sẵn
         available_bgm = self._list_available_bgm()
-        available_msg = f"\n  Available BGM files: {', '.join(available_bgm)}" if available_bgm else ""
-        
+        available_msg = f"\n  File BGM có sẵn: {', '.join(available_bgm)}" if available_bgm else ""
+
         raise FileNotFoundError(
-            f"BGM file not found: '{bgm_path}'\n"
-            f"  Tried paths:\n"
+            f"Không tìm thấy file BGM: '{bgm_path}'\n"
+            f"  Đã thử đường dẫn:\n"
             f"    1. {tried_paths[0]}\n"
             f"    2. {tried_paths[1]}"
             f"{available_msg}"
         )
-    
+
     def _list_available_bgm(self) -> list[str]:
         """
-        List available BGM files (merged from bgm/ and data/bgm/)
-        
+        Liệt kê các file BGM có sẵn (gộp từ bgm/ và data/bgm/)
+
         Returns:
-            List of filenames (with extensions), sorted
+            Danh sách tên file (kèm phần mở rộng), đã sắp xếp
         """
         try:
-            # Use resource API to get merged list
+            # Dùng resource API để lấy danh sách đã gộp
             all_files = list_resource_files("bgm")
-            
-            # Filter to audio files only
+
+            # Chỉ lọc các file audio
             audio_extensions = ('.mp3', '.wav', '.ogg', '.flac', '.m4a', '.aac')
             return sorted([f for f in all_files if f.lower().endswith(audio_extensions)])
         except Exception as e:
-            logger.warning(f"Failed to list BGM files: {e}")
+            logger.warning(f"Không thể liệt kê file BGM: {e}")
             return []
-    
+
     def _trim_video_to_duration(self, video: str, target_duration: float) -> str:
         """
-        Trim video to specified duration
-        
+        Cắt video về thời lượng được chỉ định
+
         Args:
-            video: Input video file path
-            target_duration: Target duration in seconds
-        
+            video: Đường dẫn file video đầu vào
+            target_duration: Thời lượng đích tính bằng giây
+
         Returns:
-            Path to trimmed video (temp file)
-        
+            Đường dẫn video đã cắt (file tạm)
+
         Raises:
-            RuntimeError: If FFmpeg execution fails
+            RuntimeError: Nếu thực thi FFmpeg thất bại
         """
         output = self._get_unique_temp_path("trimmed", os.path.basename(video))
-        
+
         try:
-            # Use stream copy when possible for fast trimming
+            # Dùng stream copy khi có thể để cắt nhanh
             (
                 ffmpeg
                 .input(video, t=target_duration)
@@ -917,23 +917,23 @@ class VideoService:
             return output
         except ffmpeg.Error as e:
             error_msg = e.stderr.decode() if e.stderr else str(e)
-            logger.error(f"FFmpeg error trimming video: {error_msg}")
-            raise RuntimeError(f"Failed to trim video: {error_msg}")
-    
+            logger.error(f"Lỗi FFmpeg khi cắt video: {error_msg}")
+            raise RuntimeError(f"Không thể cắt video: {error_msg}")
+
     def _pad_video_to_duration(self, video: str, target_duration: float, pad_strategy: str = "freeze") -> str:
         """
-        Pad video to specified duration by extending the last frame or adding black frames
-        
+        Đệm video về thời lượng được chỉ định bằng cách kéo dài frame cuối hoặc thêm frame đen
+
         Args:
-            video: Input video file path
-            target_duration: Target duration in seconds
-            pad_strategy: Padding strategy - "freeze" (freeze last frame) or "black" (black screen)
-        
+            video: Đường dẫn file video đầu vào
+            target_duration: Thời lượng đích tính bằng giây
+            pad_strategy: Chiến lược đệm - "freeze" (đóng băng frame cuối) hoặc "black" (màn hình đen)
+
         Returns:
-            Path to padded video (temp file)
-        
+            Đường dẫn video đã đệm (file tạm)
+
         Raises:
-            RuntimeError: If FFmpeg execution fails
+            RuntimeError: Nếu thực thi FFmpeg thất bại
         """
         output = self._get_unique_temp_path("padded", os.path.basename(video))
         
@@ -941,18 +941,18 @@ class VideoService:
         pad_duration = target_duration - video_duration
         
         if pad_duration <= 0:
-            # No padding needed, return original
+            # Không cần đệm, trả về gốc
             return video
-        
+
         try:
             input_video = ffmpeg.input(video)
             video_stream = input_video.video
-            
+
             if pad_strategy == "freeze":
-                # Freeze last frame using tpad filter
+                # Đóng băng frame cuối bằng filter tpad
                 video_stream = video_stream.filter('tpad', stop_mode='clone', stop_duration=pad_duration)
-                
-                # Output with re-encoding (tpad requires it)
+
+                # Output kèm re-encode (tpad yêu cầu)
                 (
                     ffmpeg
                     .output(
@@ -966,8 +966,8 @@ class VideoService:
                     .run(capture_stdout=True, capture_stderr=True, quiet=True)
                 )
             else:  # black
-                # Generate black frames for padding duration
-                # Get video properties
+                # Sinh frame đen cho thời lượng đệm
+                # Lấy thuộc tính video
                 probe = ffmpeg.probe(video)
                 video_info = next(s for s in probe['streams'] if s['codec_type'] == 'video')
                 width = int(video_info['width'])
@@ -975,17 +975,17 @@ class VideoService:
                 fps_str = video_info['r_frame_rate']
                 fps_num, fps_den = map(int, fps_str.split('/'))
                 fps = fps_num / fps_den if fps_den != 0 else 30
-                
-                # Create black video for padding
+
+                # Tạo video đen để đệm
                 black_input = ffmpeg.input(
                     f'color=c=black:s={width}x{height}:r={fps}',
                     f='lavfi',
                     t=pad_duration
                 )
-                
-                # Concatenate original video with black padding
+
+                # Ghép video gốc với phần đệm đen
                 video_stream = ffmpeg.concat(video_stream, black_input.video, v=1, a=0)
-                
+
                 (
                     ffmpeg
                     .output(
@@ -1002,6 +1002,6 @@ class VideoService:
             return output
         except ffmpeg.Error as e:
             error_msg = e.stderr.decode() if e.stderr else str(e)
-            logger.error(f"FFmpeg error padding video: {error_msg}")
-            raise RuntimeError(f"Failed to pad video: {error_msg}")
+            logger.error(f"Lỗi FFmpeg khi đệm video: {error_msg}")
+            raise RuntimeError(f"Không thể đệm video: {error_msg}")
 

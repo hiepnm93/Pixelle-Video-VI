@@ -1,2 +1,2 @@
-"""Pages for web interface"""
+"""Các trang cho giao diện web"""
 

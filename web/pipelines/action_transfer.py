@@ -17,40 +17,40 @@ from pixelle_video.utils.os_util import create_task_output_dir
 
 class ActionTransferPipelineUI(PipelineUI):
     """
-    UI for the Action transfer Video Generation Pipeline.
-    Generates videos from user-provided assets (images&text&video).
+    UI cho Pipeline Sinh Video Action Transfer.
+    Sinh video từ asset người dùng cung cấp (ảnh, text, video).
     """
     name = "action_transfer"
     icon = "💃"
-    
+
     @property
     def display_name(self):
         return tr("pipeline.action_transfer.name")
-    
+
     @property
     def description(self):
         return tr("pipeline.action_transfer.description")
 
     def render(self, pixelle_video: Any):
-        # Three-column layout
-        left_col,middle_col,right_col = st.columns([1, 1, 1])
+        # Bố cục ba cột
+        left_col, middle_col, right_col = st.columns([1, 1, 1])
 
         # ====================================================================
-        # Left Column: Video Upload
+        # Cột trái: Tải lên Video
         # ====================================================================
         with left_col:
             video_params = self.render_action_transfer_video_input(pixelle_video)
             render_version_info()
-        
+
         # ====================================================================
-        # Middle Column: Image Upload & Prompt
+        # Cột giữa: Tải lên Ảnh & Prompt
         # ====================================================================
         with middle_col:
             assets_params = self.render_action_transfer_assets_input(pixelle_video)
 
 
         # ====================================================================
-        # Right Column: Output Preview
+        # Cột phải: Xem trước Output
         # ====================================================================
         with right_col:
             video_params = {
@@ -70,7 +70,7 @@ class ActionTransferPipelineUI(PipelineUI):
                 st.markdown(f"**{tr('help.how')}**")
                 st.markdown(tr("action_transfer.assets.video_how"))
 
-            # File uploader for multiple files
+            # File uploader cho nhiều file
             uploaded_files = st.file_uploader(
                 tr("action_transfer.assets.video_upload"),
                 type=["mp4","mkv","mov"],
@@ -79,36 +79,36 @@ class ActionTransferPipelineUI(PipelineUI):
                 key="action_reference_files"
             )
 
-            # Save uploaded files to temp directory with unique session ID
+            # Lưu file đã tải lên vào thư mục tạm với session ID duy nhất
             video_asset_paths = []
             if uploaded_files:
                 import uuid
                 session_id = str(uuid.uuid4()).replace('-', '')[:12]
                 temp_dir = Path(f"temp/assets_{session_id}")
                 temp_dir.mkdir(parents=True, exist_ok=True)
-                
+
                 for uploaded_file in uploaded_files:
                     file_path = temp_dir / uploaded_file.name
                     with open(file_path, "wb") as f:
                         f.write(uploaded_file.getbuffer())
                     video_asset_paths.append(str(file_path.absolute()))
-                
+
                 st.success(tr("action_transfer.assets.video_sucess"))
-                
-                # Preview uploaded assets
+
+                # Xem trước asset đã tải lên
                 with st.expander(tr("action_transfer.assets.preview"), expanded=True):
-                    # Show in a grid (3 columns)
+                    # Hiển thị dạng lưới (3 cột)
                     cols = st.columns(3)
                     for i, (file, path) in enumerate(zip(uploaded_files, video_asset_paths)):
                         with cols[i % 3]:
-                            # Check if image
+                            # Kiểm tra là video
                             ext = Path(path).suffix.lower()
                             if ext in [".mp4", ".mkv", ".mov"]:
                                 st.video(file)
             else:
                 st.info(tr("action_transfer.assets.video_empty_hint"))
-            
-            # Get the video length (rounded down).
+
+            # Lấy độ dài video (làm tròn xuống).
             if video_asset_paths:
                 clip = VideoFileClip(video_asset_paths[0])
                 int_duration = int(clip.duration)
@@ -131,7 +131,7 @@ class ActionTransferPipelineUI(PipelineUI):
                 st.markdown(f"**{tr('help.how')}**")
                 st.markdown(tr("action_transfer.assets.image_how"))
 
-            # File uploader for multiple files
+            # File uploader cho nhiều file
             uploaded_files = st.file_uploader(
                 tr("action_transfer.assets.image_upload"),
                 type=["jpg", "jpeg", "png", "webp"],
@@ -140,29 +140,29 @@ class ActionTransferPipelineUI(PipelineUI):
                 key="image_files"
                 )
 
-             # Save uploaded files to temp directory with unique session ID
+             # Lưu file đã tải lên vào thư mục tạm với session ID duy nhất
             image_asset_paths = []
             if uploaded_files:
                 import uuid
                 session_id = str(uuid.uuid4()).replace('-', '')[:12]
                 temp_dir = Path(f"temp/assets_{session_id}")
                 temp_dir.mkdir(parents=True, exist_ok=True)
-                
+
                 for uploaded_file in uploaded_files:
                     file_path = temp_dir / uploaded_file.name
                     with open(file_path, "wb") as f:
                         f.write(uploaded_file.getbuffer())
                     image_asset_paths.append(str(file_path.absolute()))
-                
+
                 st.success(tr("action_transfer.assets.image_sucess"))
-                
-                # Preview uploaded assets
+
+                # Xem trước asset đã tải lên
                 with st.expander(tr("action_transfer.assets.preview"), expanded=True):
-                    # Show in a grid (3 columns)
+                    # Hiển thị dạng lưới (3 cột)
                     cols = st.columns(3)
                     for i, (file, path) in enumerate(zip(uploaded_files, image_asset_paths)):
                         with cols[i % 3]:
-                            # Check if image
+                            # Kiểm tra là ảnh
                             ext = Path(path).suffix.lower()
                             if ext in [".jpg", ".jpeg", ".png", ".webp"]:
                                 st.image(file, caption=file.name, use_container_width=True)
@@ -199,7 +199,7 @@ class ActionTransferPipelineUI(PipelineUI):
 
             workflow_display = st.selectbox(
                 tr("action_transfer.workflow_select"),
-                workflow_options if workflow_options else ["No workflow found"],
+                workflow_options if workflow_options else ["Không tìm thấy workflow"],
                 index=default_workflow_index,
                 label_visibility="collapsed",
                 key="action_transfer_workflow_select"
@@ -210,10 +210,10 @@ class ActionTransferPipelineUI(PipelineUI):
                 workflow_key = workflow_keys[workflow_selected_index]
             else:
                 workflow_key = None
-            
-            # Check and warn for selfhost workflow (auto popup if not confirmed)
+
+            # Kiểm tra và cảnh báo cho workflow selfhost (tự hiện popup nếu chưa xác nhận)
             check_and_warn_selfhost_workflow(workflow_key)
-            
+
             return {
                 "image_assets": image_asset_paths,
                 "prompt_text": prompt_text,
@@ -221,11 +221,11 @@ class ActionTransferPipelineUI(PipelineUI):
                 }
 
     def _render_output_preview(self, pixelle_video: Any, video_params: dict):
-        """Render output preview section"""
+        """Render phần xem trước output"""
         with st.container(border=True):
             st.markdown(f"**{tr('section.video_generation')}**")
 
-            # Check configuration
+            # Kiểm tra cấu hình
             if not config_manager.validate():
                 st.warning(tr("settings.not_configured"))
             
@@ -284,9 +284,9 @@ class ActionTransferPipelineUI(PipelineUI):
                 try:
                     async def generate_audio_visual_video():
                         task_dir, task_id = create_task_output_dir()
-                        logger.info(f"[Initialization] Task Directory: {task_dir}")
+                        logger.info(f"[Khởi tạo] Thư mục task: {task_dir}")
                         kit = await pixelle_video._get_or_create_comfykit()
-                        
+
                         import json
                         from pathlib import Path
 
@@ -300,7 +300,7 @@ class ActionTransferPipelineUI(PipelineUI):
                         workflow_path = Path("workflows") / workflow_key
 
                         if not workflow_path.exists():
-                            raise Exception(f"The workflow file does not exist: {workflow_path}")
+                            raise Exception(f"File workflow không tồn tại: {workflow_path}")
 
                         with open(workflow_path, 'r', encoding='utf-8') as f:
                             workflow_config = json.load(f)
@@ -331,7 +331,7 @@ class ActionTransferPipelineUI(PipelineUI):
                                         break
 
                         if not generated_video_url:
-                            raise Exception("The workflow did not return a video. Please check the workflow configuration.")
+                            raise Exception("Workflow không trả về video. Vui lòng kiểm tra cấu hình workflow.")
 
                         final_video_path = os.path.join(task_dir, "final.mp4")
                         timeout = httpx.Timeout(300.0)
@@ -344,19 +344,19 @@ class ActionTransferPipelineUI(PipelineUI):
                         status_text.text(tr("status.success"))
                         return final_video_path
                     
-                    # Execute async generation
+                    # Thực thi sinh video bất đồng bộ
                     final_video_path = run_async(generate_audio_visual_video())
 
                     total_time = time.time() - start_time
                     progress_bar.progress(100)
                     status_text.text(tr("status.success"))
 
-                    # Display result
+                    # Hiển thị kết quả
                     st.success(tr("status.video_generated", path=final_video_path))
 
                     st.markdown("---")
 
-                    # Video info
+                    # Thông tin video
                     if os.path.exists(final_video_path):
                         file_size_mb = os.path.getsize(final_video_path) / (1024 * 1024)
                         info_text = (
@@ -367,15 +367,15 @@ class ActionTransferPipelineUI(PipelineUI):
 
                         st.markdown("---")
 
-                        # Video preview
+                        # Xem trước video
                         st.video(final_video_path)
 
-                        # Download button
+                        # Nút tải xuống
                         with open(final_video_path, "rb") as video_file:
                             video_bytes = video_file.read()
                             video_filename = os.path.basename(final_video_path)
                             st.download_button(
-                                label="⬇️ 下载视频" if get_language() == "zh_CN" else "⬇️ Download Video",
+                                label="⬇️ Tải video" if get_language() == "vi_VN" else ("⬇️ 下载视频" if get_language() == "zh_CN" else "⬇️ Download Video"),
                                 data=video_bytes,
                                 file_name=video_filename,
                                 mime="video/mp4",

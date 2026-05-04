@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Task data models
+Các model dữ liệu cho task
 """
 
 from datetime import datetime
@@ -21,7 +21,7 @@ from pydantic import BaseModel, Field
 
 
 class TaskStatus(str, Enum):
-    """Task status"""
+    """Trạng thái task"""
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -30,12 +30,12 @@ class TaskStatus(str, Enum):
 
 
 class TaskType(str, Enum):
-    """Task type"""
+    """Loại task"""
     VIDEO_GENERATION = "video_generation"
 
 
 class TaskProgress(BaseModel):
-    """Task progress information"""
+    """Thông tin tiến trình task"""
     current: int = 0
     total: int = 0
     percentage: float = 0.0
@@ -43,26 +43,26 @@ class TaskProgress(BaseModel):
 
 
 class Task(BaseModel):
-    """Task model"""
+    """Model task"""
     task_id: str
     task_type: TaskType
     status: TaskStatus = TaskStatus.PENDING
-    
-    # Progress tracking
+
+    # Theo dõi tiến trình
     progress: Optional[TaskProgress] = None
-    
-    # Result
+
+    # Kết quả
     result: Optional[Any] = None
     error: Optional[str] = None
-    
+
     # Metadata
     created_at: datetime = Field(default_factory=datetime.now)
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
-    
-    # Request parameters (for reference)
+
+    # Tham số request (để tham chiếu)
     request_params: Optional[dict] = None
-    
+
     class Config:
         json_encoders = {
             datetime: lambda v: v.isoformat()

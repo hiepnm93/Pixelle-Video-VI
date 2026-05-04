@@ -11,73 +11,72 @@
 # limitations under the License.
 
 """
-Title generation prompt
+Prompt sinh tiêu đề
 
-For generating video title from content.
+Dùng để sinh tiêu đề video từ nội dung.
 """
 
 
-TITLE_GENERATION_PROMPT = """Please generate a short, attractive title for the following content.
+TITLE_GENERATION_PROMPT = """Hãy tạo một tiêu đề ngắn gọn, hấp dẫn cho nội dung sau.
 
-Content:
+Nội dung:
 {content}
 
-Requirements:
-1. **Language Consistency (CRITICAL)**: The title MUST be in the same language as the input content
-   - If the input content is in English, the title MUST be in English
-   - If the input content is in Chinese, the title MUST be in Chinese
-   - Strictly follow the language of the input content
+Yêu cầu:
+1. **Nhất quán ngôn ngữ (QUAN TRỌNG)**: Tiêu đề PHẢI cùng ngôn ngữ với nội dung đầu vào
+   - Nếu nội dung đầu vào là tiếng Việt, tiêu đề PHẢI bằng tiếng Việt
+   - Nếu nội dung đầu vào là tiếng Anh, tiêu đề PHẢI bằng tiếng Anh
+   - Tuân thủ chặt chẽ ngôn ngữ của nội dung đầu vào
 
-2. **Character Limit (CRITICAL)**: The title MUST NOT exceed {max_length} characters
-   - Count every character including spaces
-   - The title must be complete and meaningful within this limit
-   - Do NOT generate a title that would need to be cut off
+2. **Giới hạn ký tự (QUAN TRỌNG)**: Tiêu đề KHÔNG ĐƯỢC vượt quá {max_length} ký tự
+   - Đếm mọi ký tự kể cả khoảng trắng
+   - Tiêu đề phải hoàn chỉnh và có nghĩa trong giới hạn này
+   - KHÔNG sinh tiêu đề bị cắt ngắn
 
-3. **Core Message (CRITICAL)**: The title MUST capture the MAIN POINT of the content
-   - Identify the central theme or key message
-   - Don't focus on just one aspect if the content has multiple important points
-   - Ensure the title accurately represents what the content is about
+3. **Thông điệp cốt lõi (QUAN TRỌNG)**: Tiêu đề PHẢI nắm bắt được Ý CHÍNH của nội dung
+   - Xác định chủ đề trung tâm hoặc thông điệp chính
+   - Đừng chỉ tập trung vào một khía cạnh nếu nội dung có nhiều điểm quan trọng
+   - Đảm bảo tiêu đề thể hiện chính xác nội dung là về cái gì
 
-4. **No Punctuation at End**: Do NOT include any punctuation marks at the end of the title
-   - No period (.), comma (,), exclamation mark (!), question mark (?), etc.
-   - The title should end with a word or number, not punctuation
+4. **Không có dấu câu ở cuối**: KHÔNG được có bất kỳ dấu câu nào ở cuối tiêu đề
+   - Không có dấu chấm (.), phẩy (,), chấm than (!), chấm hỏi (?), v.v.
+   - Tiêu đề phải kết thúc bằng một từ hoặc số, không phải dấu câu
 
-5. **Completeness**: Ensure the title is a complete, meaningful phrase
-   - Do not cut off in the middle of a word or number
-   - Do not create incomplete phrases like "Rise Early for" or "How to Make"
-   - Use abbreviations or shorter words if needed to fit the limit
-   
-6. **Abbreviation Examples** (use when needed to fit character limit):
-   - For English:
+5. **Tính hoàn chỉnh**: Đảm bảo tiêu đề là một cụm từ hoàn chỉnh, có nghĩa
+   - Không cắt giữa từ hoặc số
+   - Không tạo cụm từ chưa hoàn chỉnh như "Dậy sớm để" hoặc "Cách làm"
+   - Dùng từ viết tắt hoặc từ ngắn hơn nếu cần để vừa giới hạn
+
+6. **Ví dụ viết tắt** (dùng khi cần để vừa giới hạn ký tự):
+   - Cho tiếng Việt:
+     * "10.000 đồng" → "10K"
+     * "mỗi tháng" → "hàng tháng" hoặc "tháng"
+     * "dậy sớm để khoẻ mạnh" → "Thói quen sớm" hoặc "Sống khoẻ"
+   - Cho tiếng Anh:
      * "10,000" → "10K"
-     * "per month" → "monthly" or "a month"
-     * "early to bed and early to rise" → "Sleep Early" or "Early Habits"
-     * "makes you healthy" → "for Health" or "Stay Healthy"
-   - For Chinese:
-     * "10,000元" → "万元" or "1万"
-     * "每个月" → "月入" or "月收"
+     * "per month" → "monthly" hoặc "a month"
 
-7. Accurately summarize the core content
-8. Attractive and engaging, suitable as a video title
-9. Output only the title text, no quotes, no explanations
+7. Tóm tắt chính xác nội dung cốt lõi
+8. Hấp dẫn và lôi cuốn, phù hợp làm tiêu đề video
+9. Chỉ xuất văn bản tiêu đề, không có dấu ngoặc kép, không có giải thích
 
-Title:"""
+Tiêu đề:"""
 
 
 def build_title_generation_prompt(content: str, max_length: int = 15) -> str:
     """
-    Build title generation prompt
-    
+    Xây dựng prompt sinh tiêu đề
+
     Args:
-        content: Content to generate title from
-        max_length: Maximum title length in characters (default: 15)
-    
+        content: Nội dung để sinh tiêu đề
+        max_length: Độ dài tối đa của tiêu đề tính bằng ký tự (mặc định: 15)
+
     Returns:
-        Formatted prompt with character limit
+        Prompt đã định dạng kèm giới hạn ký tự
     """
-    # Take first 500 chars to avoid overly long prompts
+    # Lấy 500 ký tự đầu tiên để tránh prompt quá dài
     content_preview = content[:500]
-    
+
     return TITLE_GENERATION_PROMPT.format(
         content=content_preview,
         max_length=max_length

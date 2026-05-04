@@ -11,44 +11,44 @@
 # limitations under the License.
 
 """
-Asset-based video script generation prompt
+Prompt sinh kịch bản video dựa trên asset
 
-For generating video scripts based on user-provided assets.
+Dùng để sinh kịch bản video dựa trên các asset do người dùng cung cấp.
 """
 
 
-ASSET_SCRIPT_GENERATION_PROMPT = """You are a professional video script creator. Based on the user's video intent and available assets, generate a {duration}-second video script. Before doing so, you need to detect the user's input language - if it's English, then all copy must be in English. Strictly follow the user's input language type as the standard, ensuring consistent and corresponding copy!
+ASSET_SCRIPT_GENERATION_PROMPT = """Bạn là một nhà sáng tạo kịch bản video chuyên nghiệp. Dựa trên ý định video và các asset có sẵn của người dùng, hãy tạo một kịch bản video dài {duration} giây. Trước tiên, hãy phát hiện ngôn ngữ đầu vào của người dùng - mặc định là tiếng Việt nếu không có chỉ định khác. Tuân thủ chặt chẽ ngôn ngữ đầu vào, đảm bảo lời thoại nhất quán và tương ứng!
 
-## Requirements
-{title_section}- Video Intent: {intent}
-- Target Duration: {duration} seconds
+## Yêu cầu
+{title_section}- Ý định video: {intent}
+- Thời lượng mục tiêu: {duration} giây
 
-## Available Assets (use exact paths in output)
+## Asset có sẵn (dùng đúng đường dẫn trong output)
 {assets_text}
 
-## Creation Guidelines
-1. Strictly output copy according to the user's input language type - if input is English, output must be English, and so on
-2. Determine the number of scenes based on target duration (typically 5-15 seconds per scene)
-3. Assign one asset from available assets to each scene
-4. Each scene can contain 1-3 narration sentences
-5. Try to use all available assets, but assets can be reused if needed
-6. Total duration of all scenes should approximately equal {duration} seconds
+## Hướng dẫn sáng tạo
+1. Tuân thủ chặt chẽ ngôn ngữ đầu vào - nếu đầu vào là tiếng Việt, output phải là tiếng Việt, v.v.
+2. Xác định số cảnh dựa trên thời lượng mục tiêu (thông thường 5-15 giây mỗi cảnh)
+3. Gán một asset từ danh sách asset có sẵn cho mỗi cảnh
+4. Mỗi cảnh có thể chứa 1-3 câu thuyết minh
+5. Cố gắng sử dụng tất cả asset có sẵn, nhưng có thể dùng lại asset nếu cần
+6. Tổng thời lượng tất cả các cảnh phải xấp xỉ {duration} giây
 {title_instruction}
 
-## Language Consistency Requirements (Strictly Enforce)
-- Narration language must match the user's input video intent
-- If video intent is in Chinese, narration must be in Chinese
-- If video intent is in English, narration must be in English
-- Unless the video intent explicitly specifies an output language, strictly follow the original language of the intent
+## Yêu cầu nhất quán ngôn ngữ (bắt buộc thực thi nghiêm ngặt)
+- Ngôn ngữ thuyết minh phải khớp với ngôn ngữ ý định video do người dùng nhập
+- Nếu ý định video là tiếng Việt, thuyết minh phải bằng tiếng Việt
+- Nếu ý định video là tiếng Anh, thuyết minh phải bằng tiếng Anh
+- Trừ khi ý định video chỉ định rõ ngôn ngữ output, tuân thủ ngôn ngữ gốc của ý định
 
-## Output Requirements
-Provide for each scene:
-- scene_number: Scene number (starting from 1)
-- asset_path: Exact path selected from available assets list
-- narrations: Array containing 1-3 narration sentences
-- duration: Estimated duration (seconds)
+## Yêu cầu output
+Cung cấp cho mỗi cảnh:
+- scene_number: Số thứ tự cảnh (bắt đầu từ 1)
+- asset_path: Đường dẫn chính xác chọn từ danh sách asset có sẵn
+- narrations: Mảng chứa 1-3 câu thuyết minh
+- duration: Thời lượng ước tính (giây)
 
-Now please begin generating the video script:"""
+Bây giờ hãy bắt đầu sinh kịch bản video:"""
 
 
 def build_asset_script_prompt(
@@ -58,20 +58,20 @@ def build_asset_script_prompt(
     title: str = ""
 ) -> str:
     """
-    Build asset-based script generation prompt
-    
+    Xây dựng prompt sinh kịch bản dựa trên asset
+
     Args:
-        intent: Video intent/purpose
-        duration: Target duration in seconds
-        assets_text: Formatted text of available assets with descriptions
-        title: Optional video title
-    
+        intent: Ý định/mục đích video
+        duration: Thời lượng mục tiêu (giây)
+        assets_text: Văn bản đã định dạng của các asset có sẵn kèm mô tả
+        title: Tiêu đề video (tuỳ chọn)
+
     Returns:
-        Formatted prompt
+        Prompt đã định dạng
     """
-    title_section = f"- Video Title: {title}\n" if title else ""
-    title_instruction = f"6. Narration content should be consistent with the video title: {title}\n" if title else ""
-    
+    title_section = f"- Tiêu đề video: {title}\n" if title else ""
+    title_instruction = f"6. Nội dung thuyết minh phải nhất quán với tiêu đề video: {title}\n" if title else ""
+
     return ASSET_SCRIPT_GENERATION_PROMPT.format(
         duration=duration,
         title_section=title_section,

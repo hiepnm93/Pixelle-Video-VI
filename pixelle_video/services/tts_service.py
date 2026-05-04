@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-TTS (Text-to-Speech) Service - Supports both local and ComfyUI inference
+Service TTS (Text-to-Speech) - Hỗ trợ cả inference local và ComfyUI
 """
 
 import os
@@ -29,35 +29,35 @@ from pixelle_video.tts_voices import speed_to_rate
 
 class TTSService(ComfyBaseService):
     """
-    TTS (Text-to-Speech) service - Workflow-based
-    
-    Uses ComfyKit to execute TTS workflows.
-    
-    Usage:
-        # Use default workflow
-        audio_path = await pixelle_video.tts(text="Hello, world!")
-        
-        # Use specific workflow
+    Service TTS (Text-to-Speech) - Dựa trên Workflow
+
+    Dùng ComfyKit để thực thi các workflow TTS.
+
+    Cách dùng:
+        # Dùng workflow mặc định
+        audio_path = await pixelle_video.tts(text="Xin chào, thế giới!")
+
+        # Dùng workflow cụ thể
         audio_path = await pixelle_video.tts(
             text="你好，世界！",
             workflow="tts_edge.json"
         )
-        
-        # List available workflows
+
+        # Liệt kê các workflow có sẵn
         workflows = pixelle_video.tts.list_workflows()
     """
-    
+
     WORKFLOW_PREFIX = "tts_"
-    DEFAULT_WORKFLOW = None  # No hardcoded default, must be configured
+    DEFAULT_WORKFLOW = None  # Không có mặc định hardcode, phải được cấu hình
     WORKFLOWS_DIR = "workflows"
-    
+
     def __init__(self, config: dict, core=None):
         """
-        Initialize TTS service
-        
+        Khởi tạo service TTS
+
         Args:
-            config: Full application config dict
-            core: PixelleVideoCore instance (for accessing shared ComfyKit)
+            config: Dict cấu hình đầy đủ của ứng dụng
+            core: Instance PixelleVideoCore (để truy cập ComfyKit dùng chung)
         """
         super().__init__(config, service_name="tts", core=core)
     
@@ -79,42 +79,42 @@ class TTSService(ComfyBaseService):
         **params
     ) -> str:
         """
-        Generate speech using local Edge TTS or ComfyUI workflow
-        
+        Sinh giọng nói dùng Edge TTS local hoặc workflow ComfyUI
+
         Args:
-            text: Text to convert to speech
-            workflow: Workflow filename (for ComfyUI mode, default: from config)
-            comfyui_url: ComfyUI URL (optional, overrides config)
-            runninghub_api_key: RunningHub API key (optional, overrides config)
-            voice: Voice ID (for local mode: Edge TTS voice ID; for ComfyUI: workflow-specific)
-            speed: Speech speed multiplier (1.0 = normal, >1.0 = faster, <1.0 = slower)
-            inference_mode: Override inference mode ("local" or "comfyui", default: from config)
-            output_path: Custom output path (auto-generated if None)
-            **params: Additional workflow parameters
-        
+            text: Văn bản cần chuyển thành giọng nói
+            workflow: Tên file workflow (cho chế độ ComfyUI, mặc định: từ config)
+            comfyui_url: URL ComfyUI (tuỳ chọn, ghi đè config)
+            runninghub_api_key: API key RunningHub (tuỳ chọn, ghi đè config)
+            voice: ID giọng (chế độ local: voice ID Edge TTS; ComfyUI: theo workflow)
+            speed: Hệ số tốc độ đọc (1.0 = bình thường, >1.0 = nhanh hơn, <1.0 = chậm hơn)
+            inference_mode: Ghi đè chế độ inference ("local" hoặc "comfyui", mặc định: từ config)
+            output_path: Đường dẫn output tuỳ chỉnh (tự sinh nếu None)
+            **params: Tham số workflow bổ sung
+
         Returns:
-            Generated audio file path
-        
-        Examples:
-            # Local inference (Edge TTS)
+            Đường dẫn file audio đã sinh
+
+        Ví dụ:
+            # Inference local (Edge TTS)
             audio_path = await pixelle_video.tts(
-                text="Hello, world!",
+                text="Xin chào, thế giới!",
                 inference_mode="local",
                 voice="zh-CN-YunjianNeural",
                 speed=1.2
             )
-            
-            # ComfyUI inference
+
+            # Inference ComfyUI
             audio_path = await pixelle_video.tts(
                 text="你好，世界！",
                 inference_mode="comfyui",
                 workflow="runninghub/tts_edge.json"
             )
         """
-        # Determine inference mode (param > config)
+        # Xác định chế độ inference (tham số > config)
         mode = inference_mode or self.config.get("inference_mode", "local")
-        
-        # Route to appropriate implementation
+
+        # Định tuyến tới triển khai phù hợp
         if mode == "local":
             return await self._call_local_tts(
                 text=text,
@@ -123,10 +123,10 @@ class TTSService(ComfyBaseService):
                 output_path=output_path
             )
         else:  # comfyui
-            # 1. Resolve workflow (returns structured info)
+            # 1. Phân giải workflow (trả về thông tin có cấu trúc)
             workflow_info = self._resolve_workflow(workflow=workflow)
-            
-            # 2. Execute ComfyUI workflow
+
+            # 2. Thực thi workflow ComfyUI
             return await self._call_comfyui_workflow(
                 workflow_info=workflow_info,
                 text=text,
@@ -146,39 +146,39 @@ class TTSService(ComfyBaseService):
         output_path: Optional[str] = None,
     ) -> str:
         """
-        Generate speech using local Edge TTS
-        
+        Sinh giọng nói dùng Edge TTS local
+
         Args:
-            text: Text to convert to speech
-            voice: Edge TTS voice ID (default: from config)
-            speed: Speech speed multiplier (default: from config)
-            output_path: Custom output path (auto-generated if None)
-        
+            text: Văn bản cần chuyển thành giọng nói
+            voice: ID giọng Edge TTS (mặc định: từ config)
+            speed: Hệ số tốc độ đọc (mặc định: từ config)
+            output_path: Đường dẫn output tuỳ chỉnh (tự sinh nếu None)
+
         Returns:
-            Generated audio file path
+            Đường dẫn file audio đã sinh
         """
-        # Get config defaults
+        # Lấy mặc định từ config
         local_config = self.config.get("local", {})
-        
-        # Determine voice and speed (param > config)
+
+        # Xác định voice và speed (tham số > config)
         final_voice = voice or local_config.get("voice", "zh-CN-YunjianNeural")
         final_speed = speed if speed is not None else local_config.get("speed", 1.2)
-        
-        # Convert speed to rate parameter
+
+        # Chuyển speed sang tham số rate
         rate = speed_to_rate(final_speed)
-        
-        logger.info(f"🎙️  Using local Edge TTS: voice={final_voice}, speed={final_speed}x (rate={rate})")
-        
-        # Generate output path if not provided
+
+        logger.info(f"🎙️  Đang dùng Edge TTS local: voice={final_voice}, speed={final_speed}x (rate={rate})")
+
+        # Sinh đường dẫn output nếu chưa có
         if not output_path:
-            # Generate unique filename
+            # Sinh tên file duy nhất
             unique_id = uuid.uuid4().hex
             output_path = f"output/{unique_id}.mp3"
-            
-            # Ensure output directory exists
+
+            # Đảm bảo thư mục output tồn tại
             Path("output").mkdir(parents=True, exist_ok=True)
-        
-        # Call Edge TTS
+
+        # Gọi Edge TTS
         try:
             audio_bytes = await edge_tts(
                 text=text,
@@ -186,12 +186,12 @@ class TTSService(ComfyBaseService):
                 rate=rate,
                 output_path=output_path
             )
-            
-            logger.info(f"✅ Generated audio (local Edge TTS): {output_path}")
+
+            logger.info(f"✅ Đã sinh audio (Edge TTS local): {output_path}")
             return output_path
-        
+
         except Exception as e:
-            logger.error(f"Local TTS generation error: {e}")
+            logger.error(f"Lỗi sinh TTS local: {e}")
             raise
     
     async def _call_comfyui_workflow(
@@ -206,113 +206,113 @@ class TTSService(ComfyBaseService):
         **params
     ) -> str:
         """
-        Generate speech using ComfyUI workflow
-        
+        Sinh giọng nói dùng workflow ComfyUI
+
         Args:
-            workflow_info: Workflow info dict from _resolve_workflow()
-            text: Text to convert to speech
-            comfyui_url: ComfyUI URL
-            runninghub_api_key: RunningHub API key
-            voice: Voice ID (workflow-specific)
-            speed: Speech speed multiplier (workflow-specific)
-            output_path: Custom output path (downloads if URL returned)
-            **params: Additional workflow parameters
-        
+            workflow_info: Dict thông tin workflow từ _resolve_workflow()
+            text: Văn bản cần chuyển thành giọng nói
+            comfyui_url: URL ComfyUI
+            runninghub_api_key: API key RunningHub
+            voice: ID giọng (theo workflow)
+            speed: Hệ số tốc độ đọc (theo workflow)
+            output_path: Đường dẫn output tuỳ chỉnh (tải xuống nếu trả về URL)
+            **params: Tham số workflow bổ sung
+
         Returns:
-            Generated audio file path (local if output_path provided, otherwise URL)
+            Đường dẫn file audio đã sinh (local nếu có output_path, ngược lại là URL)
         """
-        logger.info(f"🎙️  Using workflow: {workflow_info['key']}")
-        
-        # 1. Build workflow parameters (ComfyKit config is now managed by core)
+        logger.info(f"🎙️  Đang dùng workflow: {workflow_info['key']}")
+
+        # 1. Xây dựng tham số workflow (cấu hình ComfyKit do core quản lý)
         workflow_params = {"text": text}
-        
-        # Add optional TTS parameters (only if explicitly provided and not None)
+
+        # Thêm tham số TTS tuỳ chọn (chỉ khi được cung cấp rõ ràng và không None)
         if voice is not None:
             workflow_params["voice"] = voice
         if speed is not None and speed != 1.0:
             workflow_params["speed"] = speed
-        
-        # Add any additional parameters
+
+        # Thêm các tham số bổ sung
         workflow_params.update(params)
-        
-        logger.debug(f"Workflow parameters: {workflow_params}")
-        
-        # 3. Execute workflow using shared ComfyKit instance from core
+
+        logger.debug(f"Tham số workflow: {workflow_params}")
+
+        # 3. Thực thi workflow dùng instance ComfyKit dùng chung từ core
         try:
-            # Get shared ComfyKit instance (lazy initialization + config hot-reload)
+            # Lấy instance ComfyKit dùng chung (khởi tạo lười + hot-reload config)
             kit = await self.core._get_or_create_comfykit()
-            
-            # Determine what to pass to ComfyKit based on source
+
+            # Xác định truyền gì cho ComfyKit dựa trên source
             if workflow_info["source"] == "runninghub" and "workflow_id" in workflow_info:
-                # RunningHub: pass workflow_id
+                # RunningHub: truyền workflow_id
                 workflow_input = workflow_info["workflow_id"]
-                logger.info(f"Executing RunningHub TTS workflow: {workflow_input}")
+                logger.info(f"Đang thực thi workflow TTS RunningHub: {workflow_input}")
             else:
-                # Selfhost: pass file path
+                # Selfhost: truyền đường dẫn file
                 workflow_input = workflow_info["path"]
-                logger.info(f"Executing selfhost TTS workflow: {workflow_input}")
-            
+                logger.info(f"Đang thực thi workflow TTS selfhost: {workflow_input}")
+
             result = await kit.execute(workflow_input, workflow_params)
-            
-            # 4. Handle result
+
+            # 4. Xử lý kết quả
             if result.status != "completed":
-                error_msg = result.msg or "Unknown error"
-                logger.error(f"TTS generation failed: {error_msg}")
-                raise Exception(f"TTS generation failed: {error_msg}")
-            
-            # ComfyKit result can have audio files in different output types
-            # Try to get audio file path from result
+                error_msg = result.msg or "Lỗi không xác định"
+                logger.error(f"Sinh TTS thất bại: {error_msg}")
+                raise Exception(f"Sinh TTS thất bại: {error_msg}")
+
+            # Kết quả ComfyKit có thể có file audio ở các loại output khác nhau
+            # Thử lấy đường dẫn file audio từ kết quả
             audio_path = None
-            
-            # Check for audio files in result.audios (if available)
+
+            # Kiểm tra file audio trong result.audios (nếu có)
             if hasattr(result, 'audios') and result.audios:
                 audio_path = result.audios[0]
-                logger.debug(f"✅ Found audio in result.audios: {audio_path}")
-            # Check for files in result.files
+                logger.debug(f"✅ Tìm thấy audio trong result.audios: {audio_path}")
+            # Kiểm tra file trong result.files
             elif hasattr(result, 'files') and result.files:
                 audio_path = result.files[0]
-                logger.debug(f"✅ Found audio in result.files: {audio_path}")
-            # Check in outputs dictionary
+                logger.debug(f"✅ Tìm thấy audio trong result.files: {audio_path}")
+            # Kiểm tra trong dictionary outputs
             elif hasattr(result, 'outputs') and result.outputs:
-                logger.debug(f"Searching for audio file in result.outputs: {result.outputs}")
-                # Try to find audio file in outputs
+                logger.debug(f"Đang tìm file audio trong result.outputs: {result.outputs}")
+                # Thử tìm file audio trong outputs
                 for key, value in result.outputs.items():
                     if isinstance(value, str) and any(value.endswith(ext) for ext in ['.mp3', '.wav', '.flac']):
                         audio_path = value
-                        logger.debug(f"✅ Found audio in result.outputs[{key}]: {audio_path}")
+                        logger.debug(f"✅ Tìm thấy audio trong result.outputs[{key}]: {audio_path}")
                         break
-            
+
             if not audio_path:
-                logger.error("No audio file generated")
-                logger.error(f"❌ Result analysis:")
+                logger.error("Không sinh được file audio")
+                logger.error(f"❌ Phân tích kết quả:")
                 logger.error(f"   - result.audios: {getattr(result, 'audios', 'NOT_FOUND')}")
                 logger.error(f"   - result.files: {getattr(result, 'files', 'NOT_FOUND')}")
                 logger.error(f"   - result.outputs: {getattr(result, 'outputs', 'NOT_FOUND')}")
-                logger.error(f"   - Full __dict__: {result.__dict__}")
-                raise Exception("No audio file generated by workflow")
-            
-            # If output_path provided and audio_path is URL, download to local
+                logger.error(f"   - __dict__ đầy đủ: {result.__dict__}")
+                raise Exception("Workflow không sinh được file audio")
+
+            # Nếu có output_path và audio_path là URL, tải về local
             if output_path and audio_path.startswith(('http://', 'https://')):
                 import httpx
                 import os
-                
-                # Ensure parent directory exists
+
+                # Đảm bảo thư mục cha tồn tại
                 os.makedirs(os.path.dirname(output_path), exist_ok=True)
-                
-                logger.info(f"Downloading audio from {audio_path} to {output_path}")
+
+                logger.info(f"Đang tải audio từ {audio_path} về {output_path}")
                 async with httpx.AsyncClient() as client:
                     response = await client.get(audio_path)
                     response.raise_for_status()
-                    
+
                     with open(output_path, 'wb') as f:
                         f.write(response.content)
-                
-                logger.info(f"✅ Generated audio (ComfyUI): {output_path}")
+
+                logger.info(f"✅ Đã sinh audio (ComfyUI): {output_path}")
                 return output_path
-            
-            logger.info(f"✅ Generated audio (ComfyUI): {audio_path}")
+
+            logger.info(f"✅ Đã sinh audio (ComfyUI): {audio_path}")
             return audio_path
-        
+
         except Exception as e:
-            logger.error(f"TTS generation error: {e}")
+            logger.error(f"Lỗi sinh TTS: {e}")
             raise

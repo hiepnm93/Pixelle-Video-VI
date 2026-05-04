@@ -13,17 +13,17 @@
 """
 Pixelle-Video Services
 
-Core services providing atomic capabilities.
+Các service core cung cấp các tính năng đơn vị.
 
 Services:
-- LLMService: LLM text generation
+- LLMService: Sinh văn bản bằng LLM
 - TTSService: Text-to-speech
-- MediaService: Media generation (image & video)
-- VideoService: Video processing
-- FrameProcessor: Frame processing orchestrator
-- PersistenceService: Task metadata and storyboard persistence
-- HistoryManager: History management business logic
-- ComfyBaseService: Base class for ComfyUI-based services
+- MediaService: Sinh media (ảnh & video)
+- VideoService: Xử lý video
+- FrameProcessor: Bộ điều phối xử lý frame
+- PersistenceService: Lưu trữ metadata task và storyboard
+- HistoryManager: Logic nghiệp vụ quản lý lịch sử
+- ComfyBaseService: Class cơ sở cho các service dựa trên ComfyUI
 """
 
 from pixelle_video.services.comfy_base_service import ComfyBaseService
@@ -35,7 +35,7 @@ from pixelle_video.services.frame_processor import FrameProcessor
 from pixelle_video.services.persistence import PersistenceService
 from pixelle_video.services.history_manager import HistoryManager
 
-# Backward compatibility alias
+# Alias để tương thích ngược
 ImageService = MediaService
 
 __all__ = [
@@ -43,7 +43,7 @@ __all__ = [
     "LLMService",
     "TTSService",
     "MediaService",
-    "ImageService",  # Backward compatibility
+    "ImageService",  # Tương thích ngược
     "VideoService",
     "FrameProcessor",
     "PersistenceService",

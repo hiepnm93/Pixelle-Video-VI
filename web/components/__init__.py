@@ -1,2 +1,2 @@
-"""UI components for web interface"""
+"""Các component UI cho giao diện web"""
 

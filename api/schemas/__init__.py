@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-API Schemas (Pydantic models)
+Schema của API (các model Pydantic)
 """
 
 from api.schemas.base import BaseResponse, ErrorResponse
@@ -33,7 +33,7 @@ from api.schemas.video import (
 )
 
 __all__ = [
-    # Base
+    # Cơ sở
     "BaseResponse",
     "ErrorResponse",
     # LLM
@@ -42,10 +42,10 @@ __all__ = [
     # TTS
     "TTSSynthesizeRequest",
     "TTSSynthesizeResponse",
-    # Image
+    # Ảnh
     "ImageGenerateRequest",
     "ImageGenerateResponse",
-    # Content
+    # Nội dung
     "NarrationGenerateRequest",
     "NarrationGenerateResponse",
     "ImagePromptGenerateRequest",

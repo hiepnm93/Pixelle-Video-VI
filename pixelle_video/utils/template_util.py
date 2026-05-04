@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Template utility functions for size parsing and template management
+Các hàm tiện ích Template để parse kích thước và quản lý template
 """
 
 import os
@@ -32,77 +32,77 @@ logger = logging.getLogger(__name__)
 
 def parse_template_size(template_path: str) -> Tuple[int, int]:
     """
-    Parse video size from template path
-    
+    Parse kích thước video từ đường dẫn template
+
     Args:
-        template_path: Template path like "templates/1080x1920/default.html"
-                      or "1080x1920/default.html"
-    
+        template_path: Đường dẫn template như "templates/1080x1920/default.html"
+                      hoặc "1080x1920/default.html"
+
     Returns:
-        Tuple of (width, height) in pixels
-    
+        Tuple (width, height) tính bằng pixel
+
     Raises:
-        ValueError: If template path format is invalid
-    
-    Examples:
+        ValueError: Nếu định dạng đường dẫn template không hợp lệ
+
+    Ví dụ:
         >>> parse_template_size("templates/1080x1920/default.html")
         (1080, 1920)
         >>> parse_template_size("1920x1080/modern.html")
         (1920, 1080)
     """
     path = Path(template_path)
-    
-    # Get parent directory name (should be like "1080x1920")
+
+    # Lấy tên thư mục cha (nên giống như "1080x1920")
     dir_name = path.parent.name
-    
-    # Special case: if parent is "templates", go up one more level
+
+    # Trường hợp đặc biệt: nếu cha là "templates", lên thêm một mức
     if dir_name == "templates":
-        # This shouldn't happen in new structure, but handle it
+        # Việc này không nên xảy ra trong cấu trúc mới, nhưng vẫn xử lý
         raise ValueError(
-            f"Invalid template path format: {template_path}. "
-            f"Expected format: 'WIDTHxHEIGHT/template.html' or 'templates/WIDTHxHEIGHT/template.html'"
+            f"Định dạng đường dẫn template không hợp lệ: {template_path}. "
+            f"Định dạng mong đợi: 'WIDTHxHEIGHT/template.html' hoặc 'templates/WIDTHxHEIGHT/template.html'"
         )
-    
-    # Parse size from directory name
+
+    # Parse kích thước từ tên thư mục
     if 'x' not in dir_name:
         raise ValueError(
-            f"Invalid size format in path: {template_path}. "
-            f"Directory name should be 'WIDTHxHEIGHT' (e.g., '1080x1920')"
+            f"Định dạng kích thước không hợp lệ trong đường dẫn: {template_path}. "
+            f"Tên thư mục phải là 'WIDTHxHEIGHT' (vd: '1080x1920')"
         )
-    
+
     try:
         width_str, height_str = dir_name.split('x')
         width = int(width_str)
         height = int(height_str)
-        
-        # Sanity check
+
+        # Kiểm tra hợp lý
         if width < 100 or height < 100 or width > 10000 or height > 10000:
-            raise ValueError(f"Invalid size dimensions: {width}x{height}")
-        
+            raise ValueError(f"Kích thước không hợp lệ: {width}x{height}")
+
         return (width, height)
     except ValueError as e:
         raise ValueError(
-            f"Failed to parse size from path: {template_path}. "
-            f"Expected format: 'WIDTHxHEIGHT/template.html' (e.g., '1080x1920/default.html'). "
-            f"Error: {e}"
+            f"Không thể parse kích thước từ đường dẫn: {template_path}. "
+            f"Định dạng mong đợi: 'WIDTHxHEIGHT/template.html' (vd: '1080x1920/default.html'). "
+            f"Lỗi: {e}"
         )
 
 
 def list_available_sizes() -> List[str]:
     """
-    List all available video sizes (merged from templates/ and data/templates/)
-    
+    Liệt kê tất cả kích thước video có sẵn (gộp từ templates/ và data/templates/)
+
     Returns:
-        List of size strings like ["1080x1920", "1920x1080", "1080x1080"]
-    
-    Examples:
+        Danh sách chuỗi kích thước như ["1080x1920", "1920x1080", "1080x1080"]
+
+    Ví dụ:
         >>> list_available_sizes()
         ['1080x1920', '1920x1080', '1080x1080']
     """
-    # Use new resource API to merge default and custom directories
+    # Dùng resource API mới để gộp thư mục mặc định và tuỳ chỉnh
     all_dirs = list_resource_dirs("templates")
-    
-    # Filter to only valid size formats (WIDTHxHEIGHT)
+
+    # Chỉ lọc các định dạng kích thước hợp lệ (WIDTHxHEIGHT)
     sizes = []
     for dir_name in all_dirs:
         if 'x' in dir_name:
@@ -112,131 +112,131 @@ def list_available_sizes() -> List[str]:
                 int(height)
                 sizes.append(dir_name)
             except (ValueError, AttributeError):
-                # Skip invalid directories
+                # Bỏ qua thư mục không hợp lệ
                 continue
-    
+
     return sorted(sizes)
 
 
 def list_templates_for_size(size: str) -> List[str]:
     """
-    List all templates available for a given size (merged from templates/ and data/templates/)
-    
+    Liệt kê tất cả template có sẵn cho một kích thước (gộp từ templates/ và data/templates/)
+
     Args:
-        size: Size string like "1080x1920"
-    
+        size: Chuỗi kích thước như "1080x1920"
+
     Returns:
-        List of template filenames (without path) like ["default.html", "modern.html"]
-    
-    Examples:
+        Danh sách tên file template (không kèm path) như ["default.html", "modern.html"]
+
+    Ví dụ:
         >>> list_templates_for_size("1080x1920")
         ['cartoon.html', 'default.html', 'elegant.html', 'modern.html', ...]
     """
-    # Use new resource API to merge default and custom templates
+    # Dùng resource API mới để gộp template mặc định và tuỳ chỉnh
     all_files = list_resource_files("templates", size)
-    
-    # Filter to only HTML files
+
+    # Chỉ lọc file HTML
     templates = [f for f in all_files if f.endswith('.html')]
-    
+
     return sorted(templates)
 
 
 def get_template_full_path(size: str, template_name: str) -> str:
     """
-    Get full template path from size and template name (checks data/templates/ first, then templates/)
-    
+    Lấy đường dẫn template đầy đủ từ kích thước và tên template (kiểm tra data/templates/ trước, sau đó templates/)
+
     Args:
-        size: Size string like "1080x1920"
-        template_name: Template filename like "default.html"
-    
+        size: Chuỗi kích thước như "1080x1920"
+        template_name: Tên file template như "default.html"
+
     Returns:
-        Full path like "templates/1080x1920/default.html" or "data/templates/1080x1920/default.html"
-    
+        Đường dẫn đầy đủ như "templates/1080x1920/default.html" hoặc "data/templates/1080x1920/default.html"
+
     Raises:
-        FileNotFoundError: If template file doesn't exist in either location
-    
-    Examples:
+        FileNotFoundError: Nếu file template không tồn tại ở cả hai vị trí
+
+    Ví dụ:
         >>> get_template_full_path("1080x1920", "default.html")
         'templates/1080x1920/default.html'
     """
-    # Use new resource API to search custom first, then default
+    # Dùng resource API mới để tìm tuỳ chỉnh trước, sau đó mặc định
     try:
         return get_resource_path("templates", size, template_name)
     except FileNotFoundError:
         available_templates = list_templates_for_size(size)
         raise FileNotFoundError(
-            f"Template not found: {size}/{template_name}\n"
-            f"Available templates for size {size}: {available_templates}"
+            f"Không tìm thấy template: {size}/{template_name}\n"
+            f"Template có sẵn cho kích thước {size}: {available_templates}"
         )
 
 
 class TemplateDisplayInfo(BaseModel):
-    """Template display information for UI layer"""
-    
-    name: str = Field(..., description="Template name without extension")
-    size: str = Field(..., description="Size string like '1080x1920'")
-    width: int = Field(..., description="Width in pixels")
-    height: int = Field(..., description="Height in pixels")
+    """Thông tin hiển thị template cho lớp UI"""
+
+    name: str = Field(..., description="Tên template không kèm phần mở rộng")
+    size: str = Field(..., description="Chuỗi kích thước như '1080x1920'")
+    width: int = Field(..., description="Chiều rộng tính bằng pixel")
+    height: int = Field(..., description="Chiều cao tính bằng pixel")
     orientation: Literal['portrait', 'landscape', 'square'] = Field(
-        ..., 
-        description="Video orientation"
+        ...,
+        description="Hướng video"
     )
     is_standard: bool = Field(
-        ..., 
-        description="True only for standard sizes: 1080x1920, 1920x1080, 1080x1080"
+        ...,
+        description="Chỉ True với các kích thước chuẩn: 1080x1920, 1920x1080, 1080x1080"
     )
 
 
 class TemplateInfo(BaseModel):
-    """Complete template information with path and display info"""
-    
-    template_path: str = Field(..., description="Full template path like '1080x1920/default.html'")
-    display_info: TemplateDisplayInfo = Field(..., description="Display information")
+    """Thông tin template hoàn chỉnh kèm đường dẫn và thông tin hiển thị"""
+
+    template_path: str = Field(..., description="Đường dẫn template đầy đủ như '1080x1920/default.html'")
+    display_info: TemplateDisplayInfo = Field(..., description="Thông tin hiển thị")
 
 
 def format_template_display_info(template_name: str, size: str) -> TemplateDisplayInfo:
     """
-    Format template display information for UI
-    
-    Returns structured data for UI layer to handle display and i18n.
-    
+    Định dạng thông tin hiển thị template cho UI
+
+    Trả về dữ liệu có cấu trúc để lớp UI xử lý hiển thị và i18n.
+
     Args:
-        template_name: Template filename like "default.html"
-        size: Size string like "1080x1920"
-    
+        template_name: Tên file template như "default.html"
+        size: Chuỗi kích thước như "1080x1920"
+
     Returns:
-        TemplateDisplayInfo object with name, size, dimensions, orientation, and standard flag
-    
-    Examples:
+        Object TemplateDisplayInfo kèm tên, kích thước, chiều, hướng và cờ chuẩn
+
+    Ví dụ:
         >>> info = format_template_display_info("default.html", "1080x1920")
         >>> info.name
         'default'
         >>> info.is_standard
         True
-        
+
         >>> info = format_template_display_info("custom.html", "1080x1921")
         >>> info.orientation
         'portrait'
         >>> info.is_standard
         False
     """
-    # Keep full template name with .html extension
+    # Giữ tên template đầy đủ kèm phần mở rộng .html
     name = template_name
-    
-    # Parse size
+
+    # Parse kích thước
     width, height = map(int, size.split('x'))
-    
-    # Detect orientation
+
+    # Phát hiện hướng
     if height > width:
         orientation = 'portrait'
     elif width > height:
         orientation = 'landscape'
     else:
         orientation = 'square'
-    
-    # Check if it's a standard size (only these three)
+
+    # Kiểm tra có phải kích thước chuẩn không (chỉ ba cái này)
     is_standard = (width, height) in [(1080, 1920), (1920, 1080), (1080, 1080)]
-    
+
     return TemplateDisplayInfo(
         name=name,
         size=size,
@@ -249,17 +249,17 @@ def format_template_display_info(template_name: str, size: str) -> TemplateDispl
 
 def get_all_templates_with_info() -> List[TemplateInfo]:
     """
-    Get all templates with their display information
-    
+    Lấy tất cả template kèm thông tin hiển thị
+
     Returns:
-        List of TemplateInfo objects
-    
-    Example:
+        Danh sách object TemplateInfo
+
+    Ví dụ:
         >>> templates = get_all_templates_with_info()
         >>> for t in templates:
         ...     print(f"{t.display_info.name} - {t.display_info.orientation}")
-        ...     print(f"  Path: {t.template_path}")
-        ...     print(f"  Standard: {t.display_info.is_standard}")
+        ...     print(f"  Đường dẫn: {t.template_path}")
+        ...     print(f"  Chuẩn: {t.display_info.is_standard}")
     """
     result = []
     sizes = list_available_sizes()
@@ -279,16 +279,16 @@ def get_all_templates_with_info() -> List[TemplateInfo]:
 
 def get_templates_grouped_by_size() -> dict:
     """
-    Get templates grouped by size
-    
+    Lấy template được nhóm theo kích thước
+
     Returns:
-        Dict with size as key, list of TemplateInfo as value
-        Ordered by orientation priority: portrait > landscape > square
-    
-    Example:
+        Dict với key là kích thước, value là danh sách TemplateInfo
+        Sắp xếp theo ưu tiên hướng: portrait > landscape > square
+
+    Ví dụ:
         >>> grouped = get_templates_grouped_by_size()
         >>> for size, templates in grouped.items():
-        ...     print(f"Size: {size}")
+        ...     print(f"Kích thước: {size}")
         ...     for t in templates:
         ...         print(f"  - {t.display_info.name}")
     """
@@ -315,23 +315,23 @@ def get_templates_grouped_by_size() -> dict:
 
 def resolve_template_path(template_input: Optional[str]) -> str:
     """
-    Resolve template input to full path with validation (checks data/templates/ first, then templates/)
-    
+    Phân giải input template thành đường dẫn đầy đủ kèm xác thực (kiểm tra data/templates/ trước, sau đó templates/)
+
     Args:
-        template_input: Can be:
-            - None: Use default "1080x1920/image_default.html"
-            - "template.html": Use default size + this template
-            - "1080x1920/template.html": Full relative path
-            - "templates/1080x1920/template.html": Absolute-ish path (legacy)
-            - "data/templates/1080x1920/template.html": Custom path (legacy)
-    
+        template_input: Có thể là:
+            - None: Dùng mặc định "1080x1920/image_default.html"
+            - "template.html": Dùng kích thước mặc định + template này
+            - "1080x1920/template.html": Đường dẫn tương đối đầy đủ
+            - "templates/1080x1920/template.html": Đường dẫn dạng tuyệt đối (cũ)
+            - "data/templates/1080x1920/template.html": Đường dẫn tuỳ chỉnh (cũ)
+
     Returns:
-        Resolved full path (custom if exists, otherwise default)
-    
+        Đường dẫn đầy đủ đã phân giải (tuỳ chỉnh nếu có, ngược lại là mặc định)
+
     Raises:
-        FileNotFoundError: If template doesn't exist in either location
-    
-    Examples:
+        FileNotFoundError: Nếu template không tồn tại ở cả hai vị trí
+
+    Ví dụ:
         >>> resolve_template_path(None)
         'templates/1080x1920/image_default.html'
         >>> resolve_template_path("image_modern.html")
@@ -339,69 +339,69 @@ def resolve_template_path(template_input: Optional[str]) -> str:
         >>> resolve_template_path("1920x1080/image_default.html")
         'templates/1920x1080/image_default.html'
     """
-    # Default case
+    # Trường hợp mặc định
     if template_input is None:
         template_input = "1080x1920/image_default.html"
-    
-    # Parse input to extract size and template name
+
+    # Parse input để trích xuất kích thước và tên template
     size = None
     template_name = None
-    
-    # Handle different input formats
+
+    # Xử lý các định dạng input khác nhau
     if template_input.startswith("templates/") or template_input.startswith("data/templates/"):
-        # Legacy full path format - extract size and name
+        # Định dạng đường dẫn đầy đủ cũ - trích xuất kích thước và tên
         parts = Path(template_input).parts
         if len(parts) >= 3:
             size = parts[-2]
             template_name = parts[-1]
     elif '/' in template_input and 'x' in template_input.split('/')[0]:
-        # "1080x1920/template.html" format
+        # Định dạng "1080x1920/template.html"
         size, template_name = template_input.split('/', 1)
     else:
-        # Just template name - use default size
+        # Chỉ tên template - dùng kích thước mặc định
         size = "1080x1920"
         template_name = template_input
-    
-    # Backward compatibility: migrate "default.html" to "image_default.html"
+
+    # Tương thích ngược: chuyển "default.html" sang "image_default.html"
     if template_name == "default.html":
         migrated_name = "image_default.html"
         try:
-            # Try migrated name first
+            # Thử tên đã chuyển trước
             path = get_resource_path("templates", size, migrated_name)
-            logger.info(f"Backward compatibility: migrated '{template_input}' to '{size}/{migrated_name}'")
+            logger.info(f"Tương thích ngược: đã chuyển '{template_input}' thành '{size}/{migrated_name}'")
             return path
         except FileNotFoundError:
-            # Fall through to try original name
-            logger.warning(f"Migrated template '{size}/{migrated_name}' not found, trying original name")
-    
-    # Use resource API to resolve path (custom > default)
+            # Rơi xuống thử tên gốc
+            logger.warning(f"Không tìm thấy template đã chuyển '{size}/{migrated_name}', đang thử tên gốc")
+
+    # Dùng resource API để phân giải đường dẫn (tuỳ chỉnh > mặc định)
     try:
         return get_resource_path("templates", size, template_name)
     except FileNotFoundError:
         available_sizes = list_available_sizes()
         raise FileNotFoundError(
-            f"Template not found: {size}/{template_name}\n"
-            f"Available sizes: {available_sizes}\n"
-            f"Hint: Use format 'SIZExSIZE/template.html' (e.g., '1080x1920/image_default.html')"
+            f"Không tìm thấy template: {size}/{template_name}\n"
+            f"Kích thước có sẵn: {available_sizes}\n"
+            f"Gợi ý: Dùng định dạng 'SIZExSIZE/template.html' (vd: '1080x1920/image_default.html')"
         )
 
 
 def get_template_type(template_name: str) -> Literal['static', 'image', 'video']:
     """
-    Detect template type from template filename
-    
-    Template naming convention:
-    - static_*.html: Static style templates (no AI-generated media)
-    - image_*.html: Templates requiring AI-generated images
-    - video_*.html: Templates requiring AI-generated videos
-    
+    Phát hiện loại template từ tên file template
+
+    Quy ước đặt tên template:
+    - static_*.html: Template phong cách tĩnh (không có media sinh bằng AI)
+    - image_*.html: Template yêu cầu ảnh sinh bằng AI
+    - video_*.html: Template yêu cầu video sinh bằng AI
+
     Args:
-        template_name: Template filename like "image_default.html" or "video_simple.html"
-    
+        template_name: Tên file template như "image_default.html" hoặc "video_simple.html"
+
     Returns:
-        Template type: 'static', 'image', or 'video'
-    
-    Examples:
+        Loại template: 'static', 'image', hoặc 'video'
+
+    Ví dụ:
         >>> get_template_type("static_simple.html")
         'static'
         >>> get_template_type("image_default.html")
@@ -410,7 +410,7 @@ def get_template_type(template_name: str) -> Literal['static', 'image', 'video']
         'video'
     """
     name = Path(template_name).name
-    
+
     if name.startswith("static_"):
         return "static"
     elif name.startswith("video_"):
@@ -418,29 +418,29 @@ def get_template_type(template_name: str) -> Literal['static', 'image', 'video']
     elif name.startswith("image_"):
         return "image"
     else:
-        # Fallback: try to detect from legacy names
+        # Dự phòng: thử phát hiện từ tên cũ
         logger.warning(
-            f"Template '{template_name}' doesn't follow naming convention (static_/image_/video_). "
-            f"Defaulting to 'image' type."
+            f"Template '{template_name}' không tuân theo quy ước đặt tên (static_/image_/video_). "
+            f"Mặc định về loại 'image'."
         )
         return "image"
 
 
 def filter_templates_by_type(
-    templates: List[TemplateInfo], 
+    templates: List[TemplateInfo],
     template_type: Literal['static', 'image', 'video']
 ) -> List[TemplateInfo]:
     """
-    Filter templates by type
-    
+    Lọc template theo loại
+
     Args:
-        templates: List of TemplateInfo objects
-        template_type: Type to filter by ('static', 'image', or 'video')
-    
+        templates: Danh sách object TemplateInfo
+        template_type: Loại để lọc ('static', 'image', hoặc 'video')
+
     Returns:
-        Filtered list of TemplateInfo objects
-    
-    Examples:
+        Danh sách TemplateInfo đã lọc
+
+    Ví dụ:
         >>> all_templates = get_all_templates_with_info()
         >>> image_templates = filter_templates_by_type(all_templates, 'image')
         >>> len(image_templates) > 0
@@ -458,20 +458,20 @@ def get_templates_grouped_by_size_and_type(
     template_type: Optional[Literal['static', 'image', 'video']] = None
 ) -> dict:
     """
-    Get templates grouped by size, optionally filtered by type
-    
+    Lấy template được nhóm theo kích thước, có thể lọc theo loại
+
     Args:
-        template_type: Optional type filter ('static', 'image', or 'video')
-    
+        template_type: Bộ lọc loại tuỳ chọn ('static', 'image', hoặc 'video')
+
     Returns:
-        Dict with size as key, list of TemplateInfo as value
-        Ordered by orientation priority: portrait > landscape > square
-    
-    Examples:
-        >>> # Get all templates
+        Dict với key là kích thước, value là danh sách TemplateInfo
+        Sắp xếp theo ưu tiên hướng: portrait > landscape > square
+
+    Ví dụ:
+        >>> # Lấy tất cả template
         >>> all_grouped = get_templates_grouped_by_size_and_type()
-        
-        >>> # Get only image templates
+
+        >>> # Chỉ lấy template image
         >>> image_grouped = get_templates_grouped_by_size_and_type('image')
     """
     from collections import defaultdict

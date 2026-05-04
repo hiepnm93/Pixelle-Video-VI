@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Style configuration components for web UI (middle column)
+Component cấu hình style cho web UI (cột giữa)
 """
 
 import os
@@ -27,23 +27,23 @@ from pixelle_video.config import config_manager
 
 
 def render_style_config(pixelle_video):
-    """Render style configuration section (middle column)"""
-    # TTS Section (moved from left column)
+    """Render phần cấu hình style (cột giữa)"""
+    # Phần TTS (chuyển từ cột trái sang)
     # ====================================================================
     with st.container(border=True):
         st.markdown(f"**{tr('section.tts')}**")
-        
+
         with st.expander(tr("help.feature_description"), expanded=False):
             st.markdown(f"**{tr('help.what')}**")
             st.markdown(tr("tts.what"))
             st.markdown(f"**{tr('help.how')}**")
             st.markdown(tr("tts.how"))
-        
-        # Get TTS config
+
+        # Lấy cấu hình TTS
         comfyui_config = config_manager.get_comfyui_config()
         tts_config = comfyui_config["tts"]
-        
-        # Inference mode selection
+
+        # Chọn chế độ inference
         tts_mode = st.radio(
             tr("tts.inference_mode"),
             ["local", "comfyui"],
@@ -52,58 +52,58 @@ def render_style_config(pixelle_video):
             index=0 if tts_config.get("inference_mode", "local") == "local" else 1,
             key="tts_inference_mode"
         )
-        
-        # Show hint based on mode
+
+        # Hiển thị gợi ý theo chế độ
         if tts_mode == "local":
             st.caption(tr("tts.mode.local_hint"))
         else:
             st.caption(tr("tts.mode.comfyui_hint"))
-        
+
         # ================================================================
-        # Local Mode UI
+        # UI cho chế độ Local
         # ================================================================
         if tts_mode == "local":
-            # Import voice configuration
+            # Import cấu hình giọng đọc
             from pixelle_video.tts_voices import EDGE_TTS_VOICES, get_voice_display_name
-            
-            # Get saved voice from config
+
+            # Lấy giọng đã lưu trong config
             local_config = tts_config.get("local", {})
             saved_voice = local_config.get("voice", "zh-CN-YunjianNeural")
             saved_speed = local_config.get("speed", 1.2)
-            
-            # Build voice options with i18n
+
+            # Xây danh sách lựa chọn giọng kèm i18n
             voice_options = []
             voice_ids = []
             default_voice_index = 0
-            
+
             for idx, voice_config in enumerate(EDGE_TTS_VOICES):
                 voice_id = voice_config["id"]
                 display_name = get_voice_display_name(voice_id, tr, get_language())
                 voice_options.append(display_name)
                 voice_ids.append(voice_id)
-                
-                # Set default index if matches saved voice
+
+                # Đặt index mặc định nếu khớp với giọng đã lưu
                 if voice_id == saved_voice:
                     default_voice_index = idx
-            
-            # Two-column layout: Voice | Speed
+
+            # Bố cục hai cột: Giọng | Tốc độ
             voice_col, speed_col = st.columns([1, 1])
-            
+
             with voice_col:
-                # Voice selector
+                # Bộ chọn giọng
                 selected_voice_display = st.selectbox(
                     tr("tts.voice_selector"),
                     voice_options,
                     index=default_voice_index,
                     key="tts_local_voice"
                 )
-                
-                # Get actual voice ID
+
+                # Lấy ID giọng thực tế
                 selected_voice_index = voice_options.index(selected_voice_display)
                 selected_voice = voice_ids[selected_voice_index]
-            
+
             with speed_col:
-                # Speed slider
+                # Thanh trượt tốc độ
                 tts_speed = st.slider(
                     tr("tts.speed"),
                     min_value=0.5,
@@ -114,93 +114,93 @@ def render_style_config(pixelle_video):
                     key="tts_local_speed"
                 )
                 st.caption(tr("tts.speed_label", speed=f"{tts_speed:.1f}"))
-            
-            # Variables for video generation
+
+            # Biến cho việc sinh video
             tts_workflow_key = None
             ref_audio_path = None
-        
+
         # ================================================================
-        # ComfyUI Mode UI
+        # UI cho chế độ ComfyUI
         # ================================================================
-        else:  # comfyui mode
-            # Get available TTS workflows
+        else:  # chế độ comfyui
+            # Lấy danh sách TTS workflow khả dụng
             tts_workflows = pixelle_video.tts.list_workflows()
-            
-            # Build options for selectbox
+
+            # Xây danh sách lựa chọn cho selectbox
             tts_workflow_options = [wf["display_name"] for wf in tts_workflows]
             tts_workflow_keys = [wf["key"] for wf in tts_workflows]
-            
-            # Default to saved workflow if exists
+
+            # Mặc định lấy workflow đã lưu nếu có
             default_tts_index = 0
             saved_tts_workflow = tts_config.get("comfyui", {}).get("default_workflow")
             if saved_tts_workflow and saved_tts_workflow in tts_workflow_keys:
                 default_tts_index = tts_workflow_keys.index(saved_tts_workflow)
-            
+
             tts_workflow_display = st.selectbox(
                 "TTS Workflow",
-                tts_workflow_options if tts_workflow_options else ["No TTS workflows found"],
+                tts_workflow_options if tts_workflow_options else ["Không tìm thấy TTS workflow"],
                 index=default_tts_index,
                 label_visibility="collapsed",
                 key="tts_workflow_select"
             )
-            
-            # Get the actual workflow key
+
+            # Lấy key workflow thực tế
             if tts_workflow_options:
                 tts_selected_index = tts_workflow_options.index(tts_workflow_display)
                 tts_workflow_key = tts_workflow_keys[tts_selected_index]
             else:
-                tts_workflow_key = "selfhost/tts_edge.json"  # fallback
-            
-            # Check and warn for selfhost TTS workflow (auto popup if not confirmed)
+                tts_workflow_key = "selfhost/tts_edge.json"  # giá trị fallback
+
+            # Kiểm tra và cảnh báo cho TTS workflow selfhost (tự động hiện popup nếu chưa xác nhận)
             check_and_warn_selfhost_workflow(tts_workflow_key)
-            
-            # Reference audio upload (optional, for voice cloning)
+
+            # Tải lên audio tham chiếu (tuỳ chọn, dùng để clone giọng)
             ref_audio_file = st.file_uploader(
                 tr("tts.ref_audio"),
                 type=["mp3", "wav", "flac", "m4a", "aac", "ogg"],
                 help=tr("tts.ref_audio_help"),
                 key="ref_audio_upload"
             )
-            
-            # Save uploaded ref_audio to temp file if provided
+
+            # Lưu ref_audio đã tải lên vào file tạm nếu có
             ref_audio_path = None
             if ref_audio_file is not None:
-                # Audio preview player (directly play uploaded file)
+                # Trình phát nghe thử (phát trực tiếp file vừa upload)
                 st.audio(ref_audio_file)
-                
-                # Save to temp directory
+
+                # Lưu vào thư mục tạm
                 temp_dir = Path("temp")
                 temp_dir.mkdir(exist_ok=True)
                 ref_audio_path = temp_dir / f"ref_audio_{ref_audio_file.name}"
                 with open(ref_audio_path, "wb") as f:
                     f.write(ref_audio_file.getbuffer())
-            
-            # Variables for video generation
+
+            # Biến cho việc sinh video
             selected_voice = None
             tts_speed = None
-        
+
         # ================================================================
-        # TTS Preview (works for both modes)
+        # Nghe thử TTS (dùng được cho cả hai chế độ)
         # ================================================================
         with st.expander(tr("tts.preview_title"), expanded=False):
-            # Preview text input
+            # Ô nhập text để nghe thử
             preview_text = st.text_input(
                 tr("tts.preview_text"),
-                value="大家好，这是一段测试语音。",
+                value="Xin chào mọi người, đây là một đoạn giọng nói thử nghiệm.",
                 placeholder=tr("tts.preview_text_placeholder"),
                 key="tts_preview_text"
             )
-            
-            # Preview button
+
+            # Nút nghe thử
             if st.button(tr("tts.preview_button"), key="preview_tts", use_container_width=True):
                 with st.spinner(tr("tts.previewing")):
                     try:
-                        # Build TTS params based on mode
+                        # Xây tham số TTS theo chế độ
                         tts_params = {
                             "text": preview_text,
                             "inference_mode": tts_mode
                         }
-                        
+
                         if tts_mode == "local":
                             tts_params["voice"] = selected_voice
                             tts_params["speed"] = tts_speed
@@ -208,10 +208,10 @@ def render_style_config(pixelle_video):
                             tts_params["workflow"] = tts_workflow_key
                             if ref_audio_path:
                                 tts_params["ref_audio"] = str(ref_audio_path)
-                        
+
                         audio_path = run_async(pixelle_video.tts(**tts_params))
-                        
-                        # Play the audio
+
+                        # Phát audio
                         if audio_path:
                             st.success(tr("tts.preview_success"))
                             if os.path.exists(audio_path):
@@ -219,216 +219,216 @@ def render_style_config(pixelle_video):
                             elif audio_path.startswith('http'):
                                 st.audio(audio_path)
                             else:
-                                st.error("Failed to generate preview audio")
-                            
-                            # Show file path
+                                st.error("Không thể sinh audio xem trước")
+
+                            # Hiển thị đường dẫn file
                             st.caption(f"📁 {audio_path}")
                         else:
-                            st.error("Failed to generate preview audio")
+                            st.error("Không thể sinh audio xem trước")
                     except Exception as e:
                         st.error(tr("tts.preview_failed", error=str(e)))
                         logger.exception(e)
     
     # ====================================================================
-    # Storyboard Template Section
+    # Phần Storyboard Template
     # ====================================================================
-    
+
     def get_template_preview_path(template_path: str, language: str = "zh_CN") -> str:
         """
-        Get the preview image path for a template based on language.
-        
+        Lấy đường dẫn ảnh xem trước cho một template theo ngôn ngữ.
+
         Args:
-            template_path: Template path like "1080x1920/image_default.html"
-            language: Language code, either "zh_CN" or "en"
-            
+            template_path: Đường dẫn template như "1080x1920/image_default.html"
+            language: Mã ngôn ngữ, "zh_CN" hoặc "en"
+
         Returns:
-            Path to preview image in docs/images/
+            Đường dẫn ảnh xem trước trong docs/images/
         """
-        # Extract size and template name from path
-        # e.g., "1080x1920/image_default.html" -> size="1080x1920", name="image_default"
+        # Trích xuất kích thước và tên template từ đường dẫn
+        # ví dụ: "1080x1920/image_default.html" -> size="1080x1920", name="image_default"
         path_parts = template_path.split('/')
         if len(path_parts) >= 2:
-            size = path_parts[0]  # e.g., "1080x1920"
-            template_file = path_parts[1]  # e.g., "image_default.html"
-            template_name = template_file.replace('.html', '')  # e.g., "image_default"
-            
-            # Build preview image path
-            # Format: docs/images/{size}/{template_name}.jpg or {template_name}_en.jpg
-            # Chinese uses Chinese preview, all other languages use English preview for better i18n
+            size = path_parts[0]  # ví dụ: "1080x1920"
+            template_file = path_parts[1]  # ví dụ: "image_default.html"
+            template_name = template_file.replace('.html', '')  # ví dụ: "image_default"
+
+            # Xây đường dẫn ảnh xem trước
+            # Định dạng: docs/images/{size}/{template_name}.jpg hoặc {template_name}_en.jpg
+            # Tiếng Trung dùng preview tiếng Trung, các ngôn ngữ khác dùng preview tiếng Anh để hỗ trợ i18n tốt hơn
             suffix = "" if language == "zh_CN" else "_en"
-            
-            # Try different image extensions
+
+            # Thử các phần mở rộng ảnh khác nhau
             for ext in ['.jpg', '.png']:
                 preview_path = f"docs/images/{size}/{template_name}{suffix}{ext}"
                 if os.path.exists(preview_path):
                     return preview_path
-            
-            # Fallback: try without language suffix (for templates with only one version)
+
+            # Phương án dự phòng: thử không kèm hậu tố ngôn ngữ (cho template chỉ có một phiên bản)
             for ext in ['.jpg', '.png']:
                 preview_path = f"docs/images/{size}/{template_name}{ext}"
                 if os.path.exists(preview_path):
                     return preview_path
-        
-        # If no preview found, return empty string
+
+        # Nếu không tìm thấy preview, trả về chuỗi rỗng
         return ""
     
     with st.container(border=True):
         st.markdown(f"**{tr('section.template')}**")
-        
+
         with st.expander(tr("help.feature_description"), expanded=False):
             st.markdown(f"**{tr('help.what')}**")
             st.markdown(tr("template.what"))
             st.markdown(f"**{tr('help.how')}**")
             st.markdown(tr("template.how"))
-        
-        # Template preview link (based on language)
+
+        # Liên kết xem trước template (theo ngôn ngữ)
         current_lang = get_language()
-        
-        # Import template utilities
+
+        # Import các tiện ích template
         from pixelle_video.utils.template_util import get_templates_grouped_by_size_and_type, get_template_type
-        
-        # Template type selector
+
+        # Bộ chọn loại template
         st.markdown(f"**{tr('template.type_selector')}**")
-        
+
         template_type_options = {
             'static': tr('template.type.static'),
             'image': tr('template.type.image'),
             'video': tr('template.type.video')
         }
-        
-        # Radio buttons in horizontal layout
+
+        # Radio button bố cục ngang
         selected_template_type = st.radio(
             tr('template.type_selector'),
             options=list(template_type_options.keys()),
             format_func=lambda x: template_type_options[x],
-            index=1,  # Default to 'image'
+            index=1,  # Mặc định 'image'
             key="template_type_selector",
             label_visibility="collapsed",
             horizontal=True
         )
-        
-        # Display hint based on selected type (below radio buttons)
+
+        # Hiển thị gợi ý theo loại đã chọn (bên dưới radio button)
         if selected_template_type == 'static':
             st.info(tr('template.type.static_hint'))
         elif selected_template_type == 'image':
             st.info(tr('template.type.image_hint'))
         elif selected_template_type == 'video':
             st.info(tr('template.type.video_hint'))
-        
-        # Get templates grouped by size, filtered by selected type
+
+        # Lấy template đã nhóm theo kích thước, lọc theo loại đã chọn
         grouped_templates = get_templates_grouped_by_size_and_type(selected_template_type)
-        
+
         if not grouped_templates:
-            st.warning(f"No {template_type_options[selected_template_type]} templates found. Please select a different type or add templates.")
+            st.warning(f"Không tìm thấy template loại {template_type_options[selected_template_type]}. Vui lòng chọn loại khác hoặc thêm template.")
             st.stop()
-        
-        # Build orientation i18n mapping
+
+        # Xây mapping i18n cho hướng
         ORIENTATION_I18N = {
             'portrait': tr('orientation.portrait'),
             'landscape': tr('orientation.landscape'),
             'square': tr('orientation.square')
         }
-        
-        # Get default template from config
+
+        # Lấy template mặc định từ config
         template_config = pixelle_video.config.get("template", {})
         config_default_template = template_config.get("default_template", "1080x1920/image_default.html")
 
-        # Backward compatibility
+        # Tương thích ngược
         if config_default_template == "1080x1920/default.html":
             config_default_template = "1080x1920/image_default.html"
-        
-        # Determine type-specific default template
+
+        # Xác định template mặc định theo từng loại
         type_default_templates = {
             'static': '1080x1920/static_default.html',
             'image': '1080x1920/image_default.html',
             'video': '1080x1920/video_default.html'
         }
         type_specific_default = type_default_templates.get(selected_template_type, config_default_template)
-        
-        # Initialize selected template in session state if not exists
+
+        # Khởi tạo template đã chọn trong session state nếu chưa có
         if 'selected_template' not in st.session_state:
             st.session_state['selected_template'] = type_specific_default
-        
-        # Track last selected template type to detect type changes
+
+        # Theo dõi loại template được chọn lần cuối để phát hiện thay đổi loại
         last_template_type = st.session_state.get('last_template_type', None)
         if last_template_type != selected_template_type:
-            # Template type changed, reset to type-specific default
+            # Loại template đã đổi, reset về mặc định theo loại
             st.session_state['selected_template'] = type_specific_default
             st.session_state['last_template_type'] = selected_template_type
-        
-        # Collect size groups and prepare tabs
+
+        # Thu thập các nhóm kích thước và chuẩn bị tab
         size_groups = []
         size_labels = []
-        
+
         for size, templates in grouped_templates.items():
             if not templates:
                 continue
-            
-            # Filter templates to only include those with proper naming convention
-            # Only show templates starting with static_, image_, or video_
+
+            # Lọc template chỉ giữ những template có quy ước đặt tên đúng
+            # Chỉ hiện template bắt đầu bằng static_, image_, hoặc video_
             valid_templates = []
             for template in templates:
                 template_name = template.display_info.name
                 if template_name.startswith(('static_', 'image_', 'video_')):
                     valid_templates.append(template)
-            
-            # Skip if no valid templates after filtering
+
+            # Bỏ qua nếu sau lọc không còn template hợp lệ
             if not valid_templates:
                 continue
-            
-            # Separate templates into two groups: with preview and without preview
+
+            # Tách template thành hai nhóm: có preview và không có preview
             templates_with_preview = []
             templates_without_preview = []
-            
+
             for template in valid_templates:
                 preview_path = get_template_preview_path(template.template_path, current_lang)
                 if preview_path and os.path.exists(preview_path):
                     templates_with_preview.append(template)
                 else:
                     templates_without_preview.append(template)
-            
-            # Skip this group if no templates at all
+
+            # Bỏ qua nhóm này nếu không có template nào
             if not templates_with_preview and not templates_without_preview:
                 continue
-            
-            # Combine: templates with preview first, then without preview
+
+            # Gộp: template có preview trước, sau đó đến không có preview
             all_templates = templates_with_preview + templates_without_preview
-            
-            # Get orientation from first template in group
+
+            # Lấy hướng từ template đầu tiên trong nhóm
             orientation = ORIENTATION_I18N.get(
-                all_templates[0].display_info.orientation, 
+                all_templates[0].display_info.orientation,
                 all_templates[0].display_info.orientation
             )
             width = all_templates[0].display_info.width
             height = all_templates[0].display_info.height
-            
-            # Create tab label
+
+            # Tạo nhãn tab
             tab_label = f"{orientation} {width}×{height}"
             size_labels.append(tab_label)
             size_groups.append(all_templates)
-        
-        # Create tabs for each size group (wrapped in expander)
+
+        # Tạo tab cho từng nhóm kích thước (gói trong expander)
         with st.expander(tr("template.gallery_view"), expanded=True):
             if size_groups:
                 tabs = st.tabs(size_labels)
-                
+
                 for tab, all_templates in zip(tabs, size_groups):
                     with tab:
-                        # Create grid layout (5 columns)
+                        # Tạo bố cục lưới (5 cột)
                         num_cols = 5
                         cols = st.columns(num_cols)
-                        
+
                         for idx, template in enumerate(all_templates):
                             col_idx = idx % num_cols
                             with cols[col_idx]:
-                                # Get preview image path
+                                # Lấy đường dẫn ảnh xem trước
                                 preview_path = get_template_preview_path(template.template_path, current_lang)
-                                
-                                # Display preview image or placeholder
+
+                                # Hiển thị ảnh xem trước hoặc placeholder
                                 if preview_path and os.path.exists(preview_path):
                                     st.image(preview_path, use_container_width=True)
                                 else:
-                                    # Placeholder for templates without preview (fixed height, compact layout)
+                                    # Placeholder cho template không có preview (chiều cao cố định, bố cục gọn)
                                     st.markdown(
                                         f"""
                                         <div style="
@@ -458,11 +458,11 @@ def render_style_config(pixelle_video):
                                         unsafe_allow_html=True
                                     )
                                 
-                                # Select button (unified label)
+                                # Nút chọn (nhãn thống nhất)
                                 is_selected = (st.session_state['selected_template'] == template.template_path)
                                 button_label = f"{tr('template.selected')}" if is_selected else tr('template.select_button')
                                 button_type = "primary" if is_selected else "secondary"
-                                
+
                                 if st.button(
                                     button_label,
                                     key=f"template_{template.template_path}",
@@ -473,11 +473,11 @@ def render_style_config(pixelle_video):
                                     st.rerun()
             else:
                 st.warning(tr("template.no_templates_with_preview"))
-            
-            # Display selected template name (inside expander, below tabs)
+
+            # Hiển thị tên template đã chọn (bên trong expander, dưới các tab)
             frame_template = st.session_state['selected_template']
-            
-            # Find the selected template's display name
+
+            # Tìm tên hiển thị của template đã chọn
             selected_template_name = None
             for size, templates in grouped_templates.items():
                 for template in templates:
@@ -486,54 +486,54 @@ def render_style_config(pixelle_video):
                         break
                 if selected_template_name:
                     break
-            
+
         if selected_template_name:
             st.info(f"📋 {tr('template.selected_template')}: **{selected_template_name}**")
-        
 
-        # Display video size from template
+
+        # Hiển thị kích thước video từ template
         from pixelle_video.utils.template_util import parse_template_size
         video_width, video_height = parse_template_size(frame_template)
         st.caption(tr("template.video_size_info", width=video_width, height=video_height))
-        
-        # Custom template parameters (for video generation)
+
+        # Tham số template tuỳ chỉnh (cho việc sinh video)
         from pixelle_video.services.frame_html import HTMLFrameGenerator
-        # Resolve template path to support both data/templates/ and templates/
+        # Resolve đường dẫn template để hỗ trợ cả data/templates/ và templates/
         from pixelle_video.utils.template_util import resolve_template_path
         template_path_for_params = resolve_template_path(frame_template)
         generator_for_params = HTMLFrameGenerator(template_path_for_params)
         custom_params_for_video = generator_for_params.parse_template_parameters()
-        
-        # Get media size from template (for image/video generation)
+
+        # Lấy kích thước media từ template (cho việc sinh ảnh/video)
         media_width, media_height = generator_for_params.get_media_size()
         st.session_state['template_media_width'] = media_width
         st.session_state['template_media_height'] = media_height
-        
-        # Detect template media type
+
+        # Phát hiện loại media của template
         from pixelle_video.utils.template_util import get_template_type
-        
+
         template_name = Path(frame_template).name
         template_media_type = get_template_type(template_name)
         template_requires_media = (template_media_type in ["image", "video"])
-        
-        # Store in session state for workflow filtering
+
+        # Lưu vào session state để lọc workflow
         st.session_state['template_media_type'] = template_media_type
         st.session_state['template_requires_media'] = template_requires_media
-        
-        # Backward compatibility
+
+        # Tương thích ngược
         st.session_state['template_requires_image'] = (template_media_type == "image")
-        
+
         custom_values_for_video = {}
         if custom_params_for_video:
             st.markdown("📝 " + tr("template.custom_parameters"))
-            
-            # Render custom parameter inputs in 2 columns
+
+            # Render các ô nhập tham số tuỳ chỉnh trong 2 cột
             video_custom_col1, video_custom_col2 = st.columns(2)
-            
+
             param_items = list(custom_params_for_video.items())
             mid_point = (len(param_items) + 1) // 2
-            
-            # Left column parameters
+
+            # Tham số cột trái
             with video_custom_col1:
                 for param_name, config in param_items[:mid_point]:
                     param_type = config['type']
@@ -565,7 +565,7 @@ def render_style_config(pixelle_video):
                             key=f"video_custom_{param_name}"
                         )
             
-            # Right column parameters
+            # Tham số cột phải
             with video_custom_col2:
                 for param_name, config in param_items[mid_point:]:
                     param_type = config['type']
@@ -597,100 +597,100 @@ def render_style_config(pixelle_video):
                             key=f"video_custom_{param_name}"
                         )
         
-        # Template preview expander
+        # Expander xem trước template
         with st.expander(tr("template.preview_title"), expanded=False):
             col1, col2 = st.columns(2)
-            
+
             with col1:
                 preview_title = st.text_input(
-                    tr("template.preview_param_title"), 
+                    tr("template.preview_param_title"),
                     value=tr("template.preview_default_title"),
                     key="preview_title"
                 )
                 preview_image = st.text_input(
-                    tr("template.preview_param_image"), 
+                    tr("template.preview_param_image"),
                     value="resources/example.png",
                     help=tr("template.preview_image_help"),
                     key="preview_image"
                 )
-            
+
             with col2:
                 preview_text = st.text_area(
-                    tr("template.preview_param_text"), 
+                    tr("template.preview_param_text"),
                     value=tr("template.preview_default_text"),
                     height=100,
                     key="preview_text"
                 )
-            
-            # Info: Size is auto-determined from template
+
+            # Lưu ý: Kích thước được xác định tự động từ template
             from pixelle_video.utils.template_util import parse_template_size, resolve_template_path
             template_width, template_height = parse_template_size(resolve_template_path(frame_template))
             st.info(f"📐 {tr('template.size_info')}: {template_width} × {template_height}")
-            
-            # Preview button
+
+            # Nút xem trước
             if st.button(tr("template.preview_button"), key="btn_preview_template", use_container_width=True):
                 with st.spinner(tr("template.preview_generating")):
                     try:
                         from pixelle_video.services.frame_html import HTMLFrameGenerator
 
-                        # Use the currently selected template (size is auto-parsed)
+                        # Sử dụng template đang chọn (kích thước được parse tự động)
                         from pixelle_video.utils.template_util import resolve_template_path
                         template_path = resolve_template_path(frame_template)
                         generator = HTMLFrameGenerator(template_path)
-                        
-                        # Build ext dict with auto-injected parameters (same as FrameProcessor)
+
+                        # Xây dict ext với các tham số tự động (giống FrameProcessor)
                         ext = {
-                            "index": 1,  # Preview uses index 1
+                            "index": 1,  # Preview dùng index 1
                         }
-                        
-                        # Add custom parameters from user input
+
+                        # Thêm các tham số tuỳ chỉnh từ người dùng
                         if custom_values_for_video:
                             ext.update(custom_values_for_video)
-                        
-                        # Generate preview
+
+                        # Sinh preview
                         preview_path = run_async(generator.generate_frame(
                             title=preview_title,
                             text=preview_text,
                             image=preview_image,
                             ext=ext
                         ))
-                        
-                        # Display preview
+
+                        # Hiển thị preview
                         if preview_path:
                             st.success(tr("template.preview_success"))
                             st.image(
-                                preview_path, 
+                                preview_path,
                                 caption=tr("template.preview_caption", template=frame_template),
                             )
-                            
-                            # Show file path
+
+                            # Hiển thị đường dẫn file
                             st.caption(f"📁 {preview_path}")
                         else:
-                            st.error("Failed to generate preview")
-                            
+                            st.error("Không thể sinh preview")
+
                     except Exception as e:
                         st.error(tr("template.preview_failed", error=str(e)))
                         logger.exception(e)
     
     # ====================================================================
-    # Media Generation Section (conditional based on template)
+    # Phần Sinh Media (tuỳ thuộc vào template)
     # ====================================================================
-    # Check if current template requires media generation
+    # Kiểm tra template hiện tại có cần sinh media không
     template_media_type = st.session_state.get('template_media_type', 'image')
     template_requires_media = st.session_state.get('template_requires_media', True)
-    
+
     if template_requires_media:
-        # Template requires media - show Media Generation Section
+        # Template cần media - hiển thị phần Sinh Media
         with st.container(border=True):
-            # Dynamic section title based on template type
+            # Tiêu đề mục động theo loại template
             if template_media_type == "video":
                 section_title = tr('section.video')
             else:
                 section_title = tr('section.image')
-            
+
             st.markdown(f"**{section_title}**")
-        
-            # 1. ComfyUI Workflow selection
+
+            # 1. Chọn Workflow ComfyUI
             with st.expander(tr("help.feature_description"), expanded=False):
                 st.markdown(f"**{tr('help.what')}**")
                 if template_media_type == "video":
@@ -702,69 +702,69 @@ def render_style_config(pixelle_video):
                     st.markdown(tr('style.video_workflow_how'))
                 else:
                     st.markdown(tr("style.workflow_how"))
-        
-            # Get available workflows and filter by template type
+
+            # Lấy danh sách workflow khả dụng và lọc theo loại template
             all_workflows = pixelle_video.media.list_workflows()
-            
-            # Filter workflows based on template media type
+
+            # Lọc workflow theo loại media của template
             if template_media_type == "video":
-                # Only show video_ workflows
+                # Chỉ hiển thị workflow video_
                 workflows = [wf for wf in all_workflows if "video_" in wf["key"].lower()]
             else:
-                # Only show image_ workflows (exclude video_)
+                # Chỉ hiển thị workflow image_ (loại trừ video_)
                 workflows = [wf for wf in all_workflows if "video_" not in wf["key"].lower()]
-        
-            # Build options for selectbox
-            # Display: "image_flux.json - Runninghub"
-            # Value: "runninghub/image_flux.json"
+
+            # Xây danh sách lựa chọn cho selectbox
+            # Hiển thị: "image_flux.json - Runninghub"
+            # Giá trị: "runninghub/image_flux.json"
             workflow_options = [wf["display_name"] for wf in workflows]
             workflow_keys = [wf["key"] for wf in workflows]
-        
-            # Default to first option (should be runninghub by sorting)
+
+            # Mặc định lấy lựa chọn đầu tiên (thường là runninghub do sắp xếp)
             default_workflow_index = 0
-        
-            # If user has a saved preference in config, try to match it
+
+            # Nếu người dùng đã lưu lựa chọn trong config, thử khớp với danh sách
             comfyui_config = config_manager.get_comfyui_config()
-            # Select config based on template type (image or video)
+            # Chọn config theo loại template (image hoặc video)
             media_config_key = "video" if template_media_type == "video" else "image"
             saved_workflow = comfyui_config.get(media_config_key, {}).get("default_workflow", "")
             if saved_workflow and saved_workflow in workflow_keys:
                 default_workflow_index = workflow_keys.index(saved_workflow)
-        
+
             workflow_display = st.selectbox(
                 "Workflow",
-                workflow_options if workflow_options else ["No workflows found"],
+                workflow_options if workflow_options else ["Không tìm thấy workflow"],
                 index=default_workflow_index,
                 label_visibility="collapsed",
                 key="media_workflow_select"
             )
-        
-            # Get the actual workflow key (e.g., "runninghub/image_flux.json")
+
+            # Lấy key workflow thực tế (ví dụ: "runninghub/image_flux.json")
             if workflow_options:
                 workflow_selected_index = workflow_options.index(workflow_display)
                 workflow_key = workflow_keys[workflow_selected_index]
             else:
-                workflow_key = "runninghub/image_flux.json"  # fallback
-            
-            # Check and warn for selfhost media workflow (auto popup if not confirmed)
+                workflow_key = "runninghub/image_flux.json"  # giá trị fallback
+
+            # Kiểm tra và cảnh báo cho workflow media selfhost (tự động hiện popup nếu chưa xác nhận)
             check_and_warn_selfhost_workflow(workflow_key)
-        
-            # Get media size from template
+
+            # Lấy kích thước media từ template
             media_width = st.session_state.get('template_media_width')
             media_height = st.session_state.get('template_media_height')
-            
-            # Display media size info (read-only)
+
+            # Hiển thị thông tin kích thước media (chỉ đọc)
             if template_media_type == "video":
                 size_info_text = tr('style.video_size_info', width=media_width, height=media_height)
             else:
                 size_info_text = tr('style.image_size_info', width=media_width, height=media_height)
             st.info(f"📐 {size_info_text}")
-        
-            # Prompt prefix input
-            # Get current prompt_prefix from config (based on media type)
+
+            # Ô nhập tiền tố prompt
+            # Lấy prompt_prefix hiện tại từ config (theo loại media)
             current_prefix = comfyui_config.get(media_config_key, {}).get("prompt_prefix", "")
-        
-            # Prompt prefix input (temporary, not saved to config)
+
+            # Ô nhập tiền tố prompt (tạm thời, không lưu vào config)
             prompt_prefix = st.text_area(
                 tr('style.prompt_prefix'),
                 value=current_prefix,
@@ -773,37 +773,37 @@ def render_style_config(pixelle_video):
                 label_visibility="visible",
                 help=tr("style.prompt_prefix_help")
             )
-        
-            # Media preview expander
+
+            # Expander xem trước media
             preview_title = tr("style.video_preview_title") if template_media_type == "video" else tr("style.preview_title")
             with st.expander(preview_title, expanded=False):
-                # Test prompt input
+                # Ô nhập prompt thử nghiệm
                 if template_media_type == "video":
                     test_prompt_label = tr("style.test_video_prompt")
                     test_prompt_value = "a dog running in the park"
                 else:
                     test_prompt_label = tr("style.test_prompt")
                     test_prompt_value = "a dog"
-                
+
                 test_prompt = st.text_input(
                     test_prompt_label,
                     value=test_prompt_value,
                     help=tr("style.test_prompt_help"),
                     key="style_test_prompt"
                 )
-            
-                # Preview button
+
+                # Nút xem trước
                 preview_button_label = tr("style.video_preview") if template_media_type == "video" else tr("style.preview")
                 if st.button(preview_button_label, key="preview_style", use_container_width=True):
                     previewing_text = tr("style.video_previewing") if template_media_type == "video" else tr("style.previewing")
                     with st.spinner(previewing_text):
                         try:
                             from pixelle_video.utils.prompt_helper import build_image_prompt
-                        
-                            # Build final prompt with prefix
+
+                            # Xây prompt cuối cùng kèm tiền tố
                             final_prompt = build_image_prompt(test_prompt, prompt_prefix)
-                        
-                            # Generate preview media (use user-specified size and media type)
+
+                            # Sinh media xem trước (dùng kích thước và loại media người dùng chỉ định)
                             media_result = run_async(pixelle_video.media(
                                 prompt=final_prompt,
                                 workflow=workflow_key,
@@ -812,56 +812,56 @@ def render_style_config(pixelle_video):
                                 height=int(media_height)
                             ))
                             preview_media_path = media_result.url
-                        
-                            # Display preview (support both URL and local path)
+
+                            # Hiển thị preview (hỗ trợ cả URL và đường dẫn local)
                             if preview_media_path:
                                 success_text = tr("style.video_preview_success") if template_media_type == "video" else tr("style.preview_success")
                                 st.success(success_text)
-                            
+
                                 if template_media_type == "video":
-                                    # Display video
+                                    # Hiển thị video
                                     st.video(preview_media_path)
                                 else:
-                                    # Display image
+                                    # Hiển thị ảnh
                                     if preview_media_path.startswith('http'):
-                                        # URL - use directly
+                                        # URL - dùng trực tiếp
                                         img_html = f'<div class="preview-image"><img src="{preview_media_path}" alt="Style Preview"/></div>'
                                     else:
-                                        # Local file - encode as base64
+                                        # File local - mã hoá base64
                                         with open(preview_media_path, 'rb') as f:
                                             img_data = base64.b64encode(f.read()).decode()
                                         img_html = f'<div class="preview-image"><img src="data:image/png;base64,{img_data}" alt="Style Preview"/></div>'
-                                    
+
                                     st.markdown(img_html, unsafe_allow_html=True)
-                            
-                                # Show the final prompt used
+
+                                # Hiển thị prompt cuối cùng đã sử dụng
                                 st.info(f"**{tr('style.final_prompt_label')}**\n{final_prompt}")
-                            
-                                # Show file path
+
+                                # Hiển thị đường dẫn file
                                 st.caption(f"📁 {preview_media_path}")
                             else:
                                 st.error(tr("style.preview_failed_general"))
                         except Exception as e:
                             st.error(tr("style.preview_failed", error=str(e)))
                             logger.exception(e)
-        
-    
+
+
     else:
-        # Template doesn't need images - show simplified message
+        # Template không cần ảnh - hiển thị thông báo đơn giản
         with st.container(border=True):
             st.markdown(f"**{tr('section.image')}**")
             st.info("ℹ️ " + tr("image.not_required"))
             st.caption(tr("image.not_required_hint"))
-            
-            # Get media size from template (even though not used, for consistency)
+
+            # Lấy kích thước media từ template (dù không dùng, nhưng giữ tính nhất quán)
             media_width = st.session_state.get('template_media_width')
             media_height = st.session_state.get('template_media_height')
-            
-            # Set default values for later use
+
+            # Đặt giá trị mặc định để dùng về sau
             workflow_key = None
             prompt_prefix = ""
-    
-    # Return all style configuration parameters
+
+    # Trả về toàn bộ tham số cấu hình style
     return {
         "tts_inference_mode": tts_mode,
         "tts_voice": selected_voice if tts_mode == "local" else None,

@@ -11,16 +11,16 @@
 # limitations under the License.
 
 """
-Pixelle-Video Web UI - Main Entry Point
+Pixelle-Video Web UI - Điểm khởi chạy chính
 
-This is the entry point for the Streamlit multi-page application.
-Uses st.navigation to define pages and set the default page to Home.
+Đây là điểm khởi chạy cho ứng dụng Streamlit nhiều trang.
+Sử dụng st.navigation để định nghĩa các trang và đặt trang mặc định là Home.
 """
 
 import sys
 from pathlib import Path
 
-# Add project root to sys.path for module imports
+# Thêm thư mục gốc của project vào sys.path để import module
 _script_dir = Path(__file__).resolve().parent
 _project_root = _script_dir.parent
 if str(_project_root) not in sys.path:
@@ -28,9 +28,9 @@ if str(_project_root) not in sys.path:
 
 import streamlit as st
 
-# Setup page config (must be first Streamlit command)
+# Cấu hình trang (phải là lệnh Streamlit đầu tiên)
 st.set_page_config(
-    page_title="Pixelle-Video - AI Video Generator",
+    page_title="Pixelle-Video - Trình tạo video AI",
     page_icon="🎬",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -38,22 +38,22 @@ st.set_page_config(
 
 
 def main():
-    """Main entry point with navigation"""
-    # Define pages using st.Page
+    """Điểm khởi chạy chính với navigation"""
+    # Định nghĩa các trang bằng st.Page
     home_page = st.Page(
         "pages/1_🎬_Home.py",
-        title="Home",
+        title="Trang chủ",
         icon="🎬",
         default=True
     )
-    
+
     history_page = st.Page(
         "pages/2_📚_History.py",
-        title="History",
+        title="Lịch sử",
         icon="📚"
     )
-    
-    # Set up navigation and run
+
+    # Thiết lập navigation và chạy
     pg = st.navigation([home_page, history_page])
     pg.run()
 

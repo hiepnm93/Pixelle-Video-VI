@@ -11,109 +11,109 @@
 # limitations under the License.
 
 """
-Image prompt generation template
+Template sinh prompt cho ảnh
 
-For generating image prompts from narrations.
+Dùng để sinh prompt ảnh từ thuyết minh.
 """
 
 import json
 from typing import List, Optional
 
 
-# ==================== PRESET IMAGE STYLES ====================
-# Predefined visual styles for different use cases
+# ==================== PRESET PHONG CÁCH ẢNH ====================
+# Các phong cách hình ảnh định sẵn cho các trường hợp khác nhau
 
 IMAGE_STYLE_PRESETS = {
     "stick_figure": {
-        "name": "Stick Figure Sketch",
+        "name": "Phác thảo người que",
         "description": "stick figure style sketch, black and white lines, pure white background, minimalist hand-drawn feel",
-        "use_case": "General scenes, simple and intuitive"
+        "use_case": "Cảnh chung, đơn giản và trực quan"
     },
-    
+
     "minimal": {
-        "name": "Minimalist Abstract",
+        "name": "Trừu tượng tối giản",
         "description": "minimalist abstract art, geometric shapes, clean composition, modern design, soft pastel colors",
-        "use_case": "Modern, artistic feel"
+        "use_case": "Cảm giác hiện đại, nghệ thuật"
     },
-    
+
     "concept": {
-        "name": "Conceptual Visual",
+        "name": "Hình ảnh khái niệm",
         "description": "conceptual visual metaphors, symbolic elements, thought-provoking imagery, artistic interpretation",
-        "use_case": "Deep content, philosophical thinking"
+        "use_case": "Nội dung sâu sắc, suy tư triết học"
     },
 }
 
-# Default preset
+# Preset mặc định
 DEFAULT_IMAGE_STYLE = "stick_figure"
 
 
-IMAGE_PROMPT_GENERATION_PROMPT = """# Role Definition
-You are a professional visual creative designer, skilled at creating expressive and symbolic image prompts for video scripts, transforming abstract concepts into concrete visual scenes.
+IMAGE_PROMPT_GENERATION_PROMPT = """# Định nghĩa vai trò
+Bạn là một nhà thiết kế sáng tạo hình ảnh chuyên nghiệp, có khả năng tạo các prompt ảnh giàu biểu cảm và mang tính biểu tượng cho kịch bản video, biến các khái niệm trừu tượng thành các cảnh hình ảnh cụ thể.
 
-# Core Task
-Based on the existing video script, create corresponding **English** image prompts for each storyboard's "narration content", ensuring visual scenes perfectly match the narrative content and enhance audience understanding and memory.
+# Nhiệm vụ chính
+Dựa trên kịch bản video sẵn có, hãy tạo prompt ảnh **bằng tiếng Anh** tương ứng cho "nội dung thuyết minh" của mỗi storyboard, đảm bảo cảnh hình ảnh khớp hoàn hảo với nội dung kể chuyện và tăng cường khả năng hiểu, ghi nhớ của khán giả.
 
-**Important: The input contains {narrations_count} narrations. You must generate one corresponding image prompt for each narration, totaling {narrations_count} image prompts.**
+**Quan trọng: Đầu vào chứa {narrations_count} thuyết minh. Bạn phải sinh một prompt ảnh tương ứng cho mỗi thuyết minh, tổng cộng {narrations_count} prompt ảnh.**
 
-# Input Content
+# Nội dung đầu vào
 {narrations_json}
 
-# Output Requirements
+# Yêu cầu output
 
-## Image Prompt Specifications
-- Language: **Must use English** (for AI image generation models)
-- Description structure: scene + character action + emotion + symbolic elements
-- Description length: Ensure clear, complete, and creative descriptions (recommended 50-100 English words)
+## Đặc tả prompt ảnh
+- Ngôn ngữ: **Phải dùng tiếng Anh** (cho các model AI sinh ảnh)
+- Cấu trúc mô tả: cảnh + hành động nhân vật + cảm xúc + yếu tố biểu tượng
+- Độ dài mô tả: Đảm bảo mô tả rõ ràng, đầy đủ và sáng tạo (khuyến nghị 50-100 từ tiếng Anh)
 
-## Visual Creative Requirements
-- Each image must accurately reflect the specific content and emotion of the corresponding narration
-- Use symbolic techniques to visualize abstract concepts (e.g., use paths to represent life choices, chains to represent constraints, etc.)
-- Scenes should express rich emotions and actions to enhance visual impact
-- Highlight themes through composition and element arrangement, avoid overly literal representations
+## Yêu cầu sáng tạo hình ảnh
+- Mỗi ảnh phải phản ánh chính xác nội dung và cảm xúc cụ thể của thuyết minh tương ứng
+- Sử dụng kỹ thuật biểu tượng để hình ảnh hoá các khái niệm trừu tượng (ví dụ: dùng con đường để biểu thị lựa chọn cuộc đời, dây xích để biểu thị ràng buộc, v.v.)
+- Cảnh nên diễn đạt cảm xúc và hành động phong phú để tăng tác động hình ảnh
+- Làm nổi bật chủ đề thông qua bố cục và sắp xếp các phần tử, tránh diễn tả quá đơn thuần
 
-## Key English Vocabulary Reference
-- Symbolic elements: symbolic elements
-- Expression: expression / facial expression
-- Action: action / gesture / movement
-- Scene: scene / setting
-- Atmosphere: atmosphere / mood
+## Tham khảo từ vựng tiếng Anh quan trọng
+- Yếu tố biểu tượng: symbolic elements
+- Biểu cảm: expression / facial expression
+- Hành động: action / gesture / movement
+- Cảnh: scene / setting
+- Bầu không khí: atmosphere / mood
 
-## Visual and Copy Coordination Principles
-- Images should serve the copy, becoming a visual extension of the copy content
-- Avoid visual elements unrelated to or contradicting the copy content
-- Choose visual presentation methods that best enhance the persuasiveness of the copy
-- Ensure the audience can quickly understand the core viewpoint of the copy through images
+## Nguyên tắc phối hợp hình ảnh và lời thoại
+- Ảnh phải phục vụ lời thoại, trở thành phần mở rộng hình ảnh của nội dung lời thoại
+- Tránh các yếu tố hình ảnh không liên quan hoặc mâu thuẫn với nội dung lời thoại
+- Chọn cách trình bày hình ảnh tăng cường tính thuyết phục của lời thoại tốt nhất
+- Đảm bảo khán giả có thể nhanh chóng hiểu quan điểm cốt lõi của lời thoại qua hình ảnh
 
-## Creative Guidance
-1. **Phenomenon Description Copy**: Use intuitive scenes to represent social phenomena
-2. **Cause Analysis Copy**: Use visual metaphors of cause-and-effect relationships to represent internal logic
-3. **Impact Argumentation Copy**: Use consequence scenes or contrast techniques to represent the degree of impact
-4. **In-depth Discussion Copy**: Use concretization of abstract concepts to represent deep thinking
-5. **Conclusion Inspiration Copy**: Use open-ended scenes or guiding elements to represent inspiration
+## Hướng dẫn sáng tạo
+1. **Lời thoại mô tả hiện tượng**: Dùng cảnh trực quan để biểu thị hiện tượng xã hội
+2. **Lời thoại phân tích nguyên nhân**: Dùng phép ẩn dụ hình ảnh về quan hệ nhân-quả để biểu thị logic bên trong
+3. **Lời thoại lập luận tác động**: Dùng cảnh hậu quả hoặc kỹ thuật tương phản để biểu thị mức độ tác động
+4. **Lời thoại thảo luận sâu**: Dùng cụ thể hoá các khái niệm trừu tượng để biểu thị suy nghĩ sâu sắc
+5. **Lời thoại kết luận truyền cảm hứng**: Dùng cảnh kết mở hoặc các yếu tố dẫn dắt để biểu thị cảm hứng
 
-# Output Format
-Strictly output in the following JSON format, **image prompts must be in English**:
+# Định dạng output
+Xuất nghiêm ngặt theo định dạng JSON sau, **prompt ảnh phải bằng tiếng Anh**:
 
 ```json
 {{
   "image_prompts": [
-    "[detailed English image prompt following the style requirements]",
-    "[detailed English image prompt following the style requirements]"
+    "[prompt ảnh tiếng Anh chi tiết theo yêu cầu phong cách]",
+    "[prompt ảnh tiếng Anh chi tiết theo yêu cầu phong cách]"
   ]
 }}
 ```
 
-# Important Reminders
-1. Only output JSON format content, do not add any explanations
-2. Ensure JSON format is strictly correct and can be directly parsed by the program
-3. Input is {{"narrations": [narration array]}} format, output is {{"image_prompts": [image prompt array]}} format
-4. **The output image_prompts array must contain exactly {narrations_count} elements, corresponding one-to-one with the input narrations array**
-5. **Image prompts must use English** (for AI image generation models)
-6. Image prompts must accurately reflect the specific content and emotion of the corresponding narration
-7. Each image must be creative and visually impactful, avoid being monotonous
-8. Ensure visual scenes can enhance the persuasiveness of the copy and audience understanding
+# Nhắc nhở quan trọng
+1. Chỉ xuất nội dung định dạng JSON, không thêm giải thích
+2. Đảm bảo định dạng JSON nghiêm ngặt đúng và có thể parse trực tiếp bởi chương trình
+3. Đầu vào là định dạng {{"narrations": [mảng thuyết minh]}}, output là định dạng {{"image_prompts": [mảng prompt ảnh]}}
+4. **Mảng image_prompts xuất ra phải chứa chính xác {narrations_count} phần tử, tương ứng một-một với mảng thuyết minh đầu vào**
+5. **Prompt ảnh phải dùng tiếng Anh** (cho các model AI sinh ảnh)
+6. Prompt ảnh phải phản ánh chính xác nội dung và cảm xúc cụ thể của thuyết minh tương ứng
+7. Mỗi ảnh phải sáng tạo và có tác động hình ảnh, tránh đơn điệu
+8. Đảm bảo cảnh hình ảnh có thể tăng cường tính thuyết phục của lời thoại và sự hiểu biết của khán giả
 
-Now, please create {narrations_count} corresponding **English** image prompts for the above {narrations_count} narrations. Only output JSON, no other content.
+Bây giờ, hãy tạo {narrations_count} prompt ảnh **tiếng Anh** tương ứng cho {narrations_count} thuyết minh trên. Chỉ xuất JSON, không có nội dung khác.
 """
 
 
@@ -123,19 +123,19 @@ def build_image_prompt_prompt(
     max_words: int
 ) -> str:
     """
-    Build image prompt generation prompt
-    
-    Note: Style/prefix will be applied later via prompt_prefix in config.
-    
+    Xây dựng prompt sinh prompt ảnh
+
+    Lưu ý: Phong cách/tiền tố sẽ được áp dụng sau qua prompt_prefix trong config.
+
     Args:
-        narrations: List of narrations
-        min_words: Minimum word count
-        max_words: Maximum word count
-    
+        narrations: Danh sách thuyết minh
+        min_words: Số từ tối thiểu
+        max_words: Số từ tối đa
+
     Returns:
-        Formatted prompt for LLM
-    
-    Example:
+        Prompt đã định dạng cho LLM
+
+    Ví dụ:
         >>> build_image_prompt_prompt(narrations, 50, 100)
     """
     narrations_json = json.dumps(
@@ -143,7 +143,7 @@ def build_image_prompt_prompt(
         ensure_ascii=False,
         indent=2
     )
-    
+
     return IMAGE_PROMPT_GENERATION_PROMPT.format(
         narrations_json=narrations_json,
         narrations_count=len(narrations),

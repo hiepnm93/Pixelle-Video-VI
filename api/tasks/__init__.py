@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Task management for async operations
+Quản lý task cho các thao tác bất đồng bộ
 """
 
 from api.tasks.models import Task, TaskStatus, TaskType

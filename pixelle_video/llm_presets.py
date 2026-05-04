@@ -11,9 +11,9 @@
 # limitations under the License.
 
 """
-LLM Presets - Predefined configurations for popular LLM providers
+LLM Presets - Cấu hình sẵn cho các nhà cung cấp LLM phổ biến
 
-All providers support OpenAI SDK protocol.
+Tất cả nhà cung cấp đều hỗ trợ giao thức OpenAI SDK.
 """
 
 from typing import Dict, Any, List
@@ -49,7 +49,7 @@ LLM_PRESETS: List[Dict[str, Any]] = [
         "base_url": "http://localhost:11434/v1",
         "model": "llama3.2",
         "api_key_url": "https://ollama.com/download",
-        "default_api_key": "ollama",  # Required by OpenAI SDK but ignored by Ollama
+        "default_api_key": "ollama",  # OpenAI SDK yêu cầu nhưng Ollama bỏ qua
     },
     {
         "name": "Moonshot",
@@ -61,12 +61,12 @@ LLM_PRESETS: List[Dict[str, Any]] = [
 
 
 def get_preset_names() -> List[str]:
-    """Get list of preset names"""
+    """Lấy danh sách tên các preset"""
     return [preset["name"] for preset in LLM_PRESETS]
 
 
 def get_preset(name: str) -> Dict[str, Any]:
-    """Get preset configuration by name"""
+    """Lấy cấu hình preset theo tên"""
     for preset in LLM_PRESETS:
         if preset["name"] == name:
             return preset
@@ -75,10 +75,10 @@ def get_preset(name: str) -> Dict[str, Any]:
 
 def find_preset_by_base_url_and_model(base_url: str, model: str) -> str | None:
     """
-    Find preset name by base_url and model
-    
+    Tìm tên preset theo base_url và model
+
     Returns:
-        Preset name if found, None otherwise
+        Tên preset nếu tìm thấy, None nếu không
     """
     for preset in LLM_PRESETS:
         if preset["base_url"] == base_url and preset["model"] == model:

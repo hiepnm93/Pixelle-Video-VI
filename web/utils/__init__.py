@@ -1,2 +1,2 @@
-"""Utility functions for web UI"""
+"""Hàm tiện ích cho web UI"""
 

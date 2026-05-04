@@ -11,15 +11,15 @@
 # limitations under the License.
 
 """
-Workflow Path Resolver
+Bộ phân giải đường dẫn Workflow
 
-Standardized workflow path resolution for all ComfyUI services.
-Convention: {source}/{service}.json
+Phân giải đường dẫn workflow chuẩn hoá cho tất cả service ComfyUI.
+Quy ước: {source}/{service}.json
 
-Examples:
-    - Image analysis: selfhost/analyse_image.json, runninghub/analyse_image.json
-    - Image generation: selfhost/image.json, runninghub/image.json
-    - Video generation: selfhost/video.json, runninghub/video.json
+Ví dụ:
+    - Phân tích ảnh: selfhost/analyse_image.json, runninghub/analyse_image.json
+    - Sinh ảnh: selfhost/image.json, runninghub/image.json
+    - Sinh video: selfhost/video.json, runninghub/video.json
     - TTS: selfhost/tts.json, runninghub/tts.json
 """
 
@@ -33,25 +33,25 @@ def resolve_workflow_path(
     source: WorkflowSource = 'runninghub'
 ) -> str:
     """
-    Resolve workflow path using standardized naming convention
-    
-    Convention: workflows/{source}/{service_name}.json
-    
+    Phân giải đường dẫn workflow dùng quy ước đặt tên chuẩn hoá
+
+    Quy ước: workflows/{source}/{service_name}.json
+
     Args:
-        service_name: Service identifier (e.g., "analyse_image", "image", "video", "tts")
-        source: Workflow source - 'runninghub' (default) or 'selfhost'
-    
+        service_name: Định danh service (vd: "analyse_image", "image", "video", "tts")
+        source: Nguồn workflow - 'runninghub' (mặc định) hoặc 'selfhost'
+
     Returns:
-        Workflow path in format: "{source}/{service_name}.json"
-        
-    Examples:
+        Đường dẫn workflow theo định dạng: "{source}/{service_name}.json"
+
+    Ví dụ:
         >>> resolve_workflow_path("analyse_image", "runninghub")
         'runninghub/analyse_image.json'
-        
+
         >>> resolve_workflow_path("analyse_image", "selfhost")
         'selfhost/analyse_image.json'
-        
-        >>> resolve_workflow_path("image")  # defaults to runninghub
+
+        >>> resolve_workflow_path("image")  # mặc định runninghub
         'runninghub/image.json'
     """
     return f"{source}/{service_name}.json"
@@ -59,9 +59,9 @@ def resolve_workflow_path(
 
 def get_default_source() -> WorkflowSource:
     """
-    Get default workflow source
-    
+    Lấy nguồn workflow mặc định
+
     Returns:
-        'runninghub' - Cloud-first approach, better for beginners
+        'runninghub' - Cách tiếp cận ưu tiên cloud, tốt hơn cho người mới
     """
     return 'runninghub'

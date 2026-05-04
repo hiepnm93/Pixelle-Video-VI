@@ -11,36 +11,36 @@
 # limitations under the License.
 
 """
-Prompt helper utilities
+Tiện ích helper cho prompt
 
-Simple utilities for building prompts with optional prefixes.
+Các tiện ích đơn giản để xây dựng prompt với tiền tố tuỳ chọn.
 """
 
 
 def build_image_prompt(prompt: str, prefix: str = "") -> str:
     """
-    Build final image prompt with optional prefix
-    
+    Xây dựng prompt ảnh cuối cùng kèm tiền tố tuỳ chọn
+
     Args:
-        prompt: User's raw prompt
-        prefix: Optional prefix to add before the prompt
-    
+        prompt: Prompt thô của người dùng
+        prefix: Tiền tố tuỳ chọn để thêm trước prompt
+
     Returns:
-        Final prompt with prefix applied (if provided)
-    
-    Examples:
+        Prompt cuối cùng kèm tiền tố (nếu có)
+
+    Ví dụ:
         >>> build_image_prompt("a cat", "")
         'a cat'
-        
+
         >>> build_image_prompt("a cat", "anime style")
         'anime style, a cat'
-        
+
         >>> build_image_prompt("a cat", "  anime style  ")
         'anime style, a cat'
     """
     prefix = prefix.strip() if prefix else ""
     prompt = prompt.strip() if prompt else ""
-    
+
     if prefix and prompt:
         return f"{prefix}, {prompt}"
     elif prefix:

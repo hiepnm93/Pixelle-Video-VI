@@ -11,9 +11,9 @@
 # limitations under the License.
 
 """
-Style conversion prompt
+Prompt chuyển đổi phong cách
 
-For converting user's custom style description to image generation prompt.
+Dùng để chuyển mô tả phong cách tuỳ chỉnh của người dùng thành prompt sinh ảnh.
 """
 
 
@@ -34,20 +34,20 @@ Image Prompt:"""
 
 def build_style_conversion_prompt(description: str) -> str:
     """
-    Build style conversion prompt
-    
-    Converts user's custom style description (in any language) to an English
-    image generation prompt suitable for Stable Diffusion/FLUX models.
-    
+    Xây dựng prompt chuyển đổi phong cách
+
+    Chuyển mô tả phong cách của người dùng (ở bất kỳ ngôn ngữ nào) sang prompt
+    sinh ảnh tiếng Anh phù hợp cho các model Stable Diffusion/FLUX.
+
     Args:
-        description: User's style description in any language
-    
+        description: Mô tả phong cách của người dùng ở bất kỳ ngôn ngữ nào
+
     Returns:
-        Formatted prompt
-    
-    Example:
-        >>> build_style_conversion_prompt("赛博朋克风格，霓虹灯，未来感")
-        # Returns prompt that will convert to: "cyberpunk style, neon lights, futuristic..."
+        Prompt đã định dạng
+
+    Ví dụ:
+        >>> build_style_conversion_prompt("phong cách cyberpunk, đèn neon, cảm giác tương lai")
+        # Trả về prompt sẽ chuyển thành: "cyberpunk style, neon lights, futuristic..."
     """
     return STYLE_CONVERSION_PROMPT.format(description=description)
 

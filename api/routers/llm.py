@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-LLM (Large Language Model) endpoints
+Các endpoint LLM (Large Language Model)
 """
 
 from fastapi import APIRouter, HTTPException
@@ -29,32 +29,32 @@ async def llm_chat(
     pixelle_video: PixelleVideoDep
 ):
     """
-    LLM chat endpoint
-    
-    Generate text response using configured LLM.
-    
-    - **prompt**: User prompt/question
-    - **temperature**: Creativity level (0.0-2.0, lower = more deterministic)
-    - **max_tokens**: Maximum response length
-    
-    Returns generated text response.
+    Endpoint chat LLM
+
+    Tạo phản hồi văn bản bằng LLM đã cấu hình.
+
+    - **prompt**: Prompt/câu hỏi của người dùng
+    - **temperature**: Mức độ sáng tạo (0.0-2.0, thấp = ổn định hơn)
+    - **max_tokens**: Độ dài phản hồi tối đa
+
+    Trả về phản hồi văn bản đã tạo.
     """
     try:
-        logger.info(f"LLM chat request: {request.prompt[:50]}...")
-        
-        # Call LLM service
+        logger.info(f"Yêu cầu chat LLM: {request.prompt[:50]}...")
+
+        # Gọi dịch vụ LLM
         response = await pixelle_video.llm(
             prompt=request.prompt,
             temperature=request.temperature,
             max_tokens=request.max_tokens
         )
-        
+
         return LLMChatResponse(
             content=response,
-            tokens_used=None  # Can add token counting if needed
+            tokens_used=None  # Có thể thêm đếm token nếu cần
         )
-        
+
     except Exception as e:
-        logger.error(f"LLM chat error: {e}")
+        logger.error(f"Lỗi chat LLM: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 

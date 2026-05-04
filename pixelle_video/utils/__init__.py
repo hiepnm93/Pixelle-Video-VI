@@ -13,5 +13,5 @@
 """
 Pixelle-Video Utilities
 
-Utility functions and helpers.
+Các hàm tiện ích và helper.
 """

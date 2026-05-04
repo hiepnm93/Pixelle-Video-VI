@@ -11,9 +11,9 @@
 # limitations under the License.
 
 """
-Task management endpoints
+Các endpoint quản lý task
 
-Endpoints for managing async tasks (checking status, canceling, etc.)
+Endpoint dùng để quản lý các task bất đồng bộ (kiểm tra trạng thái, huỷ, v.v.)
 """
 
 from typing import List, Optional
@@ -27,79 +27,78 @@ router = APIRouter(prefix="/tasks", tags=["Tasks"])
 
 @router.get("", response_model=List[Task])
 async def list_tasks(
-    status: Optional[TaskStatus] = Query(None, description="Filter by status"),
-    limit: int = Query(100, ge=1, le=1000, description="Maximum number of tasks")
+    status: Optional[TaskStatus] = Query(None, description="Lọc theo trạng thái"),
+    limit: int = Query(100, ge=1, le=1000, description="Số lượng task tối đa")
 ):
     """
-    List tasks
-    
-    Retrieve list of tasks with optional filtering.
-    
-    - **status**: Optional filter by status (pending/running/completed/failed/cancelled)
-    - **limit**: Maximum number of tasks to return (default 100)
-    
-    Returns list of tasks sorted by creation time (newest first).
+    Liệt kê các task
+
+    Lấy danh sách task có thể lọc tuỳ chọn.
+
+    - **status**: Lọc theo trạng thái (pending/running/completed/failed/cancelled)
+    - **limit**: Số lượng task tối đa trả về (mặc định 100)
+
+    Trả về danh sách task được sắp xếp theo thời gian tạo (mới nhất trước).
     """
     try:
         tasks = task_manager.list_tasks(status=status, limit=limit)
         return tasks
-        
+
     except Exception as e:
-        logger.error(f"List tasks error: {e}")
+        logger.error(f"Lỗi liệt kê task: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/{task_id}", response_model=Task)
 async def get_task(task_id: str):
     """
-    Get task details
-    
-    Retrieve detailed information about a specific task.
-    
-    - **task_id**: Task ID
-    
-    Returns task details including status, progress, and result (if completed).
+    Lấy chi tiết task
+
+    Lấy thông tin chi tiết về một task cụ thể.
+
+    - **task_id**: ID của task
+
+    Trả về chi tiết task gồm trạng thái, tiến trình và kết quả (nếu đã hoàn thành).
     """
     try:
         task = task_manager.get_task(task_id)
-        
+
         if not task:
-            raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
-        
+            raise HTTPException(status_code=404, detail=f"Không tìm thấy task {task_id}")
+
         return task
-        
+
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Get task error: {e}")
+        logger.error(f"Lỗi lấy task: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.delete("/{task_id}")
 async def cancel_task(task_id: str):
     """
-    Cancel task
-    
-    Cancel a running or pending task.
-    
-    - **task_id**: Task ID
-    
-    Returns success status.
+    Huỷ task
+
+    Huỷ một task đang chạy hoặc đang chờ.
+
+    - **task_id**: ID của task
+
+    Trả về trạng thái thành công.
     """
     try:
         success = task_manager.cancel_task(task_id)
-        
+
         if not success:
-            raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
-        
+            raise HTTPException(status_code=404, detail=f"Không tìm thấy task {task_id}")
+
         return {
             "success": True,
-            "message": f"Task {task_id} cancelled successfully"
+            "message": f"Đã huỷ task {task_id} thành công"
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Cancel task error: {e}")
+        logger.error(f"Lỗi huỷ task: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-

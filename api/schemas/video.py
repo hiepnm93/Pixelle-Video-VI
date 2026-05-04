@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Video generation API schemas
+Các schema cho API tạo video
 """
 
 from typing import Optional, Literal, Dict, Any
@@ -19,70 +19,70 @@ from pydantic import BaseModel, Field
 
 
 class VideoGenerateRequest(BaseModel):
-    """Video generation request"""
-    
-    # === Input ===
-    text: str = Field(..., description="Source text for video generation")
-    
-    # === Processing Mode ===
+    """Yêu cầu tạo video"""
+
+    # === Đầu vào ===
+    text: str = Field(..., description="Văn bản nguồn để tạo video")
+
+    # === Chế độ xử lý ===
     mode: Literal["generate", "fixed"] = Field(
         "generate",
-        description="Processing mode: 'generate' (AI generates narrations) or 'fixed' (use text as-is)"
+        description="Chế độ xử lý: 'generate' (AI tạo lời thoại) hoặc 'fixed' (dùng văn bản nguyên trạng)"
     )
-    
-    # === Optional Title ===
-    title: Optional[str] = Field(None, description="Video title (auto-generated if not provided)")
-    
-    # === Basic Config ===
-    n_scenes: Optional[int] = Field(5, ge=1, le=20, description="Number of scenes (only used in 'generate' mode, ignored in 'fixed' mode)")
-    
-    # === TTS Parameters ===
+
+    # === Tiêu đề tuỳ chọn ===
+    title: Optional[str] = Field(None, description="Tiêu đề video (tự động tạo nếu không cung cấp)")
+
+    # === Cấu hình cơ bản ===
+    n_scenes: Optional[int] = Field(5, ge=1, le=20, description="Số lượng cảnh (chỉ dùng ở chế độ 'generate', bỏ qua ở chế độ 'fixed')")
+
+    # === Tham số TTS ===
     tts_workflow: Optional[str] = Field(
-        None, 
-        description="TTS workflow key (e.g., 'runninghub/tts_edge.json'). If not specified, uses default workflow from config."
+        None,
+        description="Khoá workflow TTS (ví dụ: 'runninghub/tts_edge.json'). Nếu không chỉ định, dùng workflow mặc định từ config."
     )
     ref_audio: Optional[str] = Field(
-        None, 
-        description="Reference audio path for voice cloning (optional)"
+        None,
+        description="Đường dẫn audio tham chiếu để nhân bản giọng (tuỳ chọn)"
     )
     voice_id: Optional[str] = Field(
-        None, 
-        description="(Deprecated) TTS voice ID for legacy compatibility"
+        None,
+        description="(Đã lỗi thời) ID giọng TTS để tương thích phiên bản cũ"
     )
-    
-    # === LLM Parameters ===
-    min_narration_words: int = Field(5, ge=1, le=100, description="Min narration words")
-    max_narration_words: int = Field(20, ge=1, le=200, description="Max narration words")
-    min_image_prompt_words: int = Field(30, ge=10, le=100, description="Min image prompt words")
-    max_image_prompt_words: int = Field(60, ge=10, le=200, description="Max image prompt words")
-    
-    # === Media Parameters ===
-    # Note: media_width and media_height are auto-determined from template meta tags
-    media_workflow: Optional[str] = Field(None, description="Custom media workflow (image or video)")
-    
-    # === Video Parameters ===
-    video_fps: int = Field(30, ge=15, le=60, description="Video FPS")
-    
-    # === Frame Template (determines video size) ===
+
+    # === Tham số LLM ===
+    min_narration_words: int = Field(5, ge=1, le=100, description="Số từ tối thiểu của lời thoại")
+    max_narration_words: int = Field(20, ge=1, le=200, description="Số từ tối đa của lời thoại")
+    min_image_prompt_words: int = Field(30, ge=10, le=100, description="Số từ tối thiểu của prompt ảnh")
+    max_image_prompt_words: int = Field(60, ge=10, le=200, description="Số từ tối đa của prompt ảnh")
+
+    # === Tham số Media ===
+    # Lưu ý: media_width và media_height được tự động xác định từ thẻ meta của template
+    media_workflow: Optional[str] = Field(None, description="Workflow media tuỳ chỉnh (ảnh hoặc video)")
+
+    # === Tham số Video ===
+    video_fps: int = Field(30, ge=15, le=60, description="FPS của video")
+
+    # === Frame Template (xác định kích thước video) ===
     frame_template: Optional[str] = Field(
-        None, 
-        description="HTML template path with size (e.g., '1080x1920/default.html'). Video size is auto-determined from template."
+        None,
+        description="Đường dẫn template HTML kèm kích thước (ví dụ: '1080x1920/default.html'). Kích thước video tự động xác định từ template."
     )
-    
-    # === Template Custom Parameters ===
+
+    # === Tham số tuỳ chỉnh của Template ===
     template_params: Optional[Dict[str, Any]] = Field(
         None,
-        description="Custom template parameters (e.g., {'accent_color': '#ff0000', 'background': 'url'}). "
-                    "Available parameters depend on the template. Use GET /api/templates/{template_path}/params to discover them."
+        description="Tham số template tuỳ chỉnh (ví dụ: {'accent_color': '#ff0000', 'background': 'url'}). "
+                    "Tham số có sẵn phụ thuộc vào template. Dùng GET /api/templates/{template_path}/params để khám phá."
     )
-    
-    # === Image Style ===
-    prompt_prefix: Optional[str] = Field(None, description="Image style prefix")
-    
+
+    # === Phong cách ảnh ===
+    prompt_prefix: Optional[str] = Field(None, description="Tiền tố phong cách ảnh")
+
     # === BGM ===
-    bgm_path: Optional[str] = Field(None, description="Background music path")
-    bgm_volume: float = Field(0.3, ge=0.0, le=1.0, description="BGM volume (0.0-1.0)")
-    
+    bgm_path: Optional[str] = Field(None, description="Đường dẫn nhạc nền")
+    bgm_volume: float = Field(0.3, ge=0.0, le=1.0, description="Âm lượng BGM (0.0-1.0)")
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -100,17 +100,16 @@ class VideoGenerateRequest(BaseModel):
 
 
 class VideoGenerateResponse(BaseModel):
-    """Video generation response (synchronous)"""
+    """Phản hồi tạo video (đồng bộ)"""
     success: bool = True
     message: str = "Success"
-    video_url: str = Field(..., description="URL to access generated video")
-    duration: float = Field(..., description="Video duration in seconds")
-    file_size: int = Field(..., description="File size in bytes")
+    video_url: str = Field(..., description="URL để truy cập video đã tạo")
+    duration: float = Field(..., description="Thời lượng video tính bằng giây")
+    file_size: int = Field(..., description="Kích thước file tính bằng byte")
 
 
 class VideoGenerateAsyncResponse(BaseModel):
-    """Video generation async response"""
+    """Phản hồi tạo video bất đồng bộ"""
     success: bool = True
     message: str = "Task created successfully"
-    task_id: str = Field(..., description="Task ID for tracking progress")
-
+    task_id: str = Field(..., description="ID task để theo dõi tiến trình")

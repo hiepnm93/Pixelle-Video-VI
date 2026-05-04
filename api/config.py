@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-API Configuration
+Cấu hình API
 """
 
 from typing import Optional
@@ -19,32 +19,32 @@ from pydantic import BaseModel
 
 
 class APIConfig(BaseModel):
-    """API configuration"""
-    
-    # Server settings
+    """Cấu hình API"""
+
+    # Cấu hình server
     host: str = "0.0.0.0"
     port: int = 8000
     reload: bool = False
-    
-    # CORS settings
+
+    # Cấu hình CORS
     cors_enabled: bool = True
     cors_origins: list[str] = ["*"]
-    
-    # Task settings
+
+    # Cấu hình task
     max_concurrent_tasks: int = 5
-    task_cleanup_interval: int = 3600  # Clean completed tasks every hour
-    task_retention_time: int = 86400   # Keep task results for 24 hours
-    
-    # File upload settings
+    task_cleanup_interval: int = 3600  # Dọn dẹp task hoàn thành mỗi giờ
+    task_retention_time: int = 86400   # Giữ kết quả task trong 24 giờ
+
+    # Cấu hình tải file
     max_upload_size: int = 100 * 1024 * 1024  # 100MB
-    
-    # API settings
+
+    # Cấu hình API
     api_prefix: str = "/api"
     docs_url: Optional[str] = "/docs"
     redoc_url: Optional[str] = "/redoc"
     openapi_url: Optional[str] = "/openapi.json"
 
 
-# Global config instance
+# Instance cấu hình toàn cục
 api_config = APIConfig()
 

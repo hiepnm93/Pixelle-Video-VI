@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Frame/Template rendering API schemas
+Các schema cho API render frame/template
 """
 
 from typing import Optional, Dict, Any, List
@@ -19,15 +19,15 @@ from pydantic import BaseModel, Field
 
 
 class FrameRenderRequest(BaseModel):
-    """Frame rendering request"""
+    """Yêu cầu render frame"""
     template: str = Field(
-        ..., 
-        description="Template key (e.g., '1080x1920/default.html'). Can also be just filename (e.g., 'default.html') to use default size."
+        ...,
+        description="Khoá template (ví dụ: '1080x1920/default.html'). Cũng có thể chỉ là tên file (ví dụ: 'default.html') để dùng kích thước mặc định."
     )
-    title: Optional[str] = Field(None, description="Frame title (optional)")
-    text: str = Field(..., description="Frame text content")
-    image: Optional[str] = Field(None, description="Image path or URL (optional)")
-    
+    title: Optional[str] = Field(None, description="Tiêu đề frame (tuỳ chọn)")
+    text: str = Field(..., description="Nội dung văn bản của frame")
+    image: Optional[str] = Field(None, description="Đường dẫn ảnh hoặc URL (tuỳ chọn)")
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -40,30 +40,29 @@ class FrameRenderRequest(BaseModel):
 
 
 class FrameRenderResponse(BaseModel):
-    """Frame rendering response"""
+    """Phản hồi render frame"""
     success: bool = True
     message: str = "Success"
-    frame_path: str = Field(..., description="Path to generated frame image")
-    width: int = Field(..., description="Frame width in pixels")
-    height: int = Field(..., description="Frame height in pixels")
+    frame_path: str = Field(..., description="Đường dẫn tới ảnh frame đã tạo")
+    width: int = Field(..., description="Chiều rộng frame tính bằng pixel")
+    height: int = Field(..., description="Chiều cao frame tính bằng pixel")
 
 
 class TemplateParamConfig(BaseModel):
-    """Single template parameter configuration"""
-    type: str = Field(..., description="Parameter type: 'text', 'number', 'color', 'bool'")
-    default: Any = Field(..., description="Default value")
-    label: str = Field(..., description="Display label for the parameter")
+    """Cấu hình của một tham số template"""
+    type: str = Field(..., description="Kiểu tham số: 'text', 'number', 'color', 'bool'")
+    default: Any = Field(..., description="Giá trị mặc định")
+    label: str = Field(..., description="Nhãn hiển thị của tham số")
 
 
 class TemplateParamsResponse(BaseModel):
-    """Template parameters response"""
+    """Phản hồi tham số template"""
     success: bool = True
     message: str = "Success"
-    template: str = Field(..., description="Template path")
-    media_width: int = Field(..., description="Media width from template meta tags")
-    media_height: int = Field(..., description="Media height from template meta tags")
+    template: str = Field(..., description="Đường dẫn template")
+    media_width: int = Field(..., description="Chiều rộng media từ thẻ meta của template")
+    media_height: int = Field(..., description="Chiều cao media từ thẻ meta của template")
     params: Dict[str, TemplateParamConfig] = Field(
         default_factory=dict,
-        description="Custom parameters defined in template. Key is parameter name, value is config."
+        description="Tham số tuỳ chỉnh được định nghĩa trong template. Khoá là tên tham số, giá trị là config."
     )
-

@@ -11,11 +11,11 @@
 # limitations under the License.
 
 """
-Standard Video Generation Pipeline
+Pipeline tạo video tiêu chuẩn
 
-Standard workflow for generating short videos from topic or fixed script.
-This is the default pipeline for general-purpose video generation.
-Refactored to use LinearVideoPipeline (Template Method Pattern).
+Workflow tiêu chuẩn để tạo video ngắn từ chủ đề hoặc kịch bản cố định.
+Đây là pipeline mặc định cho việc tạo video đa mục đích.
+Được refactor để dùng LinearVideoPipeline (Mẫu Template Method).
 """
 
 from datetime import datetime
@@ -54,63 +54,61 @@ from pixelle_video.services.video import VideoService
 
 class StandardPipeline(LinearVideoPipeline):
     """
-    Standard video generation pipeline
-    
+    Pipeline tạo video tiêu chuẩn
+
     Workflow:
-    1. Generate/determine title
-    2. Generate narrations (from topic or split fixed script)
-    3. Generate image prompts for each narration
-    4. For each frame:
-       - Generate audio (TTS)
-       - Generate image
-       - Compose frame with template
-       - Create video segment
-    5. Concatenate all segments
-    6. Add BGM (optional)
-    
-    Supports two modes:
-    - "generate": LLM generates narrations from topic
-    - "fixed": Use provided script as-is (each line = one narration)
+    1. Sinh/xác định tiêu đề
+    2. Sinh thuyết minh (từ chủ đề hoặc tách kịch bản cố định)
+    3. Sinh prompt ảnh cho mỗi thuyết minh
+    4. Với mỗi frame:
+       - Sinh audio (TTS)
+       - Sinh ảnh
+       - Ghép frame với template
+       - Tạo segment video
+    5. Ghép tất cả segment
+    6. Thêm BGM (tuỳ chọn)
+
+    Hỗ trợ hai chế độ:
+    - "generate": LLM sinh thuyết minh từ chủ đề
+    - "fixed": Dùng kịch bản đã cung cấp (mỗi dòng = một thuyết minh)
     """
-    
-    # ==================== Lifecycle Methods ====================
+
+    # ==================== Các method vòng đời ====================
 
     async def setup_environment(self, ctx: PipelineContext):
-        """Step 1: Setup task directory and environment."""
+        """Bước 1: Setup thư mục task và môi trường."""
         text = ctx.input_text
         mode = ctx.params.get("mode", "generate")
-        
-        logger.info(f"🚀 Starting StandardPipeline in '{mode}' mode")
-        logger.info(f"   Text length: {len(text)} chars")
-        
-        # Create isolated task directory
+
+        logger.info(f"🚀 Bắt đầu StandardPipeline ở chế độ '{mode}'")
+        logger.info(f"   Độ dài văn bản: {len(text)} ký tự")
+
+        # Tạo thư mục task cô lập
         task_dir, task_id = create_task_output_dir()
         ctx.task_id = task_id
         ctx.task_dir = task_dir
-        
-        logger.info(f"📁 Task directory created: {task_dir}")
+
+        logger.info(f"📁 Đã tạo thư mục task: {task_dir}")
         logger.info(f"   Task ID: {task_id}")
-        
-        # Determine final video path
+
+        # Xác định đường dẫn video cuối cùng
         output_path = ctx.params.get("output_path")
         if output_path is None:
             ctx.final_video_path = get_task_final_video_path(task_id)
         else:
-            # We will copy to this path in finalize/post_production
-            # For internal processing, we still use the task dir path? 
-            # Actually StandardPipeline logic used get_task_final_video_path as the target for concat
-            # and then copied. Let's stick to that.
+            # Sẽ copy tới đường dẫn này trong finalize/post_production
+            # Với xử lý nội bộ, vẫn dùng đường dẫn thư mục task
             ctx.final_video_path = get_task_final_video_path(task_id)
-            logger.info(f"   Will copy final video to: {output_path}")
+            logger.info(f"   Sẽ copy video cuối tới: {output_path}")
 
     async def generate_content(self, ctx: PipelineContext):
-        """Step 2: Generate or process script/narrations."""
+        """Bước 2: Sinh hoặc xử lý kịch bản/thuyết minh."""
         mode = ctx.params.get("mode", "generate")
         text = ctx.input_text
         n_scenes = ctx.params.get("n_scenes", 5)
         min_words = ctx.params.get("min_narration_words", 5)
         max_words = ctx.params.get("max_narration_words", 20)
-        
+
         if mode == "generate":
             self._report_progress(ctx.progress_callback, "generating_narrations", 0.05)
             ctx.narrations = await generate_narrations_from_topic(
@@ -120,72 +118,72 @@ class StandardPipeline(LinearVideoPipeline):
                 min_words=min_words,
                 max_words=max_words
             )
-            logger.info(f"✅ Generated {len(ctx.narrations)} narrations")
+            logger.info(f"✅ Đã sinh {len(ctx.narrations)} thuyết minh")
         else:  # fixed
             self._report_progress(ctx.progress_callback, "splitting_script", 0.05)
             split_mode = ctx.params.get("split_mode", "paragraph")
             ctx.narrations = await split_narration_script(text, split_mode=split_mode)
-            logger.info(f"✅ Split script into {len(ctx.narrations)} segments (mode={split_mode})")
-            logger.info(f"   Note: n_scenes={n_scenes} is ignored in fixed mode")
+            logger.info(f"✅ Đã tách kịch bản thành {len(ctx.narrations)} đoạn (mode={split_mode})")
+            logger.info(f"   Lưu ý: n_scenes={n_scenes} bị bỏ qua ở chế độ fixed")
 
     async def determine_title(self, ctx: PipelineContext):
-        """Step 3: Determine or generate video title."""
-        # Note: Swapped order with generate_content in base class call, 
-        # but in StandardPipeline original code, title was determined BEFORE narrations.
-        # However, LinearVideoPipeline defines generate_content BEFORE determine_title.
-        # This is fine as they are independent in StandardPipeline logic.
-        
+        """Bước 3: Xác định hoặc sinh tiêu đề video."""
+        # Lưu ý: Đã đổi thứ tự với generate_content trong lệnh gọi class cha,
+        # nhưng trong code gốc của StandardPipeline, tiêu đề được xác định TRƯỚC thuyết minh.
+        # Tuy nhiên LinearVideoPipeline định nghĩa generate_content TRƯỚC determine_title.
+        # Điều này ổn vì chúng độc lập trong logic của StandardPipeline.
+
         title = ctx.params.get("title")
         mode = ctx.params.get("mode", "generate")
         text = ctx.input_text
-        
+
         if title:
             ctx.title = title
-            logger.info(f"   Title: '{title}' (user-specified)")
+            logger.info(f"   Tiêu đề: '{title}' (do người dùng chỉ định)")
         else:
             self._report_progress(ctx.progress_callback, "generating_title", 0.01)
             if mode == "generate":
                 ctx.title = await generate_title(self.llm, text, strategy="auto")
-                logger.info(f"   Title: '{ctx.title}' (auto-generated)")
+                logger.info(f"   Tiêu đề: '{ctx.title}' (sinh tự động)")
             else:  # fixed
                 ctx.title = await generate_title(self.llm, text, strategy="llm")
-                logger.info(f"   Title: '{ctx.title}' (LLM-generated)")
+                logger.info(f"   Tiêu đề: '{ctx.title}' (sinh bằng LLM)")
 
     async def plan_visuals(self, ctx: PipelineContext):
-        """Step 4: Generate image prompts or visual descriptions."""
-        # Detect template type to determine if media generation is needed
+        """Bước 4: Sinh prompt ảnh hoặc mô tả hình ảnh."""
+        # Phát hiện loại template để xác định có cần sinh media không
         frame_template = ctx.params.get("frame_template") or "1080x1920/default.html"
-        
+
         template_name = Path(frame_template).name
         template_type = get_template_type(template_name)
         template_requires_media = (template_type in ["image", "video"])
-        
+
         if template_type == "image":
-            logger.info(f"📸 Template requires image generation")
+            logger.info(f"📸 Template yêu cầu sinh ảnh")
         elif template_type == "video":
-            logger.info(f"🎬 Template requires video generation")
+            logger.info(f"🎬 Template yêu cầu sinh video")
         else:  # static
-            logger.info(f"⚡ Static template - skipping media generation pipeline")
-            logger.info(f"   💡 Benefits: Faster generation + Lower cost + No ComfyUI dependency")
-        
-        # Only generate image prompts if template requires media
+            logger.info(f"⚡ Template tĩnh - bỏ qua pipeline sinh media")
+            logger.info(f"   💡 Lợi ích: Tạo nhanh hơn + Chi phí thấp hơn + Không phụ thuộc ComfyUI")
+
+        # Chỉ sinh prompt ảnh nếu template yêu cầu media
         if template_requires_media:
             self._report_progress(ctx.progress_callback, "generating_image_prompts", 0.15)
-            
+
             prompt_prefix = ctx.params.get("prompt_prefix")
             min_words = ctx.params.get("min_image_prompt_words", 30)
             max_words = ctx.params.get("max_image_prompt_words", 60)
-            
-            # Override prompt_prefix if provided
+
+            # Ghi đè prompt_prefix nếu được cung cấp
             original_prefix = None
             if prompt_prefix is not None:
                 image_config = self.core.config.get("comfyui", {}).get("image", {})
                 original_prefix = image_config.get("prompt_prefix")
                 image_config["prompt_prefix"] = prompt_prefix
-                logger.info(f"Using custom prompt_prefix: '{prompt_prefix}'")
+                logger.info(f"Đang dùng prompt_prefix tuỳ chỉnh: '{prompt_prefix}'")
             
             try:
-                # Create progress callback wrapper for image prompt generation
+                # Tạo wrapper callback tiến độ cho việc sinh prompt ảnh
                 def image_prompt_progress(completed: int, total: int, message: str):
                     batch_progress = completed / total if total > 0 else 0
                     overall_progress = 0.15 + (batch_progress * 0.15)
@@ -195,8 +193,8 @@ class StandardPipeline(LinearVideoPipeline):
                         overall_progress,
                         extra_info=message
                     )
-                
-                # Generate base image prompts
+
+                # Sinh các prompt ảnh cơ sở
                 base_image_prompts = await generate_image_prompts(
                     self.llm,
                     narrations=ctx.narrations,
@@ -204,57 +202,57 @@ class StandardPipeline(LinearVideoPipeline):
                     max_words=max_words,
                     progress_callback=image_prompt_progress
                 )
-                
-                # Apply prompt prefix
+
+                # Áp dụng tiền tố prompt
                 image_config = self.core.config.get("comfyui", {}).get("image", {})
                 prompt_prefix_to_use = prompt_prefix if prompt_prefix is not None else image_config.get("prompt_prefix", "")
-                
+
                 ctx.image_prompts = []
                 for base_prompt in base_image_prompts:
                     final_prompt = build_image_prompt(base_prompt, prompt_prefix_to_use)
                     ctx.image_prompts.append(final_prompt)
-                
+
             finally:
-                # Restore original prompt_prefix
+                # Khôi phục prompt_prefix gốc
                 if original_prefix is not None:
                     image_config["prompt_prefix"] = original_prefix
-            
-            logger.info(f"✅ Generated {len(ctx.image_prompts)} image prompts")
+
+            logger.info(f"✅ Đã sinh {len(ctx.image_prompts)} prompt ảnh")
         else:
-            # Static template - skip image prompt generation entirely
+            # Template tĩnh - bỏ qua hoàn toàn việc sinh prompt ảnh
             ctx.image_prompts = [None] * len(ctx.narrations)
-            logger.info(f"⚡ Skipped image prompt generation (static template)")
-            logger.info(f"   💡 Savings: {len(ctx.narrations)} LLM calls + {len(ctx.narrations)} media generations")
+            logger.info(f"⚡ Đã bỏ qua sinh prompt ảnh (template tĩnh)")
+            logger.info(f"   💡 Tiết kiệm: {len(ctx.narrations)} lệnh gọi LLM + {len(ctx.narrations)} lần sinh media")
 
     async def initialize_storyboard(self, ctx: PipelineContext):
-        """Step 5: Create Storyboard object and frames."""
-        # === Handle TTS parameter compatibility ===
+        """Bước 5: Tạo object Storyboard và các frame."""
+        # === Xử lý tương thích tham số TTS ===
         tts_inference_mode = ctx.params.get("tts_inference_mode")
         tts_voice = ctx.params.get("tts_voice")
         voice_id = ctx.params.get("voice_id")
         tts_workflow = ctx.params.get("tts_workflow")
-        
+
         final_voice_id = None
         final_tts_workflow = tts_workflow
-        
+
         if tts_inference_mode:
-            # New API from web UI
+            # API mới từ web UI
             if tts_inference_mode == "local":
                 final_voice_id = tts_voice or "zh-CN-YunjianNeural"
                 final_tts_workflow = None
-                logger.debug(f"TTS Mode: local (voice={final_voice_id})")
+                logger.debug(f"Chế độ TTS: local (voice={final_voice_id})")
             elif tts_inference_mode == "comfyui":
                 final_voice_id = None
-                logger.debug(f"TTS Mode: comfyui (workflow={final_tts_workflow})")
+                logger.debug(f"Chế độ TTS: comfyui (workflow={final_tts_workflow})")
         else:
-            # Old API
+            # API cũ
             final_voice_id = voice_id or tts_voice or "zh-CN-YunjianNeural"
-            logger.debug(f"TTS Mode: legacy (voice_id={final_voice_id}, workflow={final_tts_workflow})")
-            
-        # Create config
+            logger.debug(f"Chế độ TTS: legacy (voice_id={final_voice_id}, workflow={final_tts_workflow})")
+
+        # Tạo config
         ctx.config = StoryboardConfig(
             task_id=ctx.task_id,
-            n_storyboard=len(ctx.narrations), # Use actual length
+            n_storyboard=len(ctx.narrations), # Dùng độ dài thực tế
             min_narration_words=ctx.params.get("min_narration_words", 5),
             max_narration_words=ctx.params.get("max_narration_words", 20),
             min_image_prompt_words=ctx.params.get("min_image_prompt_words", 30),
@@ -272,15 +270,15 @@ class StandardPipeline(LinearVideoPipeline):
             template_params=ctx.params.get("template_params")
         )
         
-        # Create storyboard
+        # Tạo storyboard
         ctx.storyboard = Storyboard(
             title=ctx.title,
             config=ctx.config,
             content_metadata=ctx.params.get("content_metadata"),
             created_at=datetime.now()
         )
-        
-        # Create frames
+
+        # Tạo các frame
         for i, (narration, image_prompt) in enumerate(zip(ctx.narrations, ctx.image_prompts)):
             frame = StoryboardFrame(
                 index=i,
@@ -291,26 +289,26 @@ class StandardPipeline(LinearVideoPipeline):
             ctx.storyboard.frames.append(frame)
 
     async def produce_assets(self, ctx: PipelineContext):
-        """Step 6: Generate audio, images, and render frames (Core processing)."""
+        """Bước 6: Sinh audio, ảnh và render các frame (Xử lý cốt lõi)."""
         storyboard = ctx.storyboard
         config = ctx.config
-        
-        # Check if using RunningHub workflows for parallel processing
+
+        # Kiểm tra xem có dùng workflow RunningHub để xử lý song song không
         is_runninghub = (
             (config.tts_workflow and config.tts_workflow.startswith("runninghub/")) or
             (config.media_workflow and config.media_workflow.startswith("runninghub/"))
         )
-        
-        # Get concurrent limit from config_manager (supports hot reload without restart)
+
+        # Lấy giới hạn song song từ config_manager (hỗ trợ hot reload không cần restart)
         from pixelle_video.config import config_manager
         runninghub_concurrent_limit = config_manager.config.comfyui.runninghub_concurrent_limit or 1
-        
+
         if is_runninghub and runninghub_concurrent_limit > 1:
-            logger.info(f"🚀 Using parallel processing for RunningHub workflows (max {runninghub_concurrent_limit} concurrent)")
-            
+            logger.info(f"🚀 Đang dùng xử lý song song cho workflow RunningHub (tối đa {runninghub_concurrent_limit} đồng thời)")
+
             semaphore = asyncio.Semaphore(runninghub_concurrent_limit)
             completed_count = 0
-            
+
             async def process_frame_with_semaphore(i: int, frame: StoryboardFrame):
                 nonlocal completed_count
                 async with semaphore:
@@ -332,7 +330,7 @@ class StandardPipeline(LinearVideoPipeline):
                             )
                             ctx.progress_callback(adjusted_event)
                     
-                    # Report frame start
+                    # Báo cáo bắt đầu frame
                     self._report_progress(
                         ctx.progress_callback,
                         "processing_frame",
@@ -340,7 +338,7 @@ class StandardPipeline(LinearVideoPipeline):
                         frame_current=i+1,
                         frame_total=len(storyboard.frames)
                     )
-                    
+
                     processed_frame = await self.core.frame_processor(
                         frame=frame,
                         storyboard=storyboard,
@@ -348,25 +346,25 @@ class StandardPipeline(LinearVideoPipeline):
                         total_frames=len(storyboard.frames),
                         progress_callback=frame_progress_callback
                     )
-                    
+
                     completed_count += 1
-                    logger.info(f"✅ Frame {i+1} completed ({processed_frame.duration:.2f}s) [{completed_count}/{len(storyboard.frames)}]")
+                    logger.info(f"✅ Frame {i+1} hoàn thành ({processed_frame.duration:.2f}s) [{completed_count}/{len(storyboard.frames)}]")
                     return i, processed_frame
-            
-            # Create all tasks and execute in parallel
+
+            # Tạo tất cả task và thực thi song song
             tasks = [process_frame_with_semaphore(i, frame) for i, frame in enumerate(storyboard.frames)]
             results = await asyncio.gather(*tasks)
-            
-            # Update frames in order and calculate total duration
+
+            # Cập nhật frame theo thứ tự và tính tổng thời lượng
             for idx, processed_frame in sorted(results, key=lambda x: x[0]):
                 storyboard.frames[idx] = processed_frame
                 storyboard.total_duration += processed_frame.duration
-            
-            logger.info(f"✅ All frames processed in parallel (total duration: {storyboard.total_duration:.2f}s)")
+
+            logger.info(f"✅ Tất cả frame đã xử lý song song (tổng thời lượng: {storyboard.total_duration:.2f}s)")
         else:
-            # Serial processing for non-RunningHub workflows
-            logger.info("⚙️ Using serial processing (non-RunningHub workflow)")
-            
+            # Xử lý tuần tự cho workflow không phải RunningHub
+            logger.info("⚙️ Đang dùng xử lý tuần tự (workflow không phải RunningHub)")
+
             for i, frame in enumerate(storyboard.frames):
                 base_progress = 0.2
                 frame_range = 0.6
@@ -386,7 +384,7 @@ class StandardPipeline(LinearVideoPipeline):
                         )
                         ctx.progress_callback(adjusted_event)
                 
-                # Report frame start
+                # Báo cáo bắt đầu frame
                 self._report_progress(
                     ctx.progress_callback,
                     "processing_frame",
@@ -394,7 +392,7 @@ class StandardPipeline(LinearVideoPipeline):
                     frame_current=i+1,
                     frame_total=len(storyboard.frames)
                 )
-                
+
                 processed_frame = await self.core.frame_processor(
                     frame=frame,
                     storyboard=storyboard,
@@ -403,17 +401,17 @@ class StandardPipeline(LinearVideoPipeline):
                     progress_callback=frame_progress_callback
                 )
                 storyboard.total_duration += processed_frame.duration
-                logger.info(f"✅ Frame {i+1} completed ({processed_frame.duration:.2f}s)")
+                logger.info(f"✅ Frame {i+1} hoàn thành ({processed_frame.duration:.2f}s)")
 
     async def post_production(self, ctx: PipelineContext):
-        """Step 7: Concatenate videos and add BGM."""
+        """Bước 7: Ghép video và thêm BGM."""
         self._report_progress(ctx.progress_callback, "concatenating", 0.85)
-        
+
         storyboard = ctx.storyboard
         segment_paths = [frame.video_segment_path for frame in storyboard.frames]
-        
+
         video_service = VideoService()
-        
+
         final_video_path = video_service.concat_videos(
             videos=segment_paths,
             output=ctx.final_video_path,
@@ -421,63 +419,63 @@ class StandardPipeline(LinearVideoPipeline):
             bgm_volume=ctx.params.get("bgm_volume", 0.2),
             bgm_mode=ctx.params.get("bgm_mode", "loop")
         )
-        
+
         storyboard.final_video_path = final_video_path
         storyboard.completed_at = datetime.now()
-        
-        # Copy to user-specified path if provided
+
+        # Copy tới đường dẫn người dùng chỉ định nếu có
         user_specified_output = ctx.params.get("output_path")
         if user_specified_output:
             Path(user_specified_output).parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(final_video_path, user_specified_output)
-            logger.info(f"📹 Final video copied to: {user_specified_output}")
+            logger.info(f"📹 Đã copy video cuối tới: {user_specified_output}")
             ctx.final_video_path = user_specified_output
             storyboard.final_video_path = user_specified_output
-        
-        logger.success(f"🎬 Video generation completed: {ctx.final_video_path}")
+
+        logger.success(f"🎬 Tạo video hoàn thành: {ctx.final_video_path}")
 
     async def finalize(self, ctx: PipelineContext) -> VideoGenerationResult:
-        """Step 8: Create result object and persist metadata."""
+        """Bước 8: Tạo object kết quả và lưu metadata."""
         self._report_progress(ctx.progress_callback, "completed", 1.0)
-        
+
         video_path_obj = Path(ctx.final_video_path)
         file_size = video_path_obj.stat().st_size
-        
+
         result = VideoGenerationResult(
             video_path=ctx.final_video_path,
             storyboard=ctx.storyboard,
             duration=ctx.storyboard.total_duration,
             file_size=file_size
         )
-        
+
         ctx.result = result
-        
-        logger.info(f"✅ Generated video: {ctx.final_video_path}")
-        logger.info(f"   Duration: {ctx.storyboard.total_duration:.2f}s")
-        logger.info(f"   Size: {file_size / (1024*1024):.2f} MB")
-        logger.info(f"   Frames: {len(ctx.storyboard.frames)}")
-        
-        # Persist metadata
+
+        logger.info(f"✅ Đã tạo video: {ctx.final_video_path}")
+        logger.info(f"   Thời lượng: {ctx.storyboard.total_duration:.2f}s")
+        logger.info(f"   Kích thước: {file_size / (1024*1024):.2f} MB")
+        logger.info(f"   Số frame: {len(ctx.storyboard.frames)}")
+
+        # Lưu metadata
         await self._persist_task_data(ctx)
-        
+
         return result
 
     async def _persist_task_data(self, ctx: PipelineContext):
         """
-        Persist task metadata and storyboard to filesystem
+        Lưu metadata task và storyboard vào filesystem
         """
         try:
             storyboard = ctx.storyboard
             result = ctx.result
             task_id = storyboard.config.task_id
-            
+
             if not task_id:
-                logger.warning("No task_id in storyboard, skipping persistence")
+                logger.warning("Không có task_id trong storyboard, bỏ qua persistence")
                 return
-            
-            # Build metadata
+
+            # Xây dựng metadata
             input_with_title = ctx.params.copy()
-            input_with_title["text"] = ctx.input_text # Ensure text is included
+            input_with_title["text"] = ctx.input_text # Đảm bảo text được bao gồm
             if not input_with_title.get("title"):
                 input_with_title["title"] = storyboard.title
             
@@ -504,14 +502,14 @@ class StandardPipeline(LinearVideoPipeline):
                 }
             }
             
-            # Save metadata
+            # Lưu metadata
             await self.core.persistence.save_task_metadata(task_id, metadata)
-            logger.info(f"💾 Saved task metadata: {task_id}")
-            
-            # Save storyboard
+            logger.info(f"💾 Đã lưu metadata task: {task_id}")
+
+            # Lưu storyboard
             await self.core.persistence.save_storyboard(task_id, storyboard)
-            logger.info(f"💾 Saved storyboard: {task_id}")
-            
+            logger.info(f"💾 Đã lưu storyboard: {task_id}")
+
         except Exception as e:
-            logger.error(f"Failed to persist task data: {e}")
-            # Don't raise - persistence failure shouldn't break video generation
+            logger.error(f"Không thể lưu dữ liệu task: {e}")
+            # Đừng raise - việc lưu thất bại không nên làm hỏng quá trình tạo video

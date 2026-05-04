@@ -11,8 +11,8 @@
 # limitations under the License.
 
 """
-Pixelle-Video Web UI Package
+Gói Pixelle-Video Web UI
 
-A modular web interface for generating short videos from content.
+Giao diện web dạng module để sinh video ngắn từ nội dung.
 """
 

@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-FAQ component for displaying frequently asked questions
+Component FAQ để hiển thị các câu hỏi thường gặp
 """
 
 import re
@@ -26,119 +26,119 @@ from web.i18n import get_language, tr
 
 def load_faq_content(language: str) -> Optional[str]:
     """
-    Load FAQ content based on current language
-    
+    Tải nội dung FAQ dựa trên ngôn ngữ hiện tại
+
     Args:
-        language: Current language code (e.g., "zh_CN", "en_US")
-    
+        language: Mã ngôn ngữ hiện tại (ví dụ: "zh_CN", "en_US")
+
     Returns:
-        FAQ content as markdown string, or None if file not found
+        Nội dung FAQ dưới dạng markdown, hoặc None nếu không tìm thấy file
     """
-    # Determine which FAQ file to load based on language
-    # For Chinese (zh_CN), use FAQ_CN.md
-    # For all other languages, use FAQ.md (English)
+    # Xác định file FAQ cần tải theo ngôn ngữ
+    # Tiếng Trung (zh_CN) dùng FAQ_CN.md
+    # Các ngôn ngữ khác dùng FAQ.md (tiếng Anh)
     project_root = Path(__file__).resolve().parent.parent.parent
-    
+
     if language.startswith("zh"):
         faq_file = project_root / "docs" / "FAQ_CN.md"
     else:
         faq_file = project_root / "docs" / "FAQ.md"
-    
+
     try:
         if faq_file.exists():
             with open(faq_file, "r", encoding="utf-8") as f:
                 content = f.read()
-            logger.debug(f"Loaded FAQ from: {faq_file}")
+            logger.debug(f"Đã tải FAQ từ: {faq_file}")
             return content
         else:
-            logger.warning(f"FAQ file not found: {faq_file}")
+            logger.warning(f"Không tìm thấy file FAQ: {faq_file}")
             return None
     except Exception as e:
-        logger.error(f"Failed to load FAQ file {faq_file}: {e}")
+        logger.error(f"Không tải được file FAQ {faq_file}: {e}")
         return None
 
 
 def parse_faq_sections(content: str) -> list[tuple[str, str]]:
     """
-    Parse FAQ content into sections by ### headings
-    
+    Phân tích nội dung FAQ thành các mục theo tiêu đề ###
+
     Args:
-        content: Raw markdown content
-    
+        content: Nội dung markdown thô
+
     Returns:
-        List of (question, answer) tuples
+        Danh sách các tuple (câu hỏi, câu trả lời)
     """
-    # Remove the first main heading (starts with #, not ###)
+    # Bỏ tiêu đề chính đầu tiên (bắt đầu bằng #, không phải ###)
     lines = content.split('\n')
     if lines and lines[0].startswith('#') and not lines[0].startswith('##'):
         content = '\n'.join(lines[1:])
-    
-    # Split by ### headings (top-level questions)
-    # Pattern matches ### at start of line followed by question text
+
+    # Tách theo các tiêu đề ### (câu hỏi cấp cao nhất)
+    # Pattern khớp ### ở đầu dòng theo sau là phần text câu hỏi
     pattern = r'^###\s+(.+?)$'
-    
+
     sections = []
     current_question = None
     current_answer_lines = []
-    
+
     for line in content.split('\n'):
         match = re.match(pattern, line)
         if match:
-            # Save previous section if exists
+            # Lưu mục trước đó nếu có
             if current_question is not None:
                 answer = '\n'.join(current_answer_lines).strip()
                 sections.append((current_question, answer))
-            # Start new section
+            # Bắt đầu mục mới
             current_question = match.group(1).strip()
             current_answer_lines = []
         else:
             current_answer_lines.append(line)
-    
-    # Save last section
+
+    # Lưu mục cuối cùng
     if current_question is not None:
         answer = '\n'.join(current_answer_lines).strip()
         sections.append((current_question, answer))
-    
+
     return sections
 
 
 def render_faq_sidebar():
     """
-    Render FAQ in the sidebar
-    
-    This component displays frequently asked questions in the sidebar,
-    allowing users to quickly find answers without leaving the main interface.
+    Render FAQ trong sidebar
+
+    Component này hiển thị các câu hỏi thường gặp ở sidebar,
+    giúp người dùng nhanh chóng tìm câu trả lời mà không cần rời khỏi giao diện chính.
     """
     with st.sidebar:
-        # FAQ header with icon
+        # Tiêu đề FAQ kèm icon
         # st.markdown(f"### 🙋‍♀️ {tr('faq.title', fallback='FAQ')}")
-        
-        # Get current language
+
+        # Lấy ngôn ngữ hiện tại
         current_language = get_language()
-        
-        # Load FAQ content
+
+        # Tải nội dung FAQ
         faq_content = load_faq_content(current_language)
-        
+
         if faq_content:
-            # Display FAQ in an expander, expanded by default
+            # Hiển thị FAQ trong một expander, mở sẵn theo mặc định
             with st.expander(tr('faq.expand_to_view', fallback='FAQ'), expanded=True):
-                # Parse FAQ into sections
+                # Phân tích FAQ thành các mục
                 sections = parse_faq_sections(faq_content)
-                
-                # Display each question in its own collapsible expander
+
+                # Hiển thị từng câu hỏi trong expander có thể thu gọn riêng
                 for question, answer in sections:
                     with st.expander(question, expanded=False):
                         st.markdown(answer, unsafe_allow_html=True)
-            
-            # Add a link to GitHub issues for more help
+
+            # Thêm liên kết đến GitHub issues để được trợ giúp thêm
             st.markdown(
-                f"💡 {tr('faq.more_help', fallback='Need more help?')} "
+                f"💡 {tr('faq.more_help', fallback='Cần trợ giúp thêm?')} "
                 f"[GitHub Issues](https://github.com/AIDC-AI/Pixelle-Video/issues)"
             )
         else:
-            # If FAQ cannot be loaded, only show the GitHub link
-            st.markdown(f"### 💡 {tr('faq.more_help', fallback='Need help?')}")
+            # Nếu không tải được FAQ, chỉ hiển thị liên kết GitHub
+            st.markdown(f"### 💡 {tr('faq.more_help', fallback='Cần trợ giúp?')}")
             st.markdown(
                 f"[GitHub Issues](https://github.com/AIDC-AI/Pixelle-Video/issues) | "
-                f"[Documentation](https://aidc-ai.github.io/Pixelle-Video)"
+                f"[Tài liệu](https://aidc-ai.github.io/Pixelle-Video)"
             )

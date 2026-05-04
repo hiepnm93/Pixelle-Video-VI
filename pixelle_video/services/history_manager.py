@@ -11,10 +11,10 @@
 # limitations under the License.
 
 """
-History Manager Service
+Service quản lý lịch sử (History Manager)
 
-Business logic for history management (UI-agnostic).
-Provides high-level operations on top of PersistenceService.
+Logic nghiệp vụ cho quản lý lịch sử (không phụ thuộc UI).
+Cung cấp các thao tác cấp cao trên nền PersistenceService.
 """
 
 from typing import List, Dict, Optional, Any
@@ -26,22 +26,22 @@ from pixelle_video.services.persistence import PersistenceService
 
 class HistoryManager:
     """
-    History management service
-    
-    Provides business logic for:
-    - Task listing and filtering
-    - Task detail retrieval
-    - Task duplication (for re-generation)
-    - Task deletion
-    - Future: Frame regeneration, export, etc.
+    Service quản lý lịch sử
+
+    Cung cấp logic nghiệp vụ cho:
+    - Liệt kê và lọc các task
+    - Lấy chi tiết task
+    - Nhân bản task (để tạo lại)
+    - Xóa task
+    - Trong tương lai: Tạo lại frame, xuất file, v.v.
     """
-    
+
     def __init__(self, persistence: PersistenceService):
         """
-        Initialize history manager
-        
+        Khởi tạo history manager
+
         Args:
-            persistence: PersistenceService instance
+            persistence: Instance của PersistenceService
         """
         self.persistence = persistence
     
@@ -54,15 +54,15 @@ class HistoryManager:
         sort_order: str = "desc"
     ) -> Dict[str, Any]:
         """
-        Get paginated task list
-        
+        Lấy danh sách task có phân trang
+
         Args:
-            page: Page number (1-indexed)
-            page_size: Items per page
-            status: Filter by status (optional)
-            sort_by: Sort field (created_at, completed_at, title, duration)
-            sort_order: Sort order (asc, desc)
-        
+            page: Số trang (bắt đầu từ 1)
+            page_size: Số mục mỗi trang
+            status: Lọc theo trạng thái (tùy chọn)
+            sort_by: Trường để sắp xếp (created_at, completed_at, title, duration)
+            sort_order: Thứ tự sắp xếp (asc, desc)
+
         Returns:
             {
                 "tasks": [...],
@@ -82,17 +82,17 @@ class HistoryManager:
     
     async def get_task_detail(self, task_id: str) -> Optional[Dict[str, Any]]:
         """
-        Get full task detail including storyboard
-        
+        Lấy chi tiết đầy đủ của task, bao gồm cả storyboard
+
         Args:
             task_id: Task ID
-        
+
         Returns:
             {
-                "metadata": {...},      # Task metadata
-                "storyboard": {...}     # Storyboard data (if available)
+                "metadata": {...},      # Metadata của task
+                "storyboard": {...}     # Dữ liệu storyboard (nếu có)
             }
-            or None if task not found
+            hoặc None nếu không tìm thấy task
         """
         metadata = await self.persistence.load_task_metadata(task_id)
         if not metadata:
@@ -107,45 +107,45 @@ class HistoryManager:
     
     async def get_statistics(self) -> Dict[str, Any]:
         """
-        Get statistics about all tasks
-        
+        Lấy thống kê về tất cả các task
+
         Returns:
             {
                 "total_tasks": 100,
                 "completed": 95,
                 "failed": 5,
-                "total_duration": 3600.5,  # seconds
-                "total_size": 1024000000,  # bytes
+                "total_duration": 3600.5,  # giây
+                "total_size": 1024000000,  # byte
             }
         """
         return await self.persistence.get_statistics()
     
     async def delete_task(self, task_id: str) -> bool:
         """
-        Delete a task and all its files
-        
+        Xóa một task và toàn bộ file của nó
+
         Args:
-            task_id: Task ID to delete
-        
+            task_id: Task ID cần xóa
+
         Returns:
-            True if successful, False otherwise
+            True nếu thành công, ngược lại False
         """
         return await self.persistence.delete_task(task_id)
-    
+
     async def duplicate_task(self, task_id: str) -> Optional[Dict[str, Any]]:
         """
-        Duplicate a task (get input parameters for new generation)
-        
-        This allows users to:
-        1. Copy all generation parameters from a previous task
-        2. Pre-fill the generation form
-        3. Regenerate with same/modified parameters
-        
+        Nhân bản một task (lấy tham số input để tạo mới)
+
+        Cho phép người dùng:
+        1. Sao chép toàn bộ tham số tạo từ một task trước đó
+        2. Điền sẵn vào form tạo
+        3. Tạo lại với tham số giống/sửa đổi
+
         Args:
-            task_id: Task ID to duplicate
-        
+            task_id: Task ID cần nhân bản
+
         Returns:
-            Input parameters dict or None if task not found
+            Dict tham số input hoặc None nếu không tìm thấy task
             {
                 "text": "...",
                 "mode": "generate",
@@ -158,23 +158,23 @@ class HistoryManager:
         """
         metadata = await self.persistence.load_task_metadata(task_id)
         if not metadata:
-            logger.warning(f"Task {task_id} not found for duplication")
+            logger.warning(f"Không tìm thấy task {task_id} để nhân bản")
             return None
-        
-        # Extract input parameters
+
+        # Trích xuất tham số input
         input_params = metadata.get("input", {})
-        logger.info(f"Duplicated task {task_id} parameters")
-        
+        logger.info(f"Đã nhân bản tham số của task {task_id}")
+
         return input_params
-    
+
     async def rebuild_index(self):
-        """Rebuild task index (useful for maintenance or after manual changes)"""
+        """Xây dựng lại chỉ mục task (hữu ích khi bảo trì hoặc sau khi sửa thủ công)"""
         await self.persistence.rebuild_index()
     
     # ========================================================================
-    # Future Extensions (Phase 3)
+    # Mở rộng trong tương lai (Phase 3)
     # ========================================================================
-    
+
     async def regenerate_frame(
         self,
         task_id: str,
@@ -182,43 +182,43 @@ class HistoryManager:
         **override_params
     ) -> Optional[str]:
         """
-        Regenerate a specific frame (FUTURE FEATURE)
-        
+        Tạo lại một frame cụ thể (TÍNH NĂNG TƯƠNG LAI)
+
         Args:
-            task_id: Original task ID
-            frame_index: Frame index to regenerate (0-based)
-            **override_params: Parameters to override (image_prompt, style, etc.)
-        
+            task_id: Task ID gốc
+            frame_index: Index của frame cần tạo lại (bắt đầu từ 0)
+            **override_params: Các tham số để ghi đè (image_prompt, style, v.v.)
+
         Returns:
-            New frame image path or None if failed
-        
-        TODO: Implement in Phase 3
-        - Load original storyboard
-        - Get frame parameters
-        - Override with new parameters
-        - Call image generation service
-        - Update storyboard
-        - Re-composite video
+            Đường dẫn ảnh frame mới hoặc None nếu thất bại
+
+        TODO: Triển khai ở Phase 3
+        - Tải storyboard gốc
+        - Lấy các tham số của frame
+        - Ghi đè bằng tham số mới
+        - Gọi service tạo ảnh
+        - Cập nhật storyboard
+        - Compose lại video
         """
-        logger.warning("regenerate_frame is not implemented yet (Phase 3 feature)")
+        logger.warning("regenerate_frame chưa được triển khai (tính năng Phase 3)")
         return None
-    
+
     async def export_task(self, task_id: str, export_path: str) -> Optional[str]:
         """
-        Export task as a package (metadata + video + frames) (FUTURE FEATURE)
-        
+        Xuất task thành một gói (metadata + video + frames) (TÍNH NĂNG TƯƠNG LAI)
+
         Args:
-            task_id: Task ID to export
-            export_path: Export file path (e.g., "exports/task.zip")
-        
+            task_id: Task ID cần xuất
+            export_path: Đường dẫn file xuất (ví dụ: "exports/task.zip")
+
         Returns:
-            Export file path or None if failed
-        
-        TODO: Implement in Phase 3
-        - Collect all task files
-        - Create ZIP archive
-        - Include metadata.json, storyboard.json, video, frames
+            Đường dẫn file đã xuất hoặc None nếu thất bại
+
+        TODO: Triển khai ở Phase 3
+        - Thu thập toàn bộ file của task
+        - Tạo file nén ZIP
+        - Bao gồm metadata.json, storyboard.json, video, frames
         """
-        logger.warning("export_task is not implemented yet (Phase 3 feature)")
+        logger.warning("export_task chưa được triển khai (tính năng Phase 3)")
         return None
 

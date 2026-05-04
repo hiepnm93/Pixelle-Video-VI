@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-System settings component for web UI
+Component cài đặt hệ thống cho web UI
 """
 
 import streamlit as st
@@ -22,43 +22,43 @@ from pixelle_video.config import config_manager
 
 
 def render_advanced_settings():
-    """Render system configuration (required) with 2-column layout"""
-    # Check if system is configured
+    """Render cấu hình hệ thống (bắt buộc) với bố cục 2 cột"""
+    # Kiểm tra hệ thống đã cấu hình chưa
     is_configured = config_manager.validate()
-    
-    # Expand if not configured, collapse if configured
+
+    # Mở rộng nếu chưa cấu hình, thu gọn nếu đã cấu hình
     with st.expander(tr("settings.title"), expanded=not is_configured):
-        # 2-column layout: LLM | ComfyUI
+        # Bố cục 2 cột: LLM | ComfyUI
         llm_col, comfyui_col = st.columns(2)
-        
+
         # ====================================================================
-        # Column 1: LLM Settings
+        # Cột 1: Cài đặt LLM
         # ====================================================================
         with llm_col:
             with st.container(border=True):
                 st.markdown(f"**{tr('settings.llm.title')}**")
-                
-                # Quick preset selection
+
+                # Chọn nhanh từ preset
                 from pixelle_video.llm_presets import get_preset_names, get_preset, find_preset_by_base_url_and_model
-                
-                # Custom at the end
+
+                # Đặt Custom ở cuối
                 preset_names = get_preset_names() + ["Custom"]
-                
-                # Get current config
+
+                # Lấy cấu hình hiện tại
                 current_llm = config_manager.get_llm_config()
-                
-                # Auto-detect which preset matches current config
+
+                # Tự động phát hiện preset nào khớp với cấu hình hiện tại
                 current_preset = find_preset_by_base_url_and_model(
-                    current_llm["base_url"], 
+                    current_llm["base_url"],
                     current_llm["model"]
                 )
-                
-                # Determine default index based on current config
+
+                # Xác định index mặc định dựa trên cấu hình hiện tại
                 if current_preset:
-                    # Current config matches a preset
+                    # Cấu hình hiện tại khớp với một preset
                     default_index = preset_names.index(current_preset)
                 else:
-                    # Current config doesn't match any preset -> Custom
+                    # Cấu hình hiện tại không khớp với preset nào -> Custom
                     default_index = len(preset_names) - 1
                 
                 selected_preset = st.selectbox(
@@ -69,35 +69,35 @@ def render_advanced_settings():
                     key="llm_preset_select"
                 )
                 
-                # Auto-fill based on selected preset
+                # Tự điền dựa trên preset đã chọn
                 if selected_preset != "Custom":
-                    # Preset selected
+                    # Đã chọn một preset
                     preset_config = get_preset(selected_preset)
-                    
-                    # If user switched to a different preset (not current one), clear API key
-                    # If it's the same as current config, keep API key
+
+                    # Nếu người dùng chuyển sang preset khác (không phải hiện tại), xoá API key
+                    # Nếu giống cấu hình hiện tại, giữ lại API key
                     if selected_preset == current_preset:
-                        # Same preset as saved config: keep API key
+                        # Cùng preset với cấu hình đã lưu: giữ API key
                         default_api_key = current_llm["api_key"]
                     else:
-                        # Different preset: use default_api_key if provided (e.g., Ollama), otherwise clear
+                        # Preset khác: dùng default_api_key nếu có (ví dụ: Ollama), nếu không thì xoá
                         default_api_key = preset_config.get("default_api_key", "")
-                    
+
                     default_base_url = preset_config.get("base_url", "")
                     default_model = preset_config.get("model", "")
-                    
-                    # Show API key URL if available
+
+                    # Hiển thị URL lấy API key nếu có
                     if preset_config.get("api_key_url"):
                         st.markdown(f"🔑 [{tr('settings.llm.get_api_key')}]({preset_config['api_key_url']})")
                 else:
-                    # Custom: show current saved config (if any)
+                    # Custom: hiển thị cấu hình đang lưu (nếu có)
                     default_api_key = current_llm["api_key"]
                     default_base_url = current_llm["base_url"]
                     default_model = current_llm["model"]
-                
+
                 st.markdown("---")
-                
-                # API Key (use unique key to force refresh when switching preset)
+
+                # API Key (dùng key riêng để buộc refresh khi đổi preset)
                 llm_api_key = st.text_input(
                     f"{tr('settings.llm.api_key')} *",
                     value=default_api_key,
@@ -105,32 +105,32 @@ def render_advanced_settings():
                     help=tr("settings.llm.api_key_help"),
                     key=f"llm_api_key_input_{selected_preset}"
                 )
-                
-                # Base URL (use unique key based on preset to force refresh)
+
+                # Base URL (dùng key riêng theo preset để buộc refresh)
                 llm_base_url = st.text_input(
                     f"{tr('settings.llm.base_url')} *",
                     value=default_base_url,
                     help=tr("settings.llm.base_url_help"),
                     key=f"llm_base_url_input_{selected_preset}"
                 )
-                
-                # Model selection with dropdown and load button
-                # Initialize session state for loaded models
+
+                # Chọn model với dropdown và nút load
+                # Khởi tạo session state cho danh sách model đã tải
                 if "llm_loaded_models" not in st.session_state:
                     st.session_state.llm_loaded_models = []
-                
-                # Build model options: Custom option + loaded models
+
+                # Xây danh sách lựa chọn model: tuỳ chọn Custom + các model đã tải
                 CUSTOM_MODEL_OPTION = f"✏️ {tr('settings.llm.custom_model')}"
                 model_options = [CUSTOM_MODEL_OPTION] + st.session_state.llm_loaded_models
-                
-                # Determine default selection
+
+                # Xác định lựa chọn mặc định
                 if default_model in st.session_state.llm_loaded_models:
                     default_model_index = model_options.index(default_model)
                 else:
-                    # Default model not in loaded list, use custom
+                    # Model mặc định không có trong danh sách đã tải, dùng custom
                     default_model_index = 0
-                
-                # Model dropdown with load button on the right
+
+                # Dropdown chọn model với nút load bên phải
                 model_col, load_col, test_col = st.columns([3, 1, 1])
                 
                 with model_col:
@@ -160,7 +160,7 @@ def render_advanced_settings():
                         use_container_width=True
                     )
                 
-                # Handle load models button click
+                # Xử lý sự kiện click nút tải model
                 if load_clicked:
                     if llm_api_key and llm_base_url:
                         try:
@@ -174,8 +174,8 @@ def render_advanced_settings():
                             st.error(tr("settings.llm.models_load_failed").replace("{error}", str(e)))
                     else:
                         st.warning(tr("status.llm_config_incomplete"))
-                
-                # Handle test connection button click
+
+                # Xử lý sự kiện click nút kiểm tra kết nối
                 if test_clicked:
                     if llm_api_key and llm_base_url:
                         try:
@@ -190,8 +190,8 @@ def render_advanced_settings():
                             st.error(tr("settings.llm.connection_failed").replace("{error}", str(e)))
                     else:
                         st.warning(tr("status.llm_config_incomplete"))
-                
-                # If custom option selected, show text input for custom model name
+
+                # Nếu chọn Custom, hiển thị ô nhập tên model tuỳ chỉnh
                 if selected_model_option == CUSTOM_MODEL_OPTION:
                     llm_model = st.text_input(
                         tr("settings.llm.custom_model_input"),
@@ -203,16 +203,16 @@ def render_advanced_settings():
                     llm_model = selected_model_option
         
         # ====================================================================
-        # Column 2: ComfyUI Settings
+        # Cột 2: Cài đặt ComfyUI
         # ====================================================================
         with comfyui_col:
             with st.container(border=True):
                 st.markdown(f"**{tr('settings.comfyui.title')}**")
-                
-                # Get current configuration
+
+                # Lấy cấu hình hiện tại
                 comfyui_config = config_manager.get_comfyui_config()
-                
-                # Local/Self-hosted ComfyUI configuration
+
+                # Cấu hình ComfyUI Local/Self-hosted
                 st.markdown(f"**{tr('settings.comfyui.local_title')}**")
                 url_col, key_col = st.columns(2)
                 with url_col:
@@ -231,7 +231,7 @@ def render_advanced_settings():
                         key="comfyui_api_key_input"
                     )
                 
-                # Test connection button
+                # Nút kiểm tra kết nối
                 if st.button(tr("btn.test_connection"), key="test_comfyui", use_container_width=True):
                     try:
                         import requests
@@ -242,10 +242,10 @@ def render_advanced_settings():
                             st.error(tr("status.connection_failed"))
                     except Exception as e:
                         st.error(f"{tr('status.connection_failed')}: {str(e)}")
-                
+
                 st.markdown("---")
-                
-                # RunningHub cloud configuration
+
+                # Cấu hình cloud RunningHub
                 st.markdown(f"**{tr('settings.comfyui.cloud_title')}**")
                 runninghub_api_key = st.text_input(
                     tr("settings.comfyui.runninghub_api_key"),
@@ -260,7 +260,7 @@ def render_advanced_settings():
                     f"(https://www.runninghub{'.cn' if get_language() == 'zh_CN' else '.ai'}/?inviteCode=bozpdlbj)"
                 )
                 
-                # RunningHub concurrent limit and instance type (in one row)
+                # Giới hạn đồng thời và loại instance của RunningHub (cùng một hàng)
                 limit_col, instance_col = st.columns(2)
                 with limit_col:
                     runninghub_concurrent_limit = st.number_input(
@@ -272,10 +272,10 @@ def render_advanced_settings():
                         key="runninghub_concurrent_limit_input"
                     )
                 with instance_col:
-                    # Check if instance type is "plus" (48G VRAM enabled)
+                    # Kiểm tra loại instance có phải "plus" (bật 48G VRAM) không
                     current_instance_type = comfyui_config.get("runninghub_instance_type") or ""
                     is_plus_enabled = current_instance_type == "plus"
-                    # Instance type options with i18n
+                    # Tuỳ chọn loại instance kèm i18n
                     instance_options = [
                         tr("settings.comfyui.runninghub_instance_24g"),
                         tr("settings.comfyui.runninghub_instance_48g"),
@@ -287,26 +287,26 @@ def render_advanced_settings():
                         help=tr("settings.comfyui.runninghub_instance_type_help"),
                         key="runninghub_instance_type_input"
                     )
-                    # Convert display value back to actual value
+                    # Chuyển giá trị hiển thị về giá trị thực tế
                     runninghub_48g_enabled = runninghub_instance_type_display == tr("settings.comfyui.runninghub_instance_48g")
-        
+
         # ====================================================================
-        # Action Buttons (full width at bottom)
+        # Các nút thao tác (chiếm trọn chiều ngang ở dưới)
         # ====================================================================
         st.markdown("---")
-        
+
         col1, col2 = st.columns(2)
         with col1:
             if st.button(tr("btn.save_config"), use_container_width=True, key="save_config_btn"):
                 try:
-                    # Validate and save LLM configuration
+                    # Kiểm tra và lưu cấu hình LLM
                     if not (llm_api_key and llm_base_url and llm_model):
                         st.error(tr("status.llm_config_incomplete"))
                     else:
                         config_manager.set_llm_config(llm_api_key, llm_base_url, llm_model)
-                    
-                    # Save ComfyUI configuration (optional fields, always save what's provided)
-                    # Convert checkbox to instance type: True -> "plus", False -> ""
+
+                    # Lưu cấu hình ComfyUI (các trường tuỳ chọn, luôn lưu những gì được cung cấp)
+                    # Chuyển checkbox sang loại instance: True -> "plus", False -> ""
                     instance_type = "plus" if runninghub_48g_enabled else ""
                     config_manager.set_comfyui_config(
                         comfyui_url=comfyui_url if comfyui_url else None,
@@ -315,18 +315,18 @@ def render_advanced_settings():
                         runninghub_concurrent_limit=int(runninghub_concurrent_limit),
                         runninghub_instance_type=instance_type
                     )
-                    
-                    # Only save to file if LLM config is valid
+
+                    # Chỉ ghi xuống file nếu cấu hình LLM hợp lệ
                     if llm_api_key and llm_base_url and llm_model:
                         config_manager.save()
                         st.success(tr("status.config_saved"))
                         safe_rerun()
                 except Exception as e:
                     st.error(f"{tr('status.save_failed')}: {str(e)}")
-        
+
         with col2:
             if st.button(tr("btn.reset_config"), use_container_width=True, key="reset_config_btn"):
-                # Reset to default
+                # Reset về mặc định
                 from pixelle_video.config.schema import PixelleVideoConfig
                 config_manager.config = PixelleVideoConfig()
                 config_manager.save()

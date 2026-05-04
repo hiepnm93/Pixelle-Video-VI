@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Pixelle-Video API Layer
+Lớp API của Pixelle-Video
 
-FastAPI-based REST API for video generation services.
+REST API dựa trên FastAPI cho các dịch vụ tạo video.
 """

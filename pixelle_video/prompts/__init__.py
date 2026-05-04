@@ -11,17 +11,17 @@
 # limitations under the License.
 
 """
-Prompts package
+Package Prompts
 
-Centralized prompt management for all LLM interactions.
+Quản lý tập trung tất cả prompt cho mọi tương tác với LLM.
 """
 
-# Narration prompts
+# Prompts cho thuyết minh
 from pixelle_video.prompts.topic_narration import build_topic_narration_prompt
 from pixelle_video.prompts.content_narration import build_content_narration_prompt
 from pixelle_video.prompts.title_generation import build_title_generation_prompt
 
-# Image prompts
+# Prompts cho ảnh
 from pixelle_video.prompts.image_generation import (
     build_image_prompt_prompt,
     IMAGE_STYLE_PRESETS,
@@ -31,16 +31,16 @@ from pixelle_video.prompts.style_conversion import build_style_conversion_prompt
 
 
 __all__ = [
-    # Narration builders
+    # Builder cho thuyết minh
     "build_topic_narration_prompt",
     "build_content_narration_prompt",
     "build_title_generation_prompt",
-    
-    # Image builders
+
+    # Builder cho ảnh
     "build_image_prompt_prompt",
     "build_style_conversion_prompt",
-    
-    # Image style presets
+
+    # Preset phong cách ảnh
     "IMAGE_STYLE_PRESETS",
     "DEFAULT_IMAGE_STYLE",
 ]

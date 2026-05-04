@@ -11,12 +11,12 @@
 # limitations under the License.
 
 """
-Custom Video Generation Pipeline
+Pipeline tạo video tuỳ chỉnh
 
-Template pipeline for creating your own custom video generation workflows.
-This serves as a reference implementation showing how to extend BasePipeline.
+Pipeline mẫu để tạo các workflow tạo video tuỳ chỉnh của riêng bạn.
+Đây là một implementation tham chiếu cho thấy cách mở rộng BasePipeline.
 
-For real projects, copy this file and modify it according to your needs.
+Với project thực tế, hãy copy file này và sửa đổi theo nhu cầu.
 """
 
 from datetime import datetime
@@ -38,130 +38,130 @@ from pixelle_video.models.storyboard import (
 
 class CustomPipeline(BasePipeline):
     """
-    Custom video generation pipeline template
-    
-    This is a template showing how to create your own pipeline with custom logic.
-    You can customize:
-    - Content processing logic
-    - Narration generation strategy
-    - Image prompt generation (conditional based on template)
-    - Frame composition
-    - Video assembly
-    
-    KEY OPTIMIZATION: Conditional Image Generation
+    Mẫu pipeline tạo video tuỳ chỉnh
+
+    Đây là mẫu cho thấy cách tạo pipeline với logic tuỳ chỉnh của riêng bạn.
+    Bạn có thể tuỳ biến:
+    - Logic xử lý nội dung
+    - Chiến lược sinh thuyết minh
+    - Sinh prompt ảnh (có điều kiện dựa trên template)
+    - Ghép frame
+    - Lắp ráp video
+
+    TỐI ƯU CHÍNH: Sinh ảnh có điều kiện
     -----------------------------------------------
-    This pipeline supports automatic detection of template image requirements.
-    If your template doesn't use {{image}}, the entire image generation pipeline
-    can be skipped, providing:
-      ⚡ Faster generation (no image API calls)
-      💰 Lower cost (no LLM calls for image prompts)
-      🚀 Reduced dependencies (no ComfyUI needed for text-only videos)
-    
-    Usage patterns:
-      1. Text-only videos: Use templates/1080x1920/simple.html
-      2. AI-generated images: Use templates with {{image}} placeholder
-      3. Custom logic: Modify template or override the detection logic in your subclass
-    
-    Example usage:
-        # 1. Create your own pipeline by copying this file
-        # 2. Modify the __call__ method with your custom logic
-        # 3. Register it in service.py or dynamically
-        
+    Pipeline này hỗ trợ tự động phát hiện yêu cầu ảnh của template.
+    Nếu template của bạn không dùng {{image}}, toàn bộ pipeline sinh ảnh
+    có thể bỏ qua, mang lại:
+      ⚡ Tạo nhanh hơn (không gọi API tạo ảnh)
+      💰 Chi phí thấp hơn (không gọi LLM để sinh prompt ảnh)
+      🚀 Giảm phụ thuộc (không cần ComfyUI cho video chỉ có text)
+
+    Mẫu sử dụng:
+      1. Video chỉ có text: Dùng templates/1080x1920/simple.html
+      2. Ảnh sinh bằng AI: Dùng template có placeholder {{image}}
+      3. Logic tuỳ chỉnh: Sửa template hoặc override logic phát hiện trong subclass của bạn
+
+    Ví dụ sử dụng:
+        # 1. Tạo pipeline của riêng bạn bằng cách copy file này
+        # 2. Sửa method __call__ với logic tuỳ chỉnh của bạn
+        # 3. Đăng ký nó trong service.py hoặc động
+
         from pixelle_video.pipelines.custom import CustomPipeline
         pixelle_video.pipelines["my_custom"] = CustomPipeline(pixelle_video)
-        
-        # 4. Use it
+
+        # 4. Sử dụng
         result = await pixelle_video.generate_video(
             text=your_content,
             pipeline="my_custom",
-            # Your custom parameters here
+            # Tham số tuỳ chỉnh của bạn ở đây
         )
     """
     
     async def __call__(
         self,
         text: str,
-        # === Custom Parameters ===
-        # Add your own parameters here
+        # === Tham số tuỳ chỉnh ===
+        # Thêm tham số riêng của bạn ở đây
         custom_param_example: str = "default_value",
-        
-        # === Standard Parameters (keep these for compatibility) ===
-        tts_inference_mode: Optional[str] = None,  # "local" or "comfyui"
-        voice_id: Optional[str] = None,  # Deprecated, use tts_voice
-        tts_voice: Optional[str] = None,  # Voice ID for local mode
+
+        # === Tham số tiêu chuẩn (giữ để tương thích) ===
+        tts_inference_mode: Optional[str] = None,  # "local" hoặc "comfyui"
+        voice_id: Optional[str] = None,  # Deprecated, dùng tts_voice
+        tts_voice: Optional[str] = None,  # Voice ID cho chế độ local
         tts_workflow: Optional[str] = None,
         tts_speed: float = 1.2,
         ref_audio: Optional[str] = None,
-        
+
         media_workflow: Optional[str] = None,
-        # Note: media_width and media_height are auto-determined from template
-        
+        # Lưu ý: media_width và media_height được tự động xác định từ template
+
         frame_template: Optional[str] = None,
         video_fps: int = 30,
         output_path: Optional[str] = None,
-        
+
         bgm_path: Optional[str] = None,
         bgm_volume: float = 0.2,
-        
+
         progress_callback: Optional[Callable[[ProgressEvent], None]] = None,
     ) -> VideoGenerationResult:
         """
-        Custom video generation workflow
-        
-        Customize this method to implement your own logic.
-        
+        Workflow tạo video tuỳ chỉnh
+
+        Tuỳ chỉnh method này để implement logic của riêng bạn.
+
         Args:
-            text: Input text (customize meaning as needed)
-            custom_param_example: Your custom parameter
-            (other standard parameters...)
-        
+            text: Văn bản đầu vào (tuỳ chỉnh ý nghĩa theo nhu cầu)
+            custom_param_example: Tham số tuỳ chỉnh của bạn
+            (các tham số tiêu chuẩn khác...)
+
         Returns:
             VideoGenerationResult
-        
-        Image Generation Logic:
-            - image_*.html templates → automatically generates images
-            - video_*.html templates → automatically generates videos
-            - static_*.html templates → skips media generation (faster, cheaper)
-            - To customize: Override the template type detection logic in your subclass
+
+        Logic sinh ảnh:
+            - Template image_*.html → tự động sinh ảnh
+            - Template video_*.html → tự động sinh video
+            - Template static_*.html → bỏ qua sinh media (nhanh hơn, rẻ hơn)
+            - Để tuỳ chỉnh: Override logic phát hiện loại template trong subclass của bạn
         """
-        logger.info("Starting CustomPipeline")
-        logger.info(f"Input text length: {len(text)} chars")
-        logger.info(f"Custom parameter: {custom_param_example}")
-        
-        # === Handle TTS parameter compatibility ===
-        # Support both old API (voice_id) and new API (tts_inference_mode + tts_voice)
+        logger.info("Bắt đầu CustomPipeline")
+        logger.info(f"Độ dài văn bản đầu vào: {len(text)} ký tự")
+        logger.info(f"Tham số tuỳ chỉnh: {custom_param_example}")
+
+        # === Xử lý tương thích tham số TTS ===
+        # Hỗ trợ cả API cũ (voice_id) và API mới (tts_inference_mode + tts_voice)
         final_voice_id = None
         final_tts_workflow = tts_workflow
-        
+
         if tts_inference_mode:
-            # New API from web UI
+            # API mới từ web UI
             if tts_inference_mode == "local":
-                # Local Edge TTS mode - use tts_voice
+                # Chế độ Edge TTS local - dùng tts_voice
                 final_voice_id = tts_voice or "zh-CN-YunjianNeural"
-                final_tts_workflow = None  # Don't use workflow in local mode
-                logger.debug(f"TTS Mode: local (voice={final_voice_id})")
+                final_tts_workflow = None  # Không dùng workflow ở chế độ local
+                logger.debug(f"Chế độ TTS: local (voice={final_voice_id})")
             elif tts_inference_mode == "comfyui":
-                # ComfyUI workflow mode
-                final_voice_id = None  # Don't use voice_id in ComfyUI mode
-                # tts_workflow already set from parameter
-                logger.debug(f"TTS Mode: comfyui (workflow={final_tts_workflow})")
+                # Chế độ workflow ComfyUI
+                final_voice_id = None  # Không dùng voice_id ở chế độ ComfyUI
+                # tts_workflow đã được đặt từ tham số
+                logger.debug(f"Chế độ TTS: comfyui (workflow={final_tts_workflow})")
         else:
-            # Old API (backward compatibility)
+            # API cũ (giữ tương thích ngược)
             final_voice_id = voice_id or tts_voice or "zh-CN-YunjianNeural"
-            # tts_workflow already set from parameter
-            logger.debug(f"TTS Mode: legacy (voice_id={final_voice_id}, workflow={final_tts_workflow})")
-        
-        # ========== Step 0: Setup ==========
+            # tts_workflow đã được đặt từ tham số
+            logger.debug(f"Chế độ TTS: legacy (voice_id={final_voice_id}, workflow={final_tts_workflow})")
+
+        # ========== Bước 0: Setup ==========
         self._report_progress(progress_callback, "initializing", 0.05)
-        
-        # Create task directory
+
+        # Tạo thư mục cho task
         from pixelle_video.utils.os_util import (
             create_task_output_dir,
             get_task_final_video_path
         )
-        
+
         task_dir, task_id = create_task_output_dir()
-        logger.info(f"Task directory: {task_dir}")
+        logger.info(f"Thư mục task: {task_dir}")
         
         user_specified_output = None
         if output_path is None:
@@ -170,49 +170,49 @@ class CustomPipeline(BasePipeline):
             user_specified_output = output_path
             output_path = get_task_final_video_path(task_id)
         
-        # Determine frame template
-        # Priority: explicit param > config default > hardcoded default
+        # Xác định template frame
+        # Ưu tiên: tham số rõ ràng > mặc định trong config > mặc định hardcode
         if frame_template is None:
             template_config = self.core.config.get("template", {})
             frame_template = template_config.get("default_template", "1080x1920/default.html")
-        
-        # ========== Step 0.5: Check template requirements ==========
-        # Detect template type by filename prefix
+
+        # ========== Bước 0.5: Kiểm tra yêu cầu của template ==========
+        # Phát hiện loại template theo tiền tố tên file
         from pathlib import Path
         from pixelle_video.services.frame_html import HTMLFrameGenerator
         from pixelle_video.utils.template_util import resolve_template_path, get_template_type
-        
+
         template_name = Path(frame_template).name
         template_type = get_template_type(template_name)
         template_requires_image = (template_type == "image")
-        
-        # Read media size from template meta tags
+
+        # Đọc kích thước media từ meta tag của template
         template_path = resolve_template_path(frame_template)
         generator = HTMLFrameGenerator(template_path)
         media_width, media_height = generator.get_media_size()
-        logger.info(f"📐 Media size from template: {media_width}x{media_height}")
-        
+        logger.info(f"📐 Kích thước media từ template: {media_width}x{media_height}")
+
         if template_type == "image":
-            logger.info(f"📸 Template requires image generation")
+            logger.info(f"📸 Template yêu cầu sinh ảnh")
         elif template_type == "video":
-            logger.info(f"🎬 Template requires video generation")
+            logger.info(f"🎬 Template yêu cầu sinh video")
         else:  # static
-            logger.info(f"⚡ Static template - skipping media generation pipeline")
-            logger.info(f"   💡 Benefits: Faster generation + Lower cost + No ComfyUI dependency")
-        
-        # ========== Step 1: Process content (CUSTOMIZE THIS) ==========
+            logger.info(f"⚡ Template tĩnh - bỏ qua pipeline sinh media")
+            logger.info(f"   💡 Lợi ích: Tạo nhanh hơn + Chi phí thấp hơn + Không phụ thuộc ComfyUI")
+
+        # ========== Bước 1: Xử lý nội dung (TUỲ CHỈNH PHẦN NÀY) ==========
         self._report_progress(progress_callback, "processing_content", 0.10)
-        
-        # Example: Generate title using LLM
+
+        # Ví dụ: Sinh tiêu đề bằng LLM
         from pixelle_video.utils.content_generators import generate_title
         title = await generate_title(self.llm, text, strategy="llm")
-        logger.info(f"Generated title: '{title}'")
-        
-        # Example: Split or generate narrations
-        # Option A: Split by lines (for fixed script)
+        logger.info(f"Tiêu đề đã sinh: '{title}'")
+
+        # Ví dụ: Tách hoặc sinh thuyết minh
+        # Lựa chọn A: Tách theo dòng (cho kịch bản cố định)
         narrations = [line.strip() for line in text.split('\n') if line.strip()]
-        
-        # Option B: Use LLM to generate narrations (uncomment to use)
+
+        # Lựa chọn B: Dùng LLM để sinh thuyết minh (bỏ comment để dùng)
         # from pixelle_video.utils.content_generators import generate_narrations_from_topic
         # narrations = await generate_narrations_from_topic(
         #     self.llm,
@@ -221,42 +221,42 @@ class CustomPipeline(BasePipeline):
         #     min_words=20,
         #     max_words=80
         # )
-        
-        logger.info(f"Generated {len(narrations)} narrations")
-        
-        # ========== Step 2: Generate image prompts (CONDITIONAL - CUSTOMIZE THIS) ==========
+
+        logger.info(f"Đã sinh {len(narrations)} thuyết minh")
+
+        # ========== Bước 2: Sinh prompt ảnh (CÓ ĐIỀU KIỆN - TUỲ CHỈNH PHẦN NÀY) ==========
         self._report_progress(progress_callback, "generating_image_prompts", 0.25)
-        
-        # IMPORTANT: Check if template is image type
-        # If your template is static_*.html, you can skip this entire step!
+
+        # QUAN TRỌNG: Kiểm tra template có phải loại image không
+        # Nếu template là static_*.html, bạn có thể bỏ qua toàn bộ bước này!
         if template_requires_image:
-            # Template requires images - generate image prompts using LLM
+            # Template yêu cầu ảnh - sinh prompt ảnh dùng LLM
             from pixelle_video.utils.content_generators import generate_image_prompts
-            
+
             image_prompts = await generate_image_prompts(
                 self.llm,
                 narrations=narrations,
                 min_words=30,
                 max_words=60
             )
-            
-            # Example: Apply custom prompt prefix
+
+            # Ví dụ: Áp dụng tiền tố prompt tuỳ chỉnh
             from pixelle_video.utils.prompt_helper import build_image_prompt
-            custom_prefix = "cinematic style, professional lighting"  # Customize this
-            
+            custom_prefix = "cinematic style, professional lighting"  # Tuỳ chỉnh phần này
+
             final_image_prompts = []
             for base_prompt in image_prompts:
                 final_prompt = build_image_prompt(base_prompt, custom_prefix)
                 final_image_prompts.append(final_prompt)
-            
-            logger.info(f"✅ Generated {len(final_image_prompts)} image prompts")
+
+            logger.info(f"✅ Đã sinh {len(final_image_prompts)} prompt ảnh")
         else:
-            # Template doesn't need images - skip image generation entirely
+            # Template không cần ảnh - bỏ qua toàn bộ phần sinh ảnh
             final_image_prompts = [None] * len(narrations)
-            logger.info(f"⚡ Skipped image prompt generation (template doesn't need images)")
-            logger.info(f"   💡 Savings: {len(narrations)} LLM calls + {len(narrations)} image generations")
+            logger.info(f"⚡ Bỏ qua sinh prompt ảnh (template không cần ảnh)")
+            logger.info(f"   💡 Tiết kiệm: {len(narrations)} lệnh gọi LLM + {len(narrations)} lần sinh ảnh")
         
-        # ========== Step 3: Create storyboard ==========
+        # ========== Bước 3: Tạo storyboard ==========
         config = StoryboardConfig(
             task_id=task_id,
             n_storyboard=len(narrations),
@@ -265,9 +265,9 @@ class CustomPipeline(BasePipeline):
             min_image_prompt_words=30,
             max_image_prompt_words=60,
             video_fps=video_fps,
-            tts_inference_mode=tts_inference_mode or "local",  # TTS inference mode (CRITICAL FIX)
-            voice_id=final_voice_id,  # Use processed voice_id
-            tts_workflow=final_tts_workflow,  # Use processed workflow
+            tts_inference_mode=tts_inference_mode or "local",  # Chế độ inference TTS (FIX QUAN TRỌNG)
+            voice_id=final_voice_id,  # Dùng voice_id đã xử lý
+            tts_workflow=final_tts_workflow,  # Dùng workflow đã xử lý
             tts_speed=tts_speed,
             ref_audio=ref_audio,
             media_width=media_width,
@@ -276,10 +276,10 @@ class CustomPipeline(BasePipeline):
             frame_template=frame_template
         )
         
-        # Optional: Add custom metadata
+        # Tuỳ chọn: Thêm metadata tuỳ chỉnh
         content_metadata = ContentMetadata(
             title=title,
-            subtitle="Custom Pipeline Output"
+            subtitle="Output từ Custom Pipeline"
         )
         
         storyboard = Storyboard(
@@ -289,7 +289,7 @@ class CustomPipeline(BasePipeline):
             created_at=datetime.now()
         )
         
-        # Create frames
+        # Tạo các frame
         for i, (narration, image_prompt) in enumerate(zip(narrations, final_image_prompts)):
             frame = StoryboardFrame(
                 index=i,
@@ -298,12 +298,12 @@ class CustomPipeline(BasePipeline):
                 created_at=datetime.now()
             )
             storyboard.frames.append(frame)
-        
+
         try:
-            # ========== Step 4: Process each frame ==========
-            # This is the standard frame processing logic
-            # You can customize frame processing if needed
-            
+            # ========== Bước 4: Xử lý từng frame ==========
+            # Đây là logic xử lý frame tiêu chuẩn
+            # Bạn có thể tuỳ chỉnh xử lý frame nếu cần
+
             for i, frame in enumerate(storyboard.frames):
                 base_progress = 0.3
                 frame_range = 0.5
@@ -317,7 +317,7 @@ class CustomPipeline(BasePipeline):
                     frame_total=len(storyboard.frames)
                 )
                 
-                # Use core frame processor (standard logic)
+                # Dùng frame processor của core (logic tiêu chuẩn)
                 processed_frame = await self.core.frame_processor(
                     frame=frame,
                     storyboard=storyboard,
@@ -326,9 +326,9 @@ class CustomPipeline(BasePipeline):
                     progress_callback=None
                 )
                 storyboard.total_duration += processed_frame.duration
-                logger.info(f"Frame {i+1} completed ({processed_frame.duration:.2f}s)")
-            
-            # ========== Step 5: Concatenate videos ==========
+                logger.info(f"Frame {i+1} hoàn thành ({processed_frame.duration:.2f}s)")
+
+            # ========== Bước 5: Ghép các video ==========
             self._report_progress(progress_callback, "concatenating", 0.85)
             segment_paths = [frame.video_segment_path for frame in storyboard.frames]
             
@@ -346,37 +346,37 @@ class CustomPipeline(BasePipeline):
             storyboard.final_video_path = final_video_path
             storyboard.completed_at = datetime.now()
             
-            # Copy to user-specified path if provided
+            # Copy tới đường dẫn người dùng chỉ định nếu có
             if user_specified_output:
                 import shutil
                 Path(user_specified_output).parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(final_video_path, user_specified_output)
-                logger.info(f"Final video copied to: {user_specified_output}")
+                logger.info(f"Đã copy video cuối tới: {user_specified_output}")
                 final_video_path = user_specified_output
                 storyboard.final_video_path = user_specified_output
-            
-            logger.success(f"Custom pipeline video completed: {final_video_path}")
-            
-            # ========== Step 6: Create result ==========
+
+            logger.success(f"Video custom pipeline hoàn thành: {final_video_path}")
+
+            # ========== Bước 6: Tạo kết quả ==========
             self._report_progress(progress_callback, "completed", 1.0)
-            
+
             video_path_obj = Path(final_video_path)
             file_size = video_path_obj.stat().st_size
-            
+
             result = VideoGenerationResult(
                 video_path=final_video_path,
                 storyboard=storyboard,
                 duration=storyboard.total_duration,
                 file_size=file_size
             )
-            
-            logger.info(f"Custom pipeline completed")
-            logger.info(f"Title: {title}")
-            logger.info(f"Duration: {storyboard.total_duration:.2f}s")
-            logger.info(f"Size: {file_size / (1024*1024):.2f} MB")
-            logger.info(f"Frames: {len(storyboard.frames)}")
-            
-            # ========== Step 7: Persist metadata and storyboard ==========
+
+            logger.info(f"Custom pipeline hoàn thành")
+            logger.info(f"Tiêu đề: {title}")
+            logger.info(f"Thời lượng: {storyboard.total_duration:.2f}s")
+            logger.info(f"Kích thước: {file_size / (1024*1024):.2f} MB")
+            logger.info(f"Số frame: {len(storyboard.frames)}")
+
+            # ========== Bước 7: Lưu metadata và storyboard ==========
             await self._persist_task_data(
                 storyboard=storyboard,
                 result=result,
@@ -397,11 +397,11 @@ class CustomPipeline(BasePipeline):
             return result
             
         except Exception as e:
-            logger.error(f"Custom pipeline failed: {e}")
+            logger.error(f"Custom pipeline thất bại: {e}")
             raise
-    
+
     # ==================== Persistence ====================
-    
+
     async def _persist_task_data(
         self,
         storyboard: Storyboard,
@@ -409,21 +409,21 @@ class CustomPipeline(BasePipeline):
         input_params: dict
     ):
         """
-        Persist task metadata and storyboard to filesystem
-        
+        Lưu metadata task và storyboard vào filesystem
+
         Args:
-            storyboard: Complete storyboard
-            result: Video generation result
-            input_params: Input parameters used for generation
+            storyboard: Storyboard hoàn chỉnh
+            result: Kết quả tạo video
+            input_params: Tham số đầu vào dùng để tạo
         """
         try:
             task_id = storyboard.config.task_id
             if not task_id:
-                logger.warning("No task_id in storyboard, skipping persistence")
+                logger.warning("Không có task_id trong storyboard, bỏ qua persistence")
                 return
-            
-            # Build metadata
-            # If user didn't provide a title, use the generated one from storyboard
+
+            # Xây dựng metadata
+            # Nếu user không cung cấp tiêu đề, dùng tiêu đề đã sinh từ storyboard
             input_with_title = input_params.copy()
             if not input_with_title.get("title"):
                 input_with_title["title"] = storyboard.title
@@ -451,49 +451,49 @@ class CustomPipeline(BasePipeline):
                 }
             }
             
-            # Save metadata
+            # Lưu metadata
             await self.core.persistence.save_task_metadata(task_id, metadata)
-            logger.info(f"💾 Saved task metadata: {task_id}")
-            
-            # Save storyboard
+            logger.info(f"💾 Đã lưu metadata task: {task_id}")
+
+            # Lưu storyboard
             await self.core.persistence.save_storyboard(task_id, storyboard)
-            logger.info(f"💾 Saved storyboard: {task_id}")
-            
+            logger.info(f"💾 Đã lưu storyboard: {task_id}")
+
         except Exception as e:
-            logger.error(f"Failed to persist task data: {e}")
-            # Don't raise - persistence failure shouldn't break video generation
-    
-    # ==================== Custom Helper Methods ====================
-    # Add your own helper methods here
-    
+            logger.error(f"Không thể lưu dữ liệu task: {e}")
+            # Đừng raise - việc lưu thất bại không nên làm hỏng quá trình tạo video
+
+    # ==================== Các method helper tuỳ chỉnh ====================
+    # Thêm các method helper riêng của bạn ở đây
+
     async def _custom_content_analysis(self, text: str) -> dict:
         """
-        Example: Custom content analysis logic
-        
-        You can add your own helper methods to process content,
-        extract metadata, or perform custom transformations.
+        Ví dụ: Logic phân tích nội dung tuỳ chỉnh
+
+        Bạn có thể thêm các method helper riêng để xử lý nội dung,
+        trích xuất metadata, hoặc thực hiện các biến đổi tuỳ chỉnh.
         """
-        # Your custom logic here
+        # Logic tuỳ chỉnh của bạn ở đây
         return {
             "processed": text,
             "metadata": {}
         }
-    
+
     async def _custom_prompt_generation(self, context: str) -> str:
         """
-        Example: Custom prompt generation logic
-        
-        Create specialized prompts based on your use case.
+        Ví dụ: Logic sinh prompt tuỳ chỉnh
+
+        Tạo các prompt chuyên biệt dựa trên use case của bạn.
         """
-        prompt = f"Generate content based on: {context}"
+        prompt = f"Sinh nội dung dựa trên: {context}"
         response = await self.llm(prompt, temperature=0.7, max_tokens=500)
         return response.strip()
 
 
-# ==================== Usage Examples ====================
+# ==================== Ví dụ sử dụng ====================
 
 """
-Example 1: Text-only video (no AI image generation)
+Ví dụ 1: Video chỉ có text (không sinh ảnh bằng AI)
 ---------------------------------------------------
 from pixelle_video import pixelle_video
 from pixelle_video.pipelines.custom import CustomPipeline

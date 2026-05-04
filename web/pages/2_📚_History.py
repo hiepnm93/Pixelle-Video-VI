@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-History Page - View generation history and manage tasks
+Trang Lịch sử - Xem lịch sử sinh video và quản lý tác vụ
 """
 
 import sys
@@ -19,7 +19,7 @@ from pathlib import Path
 from datetime import datetime
 import os
 
-# Add project root to sys.path
+# Thêm thư mục gốc dự án vào sys.path
 _script_dir = Path(__file__).resolve().parent
 _project_root = _script_dir.parent.parent
 if str(_project_root) not in sys.path:
@@ -33,16 +33,16 @@ from web.components.header import render_header
 from web.i18n import tr
 from web.utils.async_helpers import run_async
 
-# Page config
+# Cấu hình trang
 st.set_page_config(
-    page_title="History - Pixelle-Video",
+    page_title="Lịch sử - Pixelle-Video",
     page_icon="📚",
     layout="wide",
 )
 
 
 def format_duration(seconds: float) -> str:
-    """Format duration in seconds to readable string"""
+    """Định dạng khoảng thời gian (giây) thành chuỗi dễ đọc"""
     if seconds < 60:
         return f"{seconds:.1f}s"
     elif seconds < 3600:
@@ -56,7 +56,7 @@ def format_duration(seconds: float) -> str:
 
 
 def format_file_size(bytes_size: int) -> str:
-    """Format file size in bytes to readable string"""
+    """Định dạng kích thước file (byte) thành chuỗi dễ đọc"""
     if bytes_size < 1024:
         return f"{bytes_size}B"
     elif bytes_size < 1024 * 1024:
@@ -68,7 +68,7 @@ def format_file_size(bytes_size: int) -> str:
 
 
 def format_datetime(iso_string: str) -> str:
-    """Format ISO datetime string to readable format"""
+    """Định dạng chuỗi datetime ISO thành định dạng dễ đọc"""
     try:
         dt = datetime.fromisoformat(iso_string)
         return dt.strftime("%m-%d %H:%M")
@@ -77,28 +77,28 @@ def format_datetime(iso_string: str) -> str:
 
 
 def truncate_text(text: str, max_length: int = 60) -> str:
-    """Truncate text to max length"""
+    """Cắt ngắn text về độ dài tối đa"""
     if len(text) <= max_length:
         return text
     return text[:max_length] + "..."
 
 
 def render_sidebar_controls(pixelle_video):
-    """Render sidebar with statistics and filters"""
+    """Render sidebar với thống kê và bộ lọc"""
     with st.sidebar:
-        # Statistics
+        # Thống kê
         st.markdown(f"**📊 {tr('history.total_tasks')}**")
         stats = run_async(pixelle_video.history.get_statistics())
-        
+
         col1, col2 = st.columns(2)
         with col1:
             st.metric(tr("history.completed_count"), stats.get("completed", 0))
         with col2:
             st.metric(tr("history.failed_count"), stats.get("failed", 0))
-        
+
         st.divider()
-        
-        # Filters
+
+        # Bộ lọc
         st.markdown(f"**🔍 {tr('history.filter_status')}**")
         status_options = {
             "all": tr("history.status_all"),
@@ -117,8 +117,8 @@ def render_sidebar_controls(pixelle_video):
         )
         
         filter_status = None if selected_status == "all" else selected_status
-        
-        # Sort
+
+        # Sắp xếp
         st.markdown(f"**📊 {tr('history.sort_by')}**")
         
         sort_options = {
@@ -142,36 +142,36 @@ def render_sidebar_controls(pixelle_video):
         }
         
         sort_order = st.radio(
-            "Sort Order",
+            "Thứ tự sắp xếp",
             options=list(sort_order_options.keys()),
             format_func=lambda x: sort_order_options[x],
             key="sort_order",
             label_visibility="collapsed",
             horizontal=True
         )
-        
-        # Page size
+
+        # Số bản ghi mỗi trang
         page_size = st.selectbox(
             tr("history.page_size"),
             options=[15, 30, 60],
             index=0,
             key="page_size"
         )
-        
+
         return filter_status, sort_by, sort_order, page_size
 
 
 def render_grid_task_card(task: dict, pixelle_video):
-    """Render a compact grid task card"""
+    """Render thẻ task dạng grid gọn"""
     task_id = task["task_id"]
-    title = task.get("title", "Untitled")
+    title = task.get("title", "Không có tiêu đề")
     status = task.get("status", "unknown")
     created_at = task.get("created_at", "")
     duration = task.get("duration", 0)
     n_frames = task.get("n_frames", 0)
     video_path = task.get("video_path", "")
-    
-    # Status badge
+
+    # Nhãn trạng thái
     status_map = {
         "completed": "✅",
         "failed": "❌",
@@ -179,17 +179,17 @@ def render_grid_task_card(task: dict, pixelle_video):
         "pending": "⏸️",
     }
     status_icon = status_map.get(status, "❓")
-    
-    # Get input text
+
+    # Lấy nội dung input
     detail = run_async(pixelle_video.history.get_task_detail(task_id))
     input_text = ""
     if detail and detail.get("metadata"):
         input_params = detail["metadata"].get("input", {})
         input_text = input_params.get("text", "")
-    
-    # Card container
+
+    # Container thẻ
     with st.container():
-        # Video preview at top
+        # Xem trước video ở trên cùng
         if video_path and os.path.exists(video_path):
             st.video(video_path, autoplay=False, loop=False, muted=False)
         else:
@@ -198,25 +198,25 @@ def render_grid_task_card(task: dict, pixelle_video):
                 f"justify-content: center; border-radius: 4px; font-size: 48px;'>📹</div>",
                 unsafe_allow_html=True
             )
-        
-        # Title + Status (compact) - show actual title from task
+
+        # Tiêu đề + Trạng thái (gọn) - hiển thị tiêu đề thực tế của task
         st.markdown(f"**{status_icon} {truncate_text(title, 50)}**")
-        
-        # Input content (very short)
+
+        # Nội dung input (rất ngắn)
         if input_text:
             st.caption(truncate_text(input_text, 60))
-        
-        # Meta info (one line)
+
+        # Thông tin meta (một dòng)
         st.caption(f"🕒 {format_datetime(created_at)} | ⏱️ {format_duration(duration)} | 🎬 {n_frames}")
-        
-        # Action buttons (compact, 3 columns)
+
+        # Các nút thao tác (gọn, 3 cột)
         col1, col2, col3 = st.columns(3)
-        
+
         with col1:
             if st.button("👁️", key=f"view_{task_id}", help=tr("history.task_card.view_detail"), use_container_width=True):
                 st.session_state[f"detail_{task_id}"] = True
                 st.rerun()
-        
+
         with col2:
             if video_path and os.path.exists(video_path):
                 with open(video_path, "rb") as f:
@@ -231,15 +231,15 @@ def render_grid_task_card(task: dict, pixelle_video):
                     )
             else:
                 st.button("⬇️", key=f"download_disabled_{task_id}", disabled=True, use_container_width=True)
-        
+
         with col3:
             if st.button("🗑️", key=f"delete_{task_id}", help=tr("history.task_card.delete"), use_container_width=True):
                 st.session_state[f"confirm_delete_{task_id}"] = True
                 st.rerun()
-        
-        # Delete confirmation (show in modal-like way)
+
+        # Xác nhận xoá (hiển thị giống modal)
         if st.session_state.get(f"confirm_delete_{task_id}", False):
-            st.warning("⚠️ 确认删除?")
+            st.warning("⚠️ Xác nhận xoá?")
             col1, col2 = st.columns(2)
             with col1:
                 if st.button("✅", key=f"confirm_yes_{task_id}", use_container_width=True):
@@ -250,9 +250,9 @@ def render_grid_task_card(task: dict, pixelle_video):
                             st.session_state[f"confirm_delete_{task_id}"] = False
                             st.rerun()
                         else:
-                            st.error("删除失败")
+                            st.error("Xoá thất bại")
                     except Exception as e:
-                        st.error(f"删除失败: {str(e)}")
+                        st.error(f"Xoá thất bại: {str(e)}")
             with col2:
                 if st.button("❌", key=f"confirm_no_{task_id}", use_container_width=True):
                     st.session_state[f"confirm_delete_{task_id}"] = False
@@ -260,64 +260,64 @@ def render_grid_task_card(task: dict, pixelle_video):
 
 
 def render_task_detail_modal(task_id: str, pixelle_video):
-    """Render task detail in three-column layout"""
+    """Render chi tiết task theo bố cục ba cột"""
     detail = run_async(pixelle_video.history.get_task_detail(task_id))
-    
+
     if not detail:
-        st.error("Task not found")
+        st.error("Không tìm thấy task")
         return
-    
+
     metadata = detail["metadata"]
     storyboard = detail["storyboard"]
-    
-    # Close button at the top
+
+    # Nút đóng ở phía trên
     if st.button("❌ " + tr("history.detail.close"), key=f"close_detail_top_{task_id}"):
         st.session_state[f"detail_{task_id}"] = False
         st.rerun()
-    
+
     st.markdown(f"**{tr('history.detail.modal_title')}**")
     st.caption(f"{tr('history.detail.task_id')}: {task_id}")
-    
-    # Three-column layout
+
+    # Bố cục ba cột
     col_input, col_storyboard, col_video = st.columns([1, 1, 1])
-    
-    # Left column: Input and config
+
+    # Cột trái: Input và cấu hình
     with col_input:
         st.markdown(f"**📝 {tr('history.detail.input_params')}**")
-        
+
         input_params = metadata.get("input", {})
-        
-        # Display input parameters
+
+        # Hiển thị các tham số input
         st.markdown(f"**{tr('history.detail.mode')}:** {input_params.get('mode', 'N/A')}")
         st.markdown(f"**{tr('history.detail.n_scenes')}:** {input_params.get('n_scenes', 'N/A')}")
         st.markdown(f"**{tr('history.detail.tts_mode')}:** {input_params.get('tts_inference_mode', 'N/A')}")
         st.markdown(f"**{tr('history.detail.voice')}:** {input_params.get('tts_voice', 'N/A')}")
-        
-        # Input text
+
+        # Text input
         with st.expander(tr("history.detail.text"), expanded=True):
             st.text_area(
-                "Input Text",
+                "Nội dung nhập",
                 value=input_params.get('text', 'N/A'),
                 height=200,
                 disabled=True,
                 label_visibility="collapsed"
             )
-    
-    # Middle column: Storyboard frames
+
+    # Cột giữa: Các phân cảnh storyboard
     with col_storyboard:
         st.markdown(f"**🎬 {tr('history.detail.storyboard')}**")
-        
+
         if storyboard and storyboard.frames:
             for frame in storyboard.frames:
                 with st.expander(f"{tr('history.detail.frame')} {frame.index + 1}", expanded=False):
                     st.markdown(f"**{tr('history.detail.narration')}:**")
                     st.caption(frame.narration)
-                    
+
                     if frame.image_prompt:
                         st.markdown(f"**{tr('history.detail.image_prompt')}:**")
                         st.caption(frame.image_prompt)
-                    
-                    # Show frame preview (small)
+
+                    # Hiển thị xem trước phân cảnh (nhỏ)
                     col1, col2 = st.columns(2)
                     with col1:
                         if frame.composed_image_path and os.path.exists(frame.composed_image_path):
@@ -327,30 +327,30 @@ def render_task_detail_modal(task_id: str, pixelle_video):
                     with col2:
                         if frame.video_segment_path and os.path.exists(frame.video_segment_path):
                             st.video(frame.video_segment_path)
-                    
-                    # Audio player (compact)
+
+                    # Trình phát audio (gọn)
                     if frame.audio_path and os.path.exists(frame.audio_path):
                         st.audio(frame.audio_path)
         else:
-            st.info("No storyboard data")
-    
-    # Right column: Final video
+            st.info("Không có dữ liệu storyboard")
+
+    # Cột phải: Video cuối cùng
     with col_video:
         st.markdown(f"**🎥 {tr('info.video_information')}**")
-        
+
         video_path = metadata.get("result", {}).get("video_path")
         if video_path and os.path.exists(video_path):
             st.video(video_path)
-            
-            # Video info
+
+            # Thông tin video
             result = metadata.get("result", {})
             st.markdown(f"**{tr('info.duration')}:** {format_duration(result.get('duration', 0))}")
             st.markdown(f"**{tr('info.frames')}:** {result.get('n_frames', 0)}")
             st.markdown(f"**{tr('info.file_size')}:** {format_file_size(result.get('file_size', 0))}")
 
-            # Download button
+            # Nút tải xuống
             with open(video_path, "rb") as f:
-                # Get title from input (which now includes the generated title)
+                # Lấy title từ input (đã bao gồm tiêu đề được sinh)
                 title = metadata.get("input", {}).get("title", "video")
                 if not title:
                     title = "video"
@@ -362,49 +362,49 @@ def render_task_detail_modal(task_id: str, pixelle_video):
                     use_container_width=True
                 )
         else:
-            st.warning("Video file not found")
-    
+            st.warning("Không tìm thấy file video")
+
     st.divider()
-    
-    # Close button at the bottom
+
+    # Nút đóng ở phía dưới
     if st.button("❌ " + tr("history.detail.close"), key=f"close_detail_bottom_{task_id}"):
         st.session_state[f"detail_{task_id}"] = False
         st.rerun()
 
 
 def main():
-    """Main entry point for History page"""
-    # Initialize
+    """Điểm khởi chạy chính cho trang Lịch sử"""
+    # Khởi tạo
     init_session_state()
     init_i18n()
-    
+
     # Render header
     render_header()
-    
-    # Initialize Pixelle-Video
+
+    # Khởi tạo Pixelle-Video
     pixelle_video = get_pixelle_video()
-    
-    # Sidebar: Statistics + Filters
+
+    # Sidebar: Thống kê + Bộ lọc
     filter_status, sort_by, sort_order, page_size = render_sidebar_controls(pixelle_video)
-    
-    # Initialize pagination in session state
+
+    # Khởi tạo phân trang trong session state
     if "history_page" not in st.session_state:
         st.session_state.history_page = 1
-    
-    # Check if we need to show a detail view
+
+    # Kiểm tra có cần hiển thị view chi tiết không
     show_detail_for = None
     for key in st.session_state.keys():
         if key.startswith("detail_") and st.session_state[key]:
             show_detail_for = key.replace("detail_", "")
             break
-    
-    # If showing detail, render it
+
+    # Nếu đang xem chi tiết, render nó
     if show_detail_for:
         render_task_detail_modal(show_detail_for, pixelle_video)
         return
-    
-    # Otherwise, show the grid list
-    # Get task list
+
+    # Ngược lại, hiển thị danh sách dạng lưới
+    # Lấy danh sách task
     result = run_async(pixelle_video.history.get_task_list(
         page=st.session_state.history_page,
         page_size=page_size,
@@ -412,42 +412,42 @@ def main():
         sort_by=sort_by,
         sort_order=sort_order
     ))
-    
+
     tasks = result["tasks"]
     total = result["total"]
     total_pages = result["total_pages"]
-    
-    # Page title with count
+
+    # Tiêu đề trang kèm số lượng
     st.markdown(f"##### 📚 {tr('history.page_title')} ({total})")
-    
-    # Show task cards in grid layout (4 columns)
+
+    # Hiển thị các thẻ task theo bố cục lưới (4 cột)
     if not tasks:
         st.info(tr("history.no_tasks"))
     else:
-        # Grid layout: 4 cards per row
+        # Bố cục lưới: 4 thẻ mỗi hàng
         CARDS_PER_ROW = 4
-        
-        # Process tasks in batches of CARDS_PER_ROW
+
+        # Xử lý task theo lô CARDS_PER_ROW
         for i in range(0, len(tasks), CARDS_PER_ROW):
             cols = st.columns(CARDS_PER_ROW)
-            
-            # Fill each column with a task card
+
+            # Lấp đầy mỗi cột với một thẻ task
             for j in range(CARDS_PER_ROW):
                 task_idx = i + j
                 if task_idx < len(tasks):
                     with cols[j]:
                         render_grid_task_card(tasks[task_idx], pixelle_video)
-    
-    # Pagination
+
+    # Phân trang
     if total_pages > 1:
         st.divider()
         col1, col2, col3 = st.columns([1, 2, 1])
-        
+
         with col1:
-            if st.button("⬅️ Previous", disabled=st.session_state.history_page == 1, use_container_width=True):
+            if st.button("⬅️ Trước", disabled=st.session_state.history_page == 1, use_container_width=True):
                 st.session_state.history_page -= 1
                 st.rerun()
-        
+
         with col2:
             st.markdown(
                 f"<div style='text-align: center; padding-top: 8px;'>"
@@ -455,9 +455,9 @@ def main():
                 f"</div>",
                 unsafe_allow_html=True
             )
-        
+
         with col3:
-            if st.button("Next ➡️", disabled=st.session_state.history_page == total_pages, use_container_width=True):
+            if st.button("Sau ➡️", disabled=st.session_state.history_page == total_pages, use_container_width=True):
                 st.session_state.history_page += 1
                 st.rerun()
 

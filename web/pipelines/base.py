@@ -11,30 +11,30 @@
 # limitations under the License.
 
 """
-Pipeline UI Base & Registry
+Base & Registry cho Pipeline UI
 
-Defines the PipelineUI protocol and the registration mechanism.
+Định nghĩa protocol PipelineUI và cơ chế đăng ký.
 """
 
 from typing import Dict, Any, List, Type
 
 class PipelineUI:
     """
-    Base class for Pipeline UI plugins.
-    
-    Each pipeline should implement a subclass to define its own full-page UI.
+    Lớp cơ sở cho các plugin Pipeline UI.
+
+    Mỗi pipeline nên cài đặt một lớp con để định nghĩa UI đầy đủ trang của riêng nó.
     """
     name: str = "base"
     display_name: str = "Base Pipeline"
     icon: str = "🔌"
     description: str = ""
-    
+
     def render(self, pixelle_video: Any):
         """
-        Render the full page content for this pipeline (below settings).
-        
+        Render toàn bộ nội dung trang cho pipeline này (bên dưới phần settings).
+
         Args:
-            pixelle_video: The initialized PixelleVideoCore instance.
+            pixelle_video: Instance PixelleVideoCore đã được khởi tạo.
         """
         raise NotImplementedError
 
@@ -44,14 +44,14 @@ class PipelineUI:
 _pipeline_uis: Dict[str, PipelineUI] = {}
 
 def register_pipeline_ui(ui_class: Type[PipelineUI]):
-    """Register a pipeline UI class"""
+    """Đăng ký một lớp pipeline UI"""
     instance = ui_class()
     _pipeline_uis[instance.name] = instance
 
 def get_pipeline_ui(name: str) -> PipelineUI:
-    """Get a pipeline UI instance by name"""
+    """Lấy instance pipeline UI theo tên"""
     return _pipeline_uis.get(name)
 
 def get_all_pipeline_uis() -> List[PipelineUI]:
-    """Get all registered pipeline UI instances"""
+    """Lấy tất cả instance pipeline UI đã đăng ký"""
     return list(_pipeline_uis.values())

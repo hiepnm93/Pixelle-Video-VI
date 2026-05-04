@@ -11,10 +11,10 @@
 # limitations under the License.
 
 """
-Media Generation Service - ComfyUI Workflow-based implementation
+Service tạo Media - Triển khai dựa trên workflow ComfyUI
 
-Supports both image and video generation workflows.
-Automatically detects output type based on ExecuteResult.
+Hỗ trợ cả workflow tạo image và tạo video.
+Tự động phát hiện loại output dựa trên ExecuteResult.
 """
 
 from typing import Optional
@@ -28,98 +28,98 @@ from pixelle_video.models.media import MediaResult
 
 class MediaService(ComfyBaseService):
     """
-    Media generation service - Workflow-based
-    
-    Uses ComfyKit to execute image/video generation workflows.
-    Supports both image_ and video_ workflow prefixes.
-    
-    Usage:
-        # Use default workflow (workflows/image_flux.json)
+    Service tạo media - dựa trên workflow
+
+    Sử dụng ComfyKit để chạy các workflow tạo image/video.
+    Hỗ trợ cả tiền tố workflow image_ và video_.
+
+    Cách dùng:
+        # Dùng workflow mặc định (workflows/image_flux.json)
         media = await pixelle_video.media(prompt="a cat")
         if media.is_image:
-            print(f"Generated image: {media.url}")
+            print(f"Đã tạo image: {media.url}")
         elif media.is_video:
-            print(f"Generated video: {media.url} ({media.duration}s)")
-        
-        # Use specific workflow
+            print(f"Đã tạo video: {media.url} ({media.duration}s)")
+
+        # Dùng workflow cụ thể
         media = await pixelle_video.media(
             prompt="a cat",
             workflow="image_flux.json"
         )
-        
-        # List available workflows
+
+        # Liệt kê các workflow có sẵn
         workflows = pixelle_video.media.list_workflows()
     """
-    
-    WORKFLOW_PREFIX = ""  # Will be overridden by _scan_workflows
-    DEFAULT_WORKFLOW = None  # No hardcoded default, must be configured
+
+    WORKFLOW_PREFIX = ""  # Sẽ được ghi đè bởi _scan_workflows
+    DEFAULT_WORKFLOW = None  # Không có giá trị mặc định cứng, bắt buộc phải cấu hình
     WORKFLOWS_DIR = "workflows"
-    
+
     def __init__(self, config: dict, core=None):
         """
-        Initialize media service
-        
+        Khởi tạo media service
+
         Args:
-            config: Full application config dict
-            core: PixelleVideoCore instance (for accessing shared ComfyKit)
+            config: Dict cấu hình đầy đủ của ứng dụng
+            core: Instance PixelleVideoCore (để truy cập ComfyKit dùng chung)
         """
-        super().__init__(config, service_name="image", core=core)  # Keep "image" for config compatibility
+        super().__init__(config, service_name="image", core=core)  # Giữ "image" để tương thích config
     
     def _scan_workflows(self):
         """
-        Scan workflows for both image_ and video_ prefixes
-        
-        Override parent method to support multiple prefixes
+        Quét các workflow có tiền tố image_ và video_
+
+        Ghi đè phương thức của lớp cha để hỗ trợ nhiều tiền tố
         """
         from pixelle_video.utils.os_util import list_resource_dirs, list_resource_files, get_resource_path
         from pathlib import Path
-        
+
         workflows = []
-        
-        # Get all workflow source directories
+
+        # Lấy tất cả thư mục nguồn workflow
         source_dirs = list_resource_dirs("workflows")
-        
+
         if not source_dirs:
-            logger.warning("No workflow source directories found")
+            logger.warning("Không tìm thấy thư mục nguồn workflow nào")
             return workflows
-        
-        # Scan each source directory for workflow files
+
+        # Quét từng thư mục nguồn để tìm file workflow
         for source_name in source_dirs:
-            # Get all JSON files for this source
+            # Lấy tất cả file JSON cho nguồn này
             workflow_files = list_resource_files("workflows", source_name)
-            
-            # Filter to only files matching image_ or video_ prefix
+
+            # Lọc chỉ những file có tiền tố image_ hoặc video_
             matching_files = [
-                f for f in workflow_files 
+                f for f in workflow_files
                 if (f.startswith("image_") or f.startswith("video_")) and f.endswith('.json')
             ]
-            
+
             for filename in matching_files:
                 try:
-                    # Get actual file path
+                    # Lấy đường dẫn file thực tế
                     file_path = Path(get_resource_path("workflows", source_name, filename))
                     workflow_info = self._parse_workflow_file(file_path, source_name)
                     workflows.append(workflow_info)
-                    logger.debug(f"Found workflow: {workflow_info['key']}")
+                    logger.debug(f"Đã tìm thấy workflow: {workflow_info['key']}")
                 except Exception as e:
-                    logger.error(f"Failed to parse workflow {source_name}/{filename}: {e}")
-        
-        # Sort by key (source/name)
+                    logger.error(f"Không parse được workflow {source_name}/{filename}: {e}")
+
+        # Sắp xếp theo key (source/name)
         return sorted(workflows, key=lambda w: w["key"])
     
     async def __call__(
         self,
         prompt: str,
         workflow: Optional[str] = None,
-        # Media type specification (required for proper handling)
-        media_type: str = "image",  # "image" or "video"
-        # ComfyUI connection (optional overrides)
+        # Khai báo loại media (bắt buộc để xử lý đúng)
+        media_type: str = "image",  # "image" hoặc "video"
+        # Kết nối ComfyUI (tùy chọn ghi đè)
         comfyui_url: Optional[str] = None,
         runninghub_api_key: Optional[str] = None,
-        # Common workflow parameters
+        # Tham số workflow phổ biến
         width: Optional[int] = None,
         height: Optional[int] = None,
-        duration: Optional[float] = None,  # Video duration in seconds (for video workflows)
+        duration: Optional[float] = None,  # Thời lượng video tính bằng giây (dùng cho workflow video)
         negative_prompt: Optional[str] = None,
         steps: Optional[int] = None,
         seed: Optional[int] = None,
@@ -128,51 +128,51 @@ class MediaService(ComfyBaseService):
         **params
     ) -> MediaResult:
         """
-        Generate media (image or video) using workflow
-        
-        Media type must be specified explicitly via media_type parameter.
-        Returns a MediaResult object containing media type and URL.
-        
+        Tạo media (image hoặc video) bằng workflow
+
+        Loại media phải được chỉ định rõ qua tham số media_type.
+        Trả về đối tượng MediaResult chứa loại media và URL.
+
         Args:
-            prompt: Media generation prompt
-            workflow: Workflow filename (default: from config or "image_flux.json")
-            media_type: Type of media to generate - "image" or "video" (default: "image")
-            comfyui_url: ComfyUI URL (optional, overrides config)
-            runninghub_api_key: RunningHub API key (optional, overrides config)
-            width: Media width
-            height: Media height
-            duration: Target video duration in seconds (only for video workflows, typically from TTS audio duration)
+            prompt: Prompt để tạo media
+            workflow: Tên file workflow (mặc định: từ config hoặc "image_flux.json")
+            media_type: Loại media cần tạo - "image" hoặc "video" (mặc định: "image")
+            comfyui_url: URL của ComfyUI (tùy chọn, ghi đè config)
+            runninghub_api_key: API Key của RunningHub (tùy chọn, ghi đè config)
+            width: Chiều rộng media
+            height: Chiều cao media
+            duration: Thời lượng video mục tiêu tính bằng giây (chỉ dùng cho workflow video, thường lấy từ thời lượng audio TTS)
             negative_prompt: Negative prompt
-            steps: Sampling steps
-            seed: Random seed
-            cfg: CFG scale
-            sampler: Sampler name
-            **params: Additional workflow parameters
-        
+            steps: Số bước sampling
+            seed: Seed ngẫu nhiên
+            cfg: Hệ số CFG
+            sampler: Tên sampler
+            **params: Tham số workflow bổ sung
+
         Returns:
-            MediaResult object with media_type ("image" or "video") and url
-        
-        Examples:
-            # Simplest: use default workflow (workflows/image_flux.json)
+            Đối tượng MediaResult với media_type ("image" hoặc "video") và url
+
+        Ví dụ:
+            # Đơn giản nhất: dùng workflow mặc định (workflows/image_flux.json)
             media = await pixelle_video.media(prompt="a beautiful cat")
             if media.is_image:
                 print(f"Image: {media.url}")
-            
-            # Use specific workflow
+
+            # Dùng workflow cụ thể
             media = await pixelle_video.media(
                 prompt="a cat",
                 workflow="image_flux.json"
             )
-            
-            # Video workflow
+
+            # Workflow video
             media = await pixelle_video.media(
                 prompt="a cat running",
                 workflow="image_video.json"
             )
             if media.is_video:
-                print(f"Video: {media.url}, duration: {media.duration}s")
-            
-            # With additional parameters
+                print(f"Video: {media.url}, thời lượng: {media.duration}s")
+
+            # Với tham số bổ sung
             media = await pixelle_video.media(
                 prompt="a cat",
                 workflow="image_flux.json",
@@ -181,26 +181,26 @@ class MediaService(ComfyBaseService):
                 steps=20,
                 seed=42
             )
-            
-            # With absolute path
+
+            # Với đường dẫn tuyệt đối
             media = await pixelle_video.media(
                 prompt="a cat",
                 workflow="/path/to/custom.json"
             )
-            
-            # With custom ComfyUI server
+
+            # Với máy chủ ComfyUI tùy chỉnh
             media = await pixelle_video.media(
                 prompt="a cat",
                 comfyui_url="http://192.168.1.100:8188"
             )
         """
-        # 1. Resolve workflow (returns structured info)
+        # 1. Resolve workflow (trả về thông tin có cấu trúc)
         workflow_info = self._resolve_workflow(workflow=workflow)
-        
-        # 2. Build workflow parameters (ComfyKit config is now managed by core)
+
+        # 2. Xây dựng tham số workflow (cấu hình ComfyKit hiện do core quản lý)
         workflow_params = {"prompt": prompt}
-        
-        # Add optional parameters
+
+        # Thêm các tham số tùy chọn
         if width is not None:
             workflow_params["width"] = width
         if height is not None:
@@ -208,7 +208,7 @@ class MediaService(ComfyBaseService):
         if duration is not None:
             workflow_params["duration"] = duration
             if media_type == "video":
-                logger.info(f"📏 Target video duration: {duration:.2f}s (from TTS audio)")
+                logger.info(f"📏 Thời lượng video mục tiêu: {duration:.2f}s (từ TTS audio)")
         if negative_prompt is not None:
             workflow_params["negative_prompt"] = negative_prompt
         if steps is not None:
@@ -219,69 +219,69 @@ class MediaService(ComfyBaseService):
             workflow_params["cfg"] = cfg
         if sampler is not None:
             workflow_params["sampler"] = sampler
-        
-        # Add any additional parameters
+
+        # Thêm bất kỳ tham số bổ sung nào
         workflow_params.update(params)
-        
-        logger.debug(f"Workflow parameters: {workflow_params}")
-        
-        # 4. Execute workflow using shared ComfyKit instance from core
+
+        logger.debug(f"Tham số workflow: {workflow_params}")
+
+        # 4. Chạy workflow bằng instance ComfyKit dùng chung từ core
         try:
-            # Get shared ComfyKit instance (lazy initialization + config hot-reload)
+            # Lấy instance ComfyKit dùng chung (khởi tạo lazy + hot-reload config)
             kit = await self.core._get_or_create_comfykit()
-            
-            # Determine what to pass to ComfyKit based on source
+
+            # Xác định nội dung truyền vào ComfyKit dựa trên source
             if workflow_info["source"] == "runninghub" and "workflow_id" in workflow_info:
-                # RunningHub: pass workflow_id (ComfyKit will use runninghub backend)
+                # RunningHub: truyền workflow_id (ComfyKit sẽ dùng backend runninghub)
                 workflow_input = workflow_info["workflow_id"]
-                logger.info(f"Executing RunningHub workflow: {workflow_input}")
+                logger.info(f"Đang chạy workflow RunningHub: {workflow_input}")
             else:
-                # Selfhost: pass file path (ComfyKit will use local ComfyUI)
+                # Selfhost: truyền đường dẫn file (ComfyKit sẽ dùng ComfyUI cục bộ)
                 workflow_input = workflow_info["path"]
-                logger.info(f"Executing selfhost workflow: {workflow_input}")
-            
+                logger.info(f"Đang chạy workflow selfhost: {workflow_input}")
+
             result = await kit.execute(workflow_input, workflow_params)
-            
-            # 5. Handle result based on specified media_type
+
+            # 5. Xử lý kết quả dựa trên media_type đã chỉ định
             if result.status != "completed":
-                error_msg = result.msg or "Unknown error"
-                logger.error(f"Media generation failed: {error_msg}")
-                raise Exception(f"Media generation failed: {error_msg}")
-            
-            # Extract media based on specified type
+                error_msg = result.msg or "Lỗi không xác định"
+                logger.error(f"Tạo media thất bại: {error_msg}")
+                raise Exception(f"Tạo media thất bại: {error_msg}")
+
+            # Trích xuất media theo loại đã chỉ định
             if media_type == "video":
-                # Video workflow - get video from result
+                # Workflow video - lấy video từ kết quả
                 if not result.videos:
-                    logger.error("No video generated (workflow returned no videos)")
-                    raise Exception("No video generated")
-                
+                    logger.error("Không có video nào được tạo (workflow không trả về video)")
+                    raise Exception("Không có video nào được tạo")
+
                 video_url = result.videos[0]
-                logger.info(f"✅ Generated video: {video_url}")
-                
-                # Try to extract duration from result (if available)
+                logger.info(f"✅ Đã tạo video: {video_url}")
+
+                # Thử trích xuất thời lượng từ kết quả (nếu có)
                 duration = None
                 if hasattr(result, 'duration') and result.duration:
                     duration = result.duration
-                
+
                 return MediaResult(
                     media_type="video",
                     url=video_url,
                     duration=duration
                 )
             else:  # image
-                # Image workflow - get image from result
+                # Workflow image - lấy image từ kết quả
                 if not result.images:
-                    logger.error("No image generated (workflow returned no images)")
-                    raise Exception("No image generated")
-                
+                    logger.error("Không có image nào được tạo (workflow không trả về image)")
+                    raise Exception("Không có image nào được tạo")
+
                 image_url = result.images[0]
-                logger.info(f"✅ Generated image: {image_url}")
-                
+                logger.info(f"✅ Đã tạo image: {image_url}")
+
                 return MediaResult(
                     media_type="image",
                     url=image_url
                 )
-        
+
         except Exception as e:
-            logger.error(f"Media generation error: {e}")
+            logger.error(f"Lỗi tạo media: {e}")
             raise

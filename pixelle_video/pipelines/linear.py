@@ -11,11 +11,11 @@
 # limitations under the License.
 
 """
-Linear Video Pipeline Base Class
+Class cơ sở cho Linear Video Pipeline
 
-This module defines the template method pattern for linear video generation workflows.
-It introduces `PipelineContext` for state management and `LinearVideoPipeline` for
-process orchestration.
+Module này định nghĩa mẫu template method cho các workflow tạo video tuyến tính.
+Giới thiệu `PipelineContext` để quản lý trạng thái và `LinearVideoPipeline` để
+điều phối quy trình.
 """
 
 from dataclasses import dataclass, field
@@ -34,30 +34,30 @@ from pixelle_video.models.progress import ProgressEvent
 @dataclass
 class PipelineContext:
     """
-    Context object holding the state of a single pipeline execution.
-    
-    This object is passed between steps in the LinearVideoPipeline lifecycle.
+    Object context giữ trạng thái của một lần thực thi pipeline.
+
+    Object này được truyền giữa các bước trong vòng đời LinearVideoPipeline.
     """
-    # === Input ===
+    # === Đầu vào ===
     input_text: str
     params: Dict[str, Any]
     progress_callback: Optional[Callable[[ProgressEvent], None]] = None
-    
-    # === Task State ===
+
+    # === Trạng thái Task ===
     task_id: Optional[str] = None
     task_dir: Optional[str] = None
-    
-    # === Content ===
+
+    # === Nội dung ===
     title: Optional[str] = None
     narrations: List[str] = field(default_factory=list)
-    
-    # === Visuals ===
+
+    # === Hình ảnh ===
     image_prompts: List[Optional[str]] = field(default_factory=list)
-    
-    # === Configuration & Storyboard ===
+
+    # === Cấu hình & Storyboard ===
     config: Optional[StoryboardConfig] = None
     storyboard: Optional[Storyboard] = None
-    
+
     # === Output ===
     final_video_path: Optional[str] = None
     result: Optional[VideoGenerationResult] = None
@@ -65,9 +65,9 @@ class PipelineContext:
 
 class LinearVideoPipeline(BasePipeline):
     """
-    Base class for linear video generation pipelines using the Template Method pattern.
-    
-    This class orchestrates the video generation process into distinct lifecycle steps:
+    Class cơ sở cho các pipeline tạo video tuyến tính, dùng mẫu Template Method.
+
+    Class này điều phối quá trình tạo video thành các bước vòng đời riêng biệt:
     1. setup_environment
     2. generate_content
     3. determine_title
@@ -76,11 +76,11 @@ class LinearVideoPipeline(BasePipeline):
     6. produce_assets
     7. post_production
     8. finalize
-    
-    Subclasses should override specific steps to customize behavior while maintaining
-    the overall workflow structure.
+
+    Các subclass nên override các bước cụ thể để tuỳ chỉnh hành vi đồng thời giữ
+    cấu trúc workflow tổng thể.
     """
-    
+
     async def __call__(
         self,
         text: str,
@@ -88,74 +88,74 @@ class LinearVideoPipeline(BasePipeline):
         **kwargs
     ) -> VideoGenerationResult:
         """
-        Execute the pipeline using the template method.
+        Thực thi pipeline bằng template method.
         """
-        # 1. Initialize context
+        # 1. Khởi tạo context
         ctx = PipelineContext(
             input_text=text,
             params=kwargs,
             progress_callback=progress_callback
         )
-        
+
         try:
-            # === Phase 1: Preparation ===
+            # === Giai đoạn 1: Chuẩn bị ===
             await self.setup_environment(ctx)
-            
-            # === Phase 2: Content Creation ===
+
+            # === Giai đoạn 2: Tạo nội dung ===
             await self.generate_content(ctx)
             await self.determine_title(ctx)
-            
-            # === Phase 3: Visual Planning ===
+
+            # === Giai đoạn 3: Lập kế hoạch hình ảnh ===
             await self.plan_visuals(ctx)
             await self.initialize_storyboard(ctx)
-            
-            # === Phase 4: Asset Production ===
+
+            # === Giai đoạn 4: Sản xuất tài nguyên ===
             await self.produce_assets(ctx)
-            
-            # === Phase 5: Post Production ===
+
+            # === Giai đoạn 5: Hậu kỳ ===
             await self.post_production(ctx)
-            
-            # === Phase 6: Finalization ===
+
+            # === Giai đoạn 6: Hoàn thiện ===
             return await self.finalize(ctx)
-            
+
         except Exception as e:
             await self.handle_exception(ctx, e)
             raise
 
-    # ==================== Lifecycle Methods ====================
-    
+    # ==================== Các method vòng đời ====================
+
     async def setup_environment(self, ctx: PipelineContext):
-        """Step 1: Setup task directory and environment."""
+        """Bước 1: Setup thư mục task và môi trường."""
         pass
-        
+
     async def generate_content(self, ctx: PipelineContext):
-        """Step 2: Generate or process script/narrations."""
+        """Bước 2: Sinh hoặc xử lý kịch bản/thuyết minh."""
         pass
-        
+
     async def determine_title(self, ctx: PipelineContext):
-        """Step 3: Determine or generate video title."""
+        """Bước 3: Xác định hoặc sinh tiêu đề video."""
         pass
-        
+
     async def plan_visuals(self, ctx: PipelineContext):
-        """Step 4: Generate image prompts or visual descriptions."""
+        """Bước 4: Sinh prompt ảnh hoặc mô tả hình ảnh."""
         pass
-        
+
     async def initialize_storyboard(self, ctx: PipelineContext):
-        """Step 5: Create Storyboard object and frames."""
+        """Bước 5: Tạo object Storyboard và các frame."""
         pass
-        
+
     async def produce_assets(self, ctx: PipelineContext):
-        """Step 6: Generate audio, images, and render frames (Core processing)."""
+        """Bước 6: Sinh audio, ảnh và render các frame (Xử lý cốt lõi)."""
         pass
-        
+
     async def post_production(self, ctx: PipelineContext):
-        """Step 7: Concatenate videos and add BGM."""
+        """Bước 7: Ghép video và thêm BGM."""
         pass
-        
+
     async def finalize(self, ctx: PipelineContext) -> VideoGenerationResult:
-        """Step 8: Create result object and persist metadata."""
-        raise NotImplementedError("finalize must be implemented by subclass")
+        """Bước 8: Tạo object kết quả và lưu metadata."""
+        raise NotImplementedError("finalize phải được triển khai bởi subclass")
 
     async def handle_exception(self, ctx: PipelineContext, error: Exception):
-        """Handle exceptions during pipeline execution."""
-        logger.error(f"Pipeline execution failed: {error}")
+        """Xử lý ngoại lệ trong khi thực thi pipeline."""
+        logger.error(f"Thực thi pipeline thất bại: {error}")

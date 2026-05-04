@@ -13,8 +13,8 @@
 """
 Pixelle-Video Pipelines
 
-Video generation pipelines with different strategies and workflows.
-Each pipeline implements a specific video generation approach.
+Các pipeline tạo video với chiến lược và workflow khác nhau.
+Mỗi pipeline triển khai một cách tiếp cận tạo video cụ thể.
 """
 
 from pixelle_video.pipelines.base import BasePipeline

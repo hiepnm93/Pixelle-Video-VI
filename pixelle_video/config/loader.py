@@ -11,9 +11,9 @@
 # limitations under the License.
 
 """
-Configuration loader - Pure YAML
+Bộ tải cấu hình - YAML thuần
 
-Handles loading and saving configuration from/to YAML files.
+Xử lý việc nạp và lưu cấu hình từ/đến file YAML.
 """
 from pathlib import Path
 import yaml
@@ -22,44 +22,44 @@ from loguru import logger
 
 def load_config_dict(config_path: str = "config.yaml") -> dict:
     """
-    Load configuration from YAML file
-    
+    Nạp cấu hình từ file YAML
+
     Args:
-        config_path: Path to config file
-        
+        config_path: Đường dẫn tới file config
+
     Returns:
-        Configuration dictionary
+        Dictionary cấu hình
     """
     config_file = Path(config_path)
-    
+
     if not config_file.exists():
-        logger.warning(f"Config file not found: {config_path}")
-        logger.info("Using default configuration")
+        logger.warning(f"Không tìm thấy file config: {config_path}")
+        logger.info("Sử dụng cấu hình mặc định")
         return {}
-    
+
     try:
         with open(config_file, 'r', encoding='utf-8') as f:
             data = yaml.safe_load(f) or {}
-        logger.info(f"Configuration loaded from {config_path}")
+        logger.info(f"Đã nạp cấu hình từ {config_path}")
         return data
     except Exception as e:
-        logger.error(f"Failed to load config: {e}")
+        logger.error(f"Không thể nạp config: {e}")
         return {}
 
 
 def save_config_dict(config: dict, config_path: str = "config.yaml"):
     """
-    Save configuration to YAML file
-    
+    Lưu cấu hình ra file YAML
+
     Args:
-        config: Configuration dictionary
-        config_path: Path to config file
+        config: Dictionary cấu hình
+        config_path: Đường dẫn tới file config
     """
     try:
         with open(config_path, 'w', encoding='utf-8') as f:
             yaml.dump(config, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
-        logger.info(f"Configuration saved to {config_path}")
+        logger.info(f"Đã lưu cấu hình tới {config_path}")
     except Exception as e:
-        logger.error(f"Failed to save config: {e}")
+        logger.error(f"Không thể lưu config: {e}")
         raise
 

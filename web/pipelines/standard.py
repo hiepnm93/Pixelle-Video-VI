@@ -11,9 +11,9 @@
 # limitations under the License.
 
 """
-Standard Pipeline UI
+UI cho Pipeline Standard
 
-Implements the classic 3-column layout for the Standard Pipeline.
+Cài đặt bố cục 3 cột kinh điển cho Pipeline Standard.
 """
 
 import streamlit as st
@@ -22,7 +22,7 @@ from web.i18n import tr
 
 from web.pipelines.base import PipelineUI, register_pipeline_ui
 
-# Import components
+# Import các component
 from web.components.content_input import render_content_input, render_bgm_section, render_version_info
 from web.components.style_config import render_style_config
 from web.components.output_preview import render_output_preview
@@ -30,59 +30,59 @@ from web.components.output_preview import render_output_preview
 
 class StandardPipelineUI(PipelineUI):
     """
-    UI for the Standard Video Generation Pipeline.
-    Implements the classic 3-column layout.
+    UI cho Pipeline Sinh Video Tiêu Chuẩn.
+    Cài đặt bố cục 3 cột kinh điển.
     """
     name = "quick_create"
     icon = "⚡"
-    
+
     @property
     def display_name(self):
         return tr("pipeline.quick_create.name")
-    
+
     @property
     def description(self):
         return tr("pipeline.quick_create.description")
-    
+
     def render(self, pixelle_video: Any):
-        # Three-column layout
+        # Bố cục ba cột
         left_col, middle_col, right_col = st.columns([1, 1, 1])
-        
+
         # ====================================================================
-        # Left Column: Content Input & BGM
+        # Cột trái: Nhập nội dung & BGM
         # ====================================================================
         with left_col:
-            # Content input (mode, text, title, n_scenes)
+            # Nhập nội dung (mode, text, title, n_scenes)
             content_params = render_content_input()
-            
-            # BGM selection (bgm_path, bgm_volume)
+
+            # Chọn BGM (bgm_path, bgm_volume)
             bgm_params = render_bgm_section()
-            
-            # Version info & GitHub link
+
+            # Thông tin phiên bản & liên kết GitHub
             render_version_info()
-        
+
         # ====================================================================
-        # Middle Column: Style Configuration
+        # Cột giữa: Cấu hình Style
         # ====================================================================
         with middle_col:
-            # Style configuration (TTS, template, workflow, etc.)
+            # Cấu hình style (TTS, template, workflow, v.v.)
             style_params = render_style_config(pixelle_video)
-        
+
         # ====================================================================
-        # Right Column: Output Preview
+        # Cột phải: Xem trước Output
         # ====================================================================
         with right_col:
-            # Combine all parameters
+            # Gộp tất cả tham số
             video_params = {
                 "pipeline": self.name,
                 **content_params,
                 **bgm_params,
                 **style_params
             }
-            
-            # Render output preview (generate button, progress, video preview)
+
+            # Render xem trước output (nút sinh, tiến trình, xem trước video)
             render_output_preview(pixelle_video, video_params)
 
 
-# Register self
+# Tự đăng ký
 register_pipeline_ui(StandardPipelineUI)

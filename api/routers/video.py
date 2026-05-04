@@ -11,9 +11,9 @@
 # limitations under the License.
 
 """
-Video generation endpoints
+Các endpoint tạo video
 
-Supports both synchronous and asynchronous video generation.
+Hỗ trợ tạo video đồng bộ và bất đồng bộ.
 """
 
 import os
@@ -33,54 +33,54 @@ router = APIRouter(prefix="/video", tags=["Video Generation"])
 
 def path_to_url(request: Request, file_path: str) -> str:
     """
-    Convert file path to accessible URL
-    
-    Handles both absolute and relative paths, extracting the path relative
-    to the output directory for URL construction.
-    
+    Chuyển đường dẫn file sang URL có thể truy cập
+
+    Xử lý cả đường dẫn tuyệt đối và tương đối, trích xuất phần đường dẫn
+    tương đối so với thư mục output để tạo URL.
+
     Args:
-        request: FastAPI Request object (provides base_url from actual request)
-        file_path: Absolute or relative file path
-    
+        request: Đối tượng Request của FastAPI (cung cấp base_url từ request thực tế)
+        file_path: Đường dẫn file tuyệt đối hoặc tương đối
+
     Returns:
-        Full URL to access the file
-    
-    Examples:
+        URL đầy đủ để truy cập file
+
+    Ví dụ:
         Windows: G:\\...\\output\\20251205_233630_c939\\final.mp4
               -> http://localhost:8000/api/files/20251205_233630_c939/final.mp4
-        
+
         Linux:   /home/user/.../output/20251205_233630_c939/final.mp4
               -> http://localhost:8000/api/files/20251205_233630_c939/final.mp4
-        
-        Domain:  With domain request -> https://your-domain.com/api/files/...
+
+        Domain:  Với request có domain -> https://your-domain.com/api/files/...
     """
     from pathlib import Path
     import os
-    
-    # Normalize path separators to forward slashes first (for cross-platform compatibility)
+
+    # Chuẩn hoá dấu phân tách đường dẫn về dấu / (để tương thích đa nền tảng)
     file_path = file_path.replace("\\", "/")
-    
-    # Check if it's an absolute path (works for both Windows and Linux)
+
+    # Kiểm tra xem có phải đường dẫn tuyệt đối không (cả Windows và Linux)
     is_absolute = os.path.isabs(file_path) or Path(file_path).is_absolute()
-    
+
     if is_absolute:
-        # Find "output" in the path and get everything after it
-        # Split by / to work with normalized paths
+        # Tìm "output" trong đường dẫn và lấy tất cả phần sau nó
+        # Tách theo / để hoạt động với đường dẫn đã chuẩn hoá
         parts = file_path.split("/")
         try:
             output_idx = parts.index("output")
-            # Get all parts after "output" and join them
+            # Lấy tất cả các phần sau "output" và ghép lại
             relative_parts = parts[output_idx + 1:]
             file_path = "/".join(relative_parts)
         except ValueError:
-            # If "output" not in path, use the filename only
+            # Nếu "output" không có trong đường dẫn, chỉ dùng tên file
             file_path = Path(file_path).name
     else:
-        # If relative path starting with "output/", remove it
+        # Nếu đường dẫn tương đối bắt đầu bằng "output/", loại bỏ nó
         if file_path.startswith("output/"):
-            file_path = file_path[7:]  # Remove "output/"
-    
-    # Build URL using request's base_url (automatically matches the request host)
+            file_path = file_path[7:]  # Loại bỏ "output/"
+
+    # Tạo URL dùng base_url của request (tự động khớp với host của request)
     base_url = str(request.base_url).rstrip('/')
     return f"{base_url}/api/files/{file_path}"
 
@@ -92,33 +92,33 @@ async def generate_video_sync(
     request: Request
 ):
     """
-    Generate video synchronously
-    
-    This endpoint blocks until video generation is complete.
-    Suitable for small videos (< 30 seconds).
-    
-    **Note**: May timeout for large videos. Use `/generate/async` instead.
-    
-    Request body includes all video generation parameters.
-    See VideoGenerateRequest schema for details.
-    
-    Returns path to generated video, duration, and file size.
+    Tạo video đồng bộ
+
+    Endpoint này sẽ chặn (block) cho đến khi video được tạo xong.
+    Phù hợp với video nhỏ (< 30 giây).
+
+    **Lưu ý**: Có thể bị timeout với video lớn. Hãy dùng `/generate/async` thay thế.
+
+    Body request bao gồm tất cả tham số tạo video.
+    Xem schema VideoGenerateRequest để biết chi tiết.
+
+    Trả về đường dẫn tới video đã tạo, thời lượng và kích thước file.
     """
     try:
-        logger.info(f"Sync video generation: {request_body.text[:50]}...")
-        
-        # Auto-determine media_width and media_height from template meta tags (required)
+        logger.info(f"Tạo video đồng bộ: {request_body.text[:50]}...")
+
+        # Tự động xác định media_width và media_height từ thẻ meta của template (bắt buộc)
         if not request_body.frame_template:
-            raise ValueError("frame_template is required to determine media size")
-        
+            raise ValueError("frame_template là bắt buộc để xác định kích thước media")
+
         from pixelle_video.services.frame_html import HTMLFrameGenerator
         from pixelle_video.utils.template_util import resolve_template_path
         template_path = resolve_template_path(request_body.frame_template)
         generator = HTMLFrameGenerator(template_path)
         media_width, media_height = generator.get_media_size()
-        logger.debug(f"Auto-determined media size from template: {media_width}x{media_height}")
-        
-        # Build video generation parameters
+        logger.debug(f"Tự động xác định kích thước media từ template: {media_width}x{media_height}")
+
+        # Xây dựng tham số tạo video
         video_params = {
             "text": request_body.text,
             "mode": request_body.mode,
@@ -137,41 +137,41 @@ async def generate_video_sync(
             "bgm_path": request_body.bgm_path,
             "bgm_volume": request_body.bgm_volume,
         }
-        
-        # Add TTS workflow if specified
+
+        # Thêm workflow TTS nếu được chỉ định
         if request_body.tts_workflow:
             video_params["tts_workflow"] = request_body.tts_workflow
-        
-        # Add ref_audio if specified
+
+        # Thêm ref_audio nếu được chỉ định
         if request_body.ref_audio:
             video_params["ref_audio"] = request_body.ref_audio
-        
-        # Legacy voice_id support (deprecated)
+
+        # Hỗ trợ voice_id cũ (đã lỗi thời)
         if request_body.voice_id:
-            logger.warning("voice_id parameter is deprecated, please use tts_workflow instead")
+            logger.warning("Tham số voice_id đã lỗi thời, vui lòng dùng tts_workflow thay thế")
             video_params["voice_id"] = request_body.voice_id
-        
-        # Add custom template parameters if specified
+
+        # Thêm tham số template tuỳ chỉnh nếu được chỉ định
         if request_body.template_params:
             video_params["template_params"] = request_body.template_params
-        
-        # Call video generator service
+
+        # Gọi dịch vụ tạo video
         result = await pixelle_video.generate_video(**video_params)
-        
-        # Get file size
+
+        # Lấy kích thước file
         file_size = os.path.getsize(result.video_path) if os.path.exists(result.video_path) else 0
-        
-        # Convert path to URL
+
+        # Chuyển đường dẫn sang URL
         video_url = path_to_url(request, result.video_path)
-        
+
         return VideoGenerateResponse(
             video_url=video_url,
             duration=result.duration,
             file_size=file_size
         )
-        
+
     except Exception as e:
-        logger.error(f"Sync video generation error: {e}")
+        logger.error(f"Lỗi tạo video đồng bộ: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -182,46 +182,46 @@ async def generate_video_async(
     request: Request
 ):
     """
-    Generate video asynchronously
-    
-    Creates a background task for video generation.
-    Returns immediately with a task_id for tracking progress.
-    
-    **Workflow:**
-    1. Submit video generation request
-    2. Receive task_id in response
-    3. Poll `/api/tasks/{task_id}` to check status
-    4. When status is "completed", retrieve video from result
-    
-    Request body includes all video generation parameters.
-    See VideoGenerateRequest schema for details.
-    
-    Returns task_id for tracking progress.
+    Tạo video bất đồng bộ
+
+    Tạo một task chạy nền để sinh video.
+    Trả về ngay lập tức với task_id để theo dõi tiến trình.
+
+    **Quy trình:**
+    1. Gửi yêu cầu tạo video
+    2. Nhận task_id trong phản hồi
+    3. Poll `/api/tasks/{task_id}` để kiểm tra trạng thái
+    4. Khi trạng thái là "completed", lấy video từ kết quả
+
+    Body request bao gồm tất cả tham số tạo video.
+    Xem schema VideoGenerateRequest để biết chi tiết.
+
+    Trả về task_id để theo dõi tiến trình.
     """
     try:
-        logger.info(f"Async video generation: {request_body.text[:50]}...")
-        
-        # Create task
+        logger.info(f"Tạo video bất đồng bộ: {request_body.text[:50]}...")
+
+        # Tạo task
         task = task_manager.create_task(
             task_type=TaskType.VIDEO_GENERATION,
             request_params=request_body.model_dump()
         )
-        
-        # Define async execution function
+
+        # Định nghĩa hàm thực thi bất đồng bộ
         async def execute_video_generation():
-            """Execute video generation in background"""
-            # Auto-determine media_width and media_height from template meta tags (required)
+            """Thực thi tạo video chạy nền"""
+            # Tự động xác định media_width và media_height từ thẻ meta của template (bắt buộc)
             if not request_body.frame_template:
-                raise ValueError("frame_template is required to determine media size")
-            
+                raise ValueError("frame_template là bắt buộc để xác định kích thước media")
+
             from pixelle_video.services.frame_html import HTMLFrameGenerator
             from pixelle_video.utils.template_util import resolve_template_path
             template_path = resolve_template_path(request_body.frame_template)
             generator = HTMLFrameGenerator(template_path)
             media_width, media_height = generator.get_media_size()
-            logger.debug(f"Auto-determined media size from template: {media_width}x{media_height}")
-            
-            # Build video generation parameters
+            logger.debug(f"Tự động xác định kích thước media từ template: {media_width}x{media_height}")
+
+            # Xây dựng tham số tạo video
             video_params = {
                 "text": request_body.text,
                 "mode": request_body.mode,
@@ -239,52 +239,51 @@ async def generate_video_async(
                 "prompt_prefix": request_body.prompt_prefix,
                 "bgm_path": request_body.bgm_path,
                 "bgm_volume": request_body.bgm_volume,
-                # Progress callback can be added here if needed
+                # Có thể thêm progress callback ở đây nếu cần
                 # "progress_callback": lambda event: task_manager.update_progress(...)
             }
-            
-            # Add TTS workflow if specified
+
+            # Thêm workflow TTS nếu được chỉ định
             if request_body.tts_workflow:
                 video_params["tts_workflow"] = request_body.tts_workflow
-            
-            # Add ref_audio if specified
+
+            # Thêm ref_audio nếu được chỉ định
             if request_body.ref_audio:
                 video_params["ref_audio"] = request_body.ref_audio
-            
-            # Legacy voice_id support (deprecated)
+
+            # Hỗ trợ voice_id cũ (đã lỗi thời)
             if request_body.voice_id:
-                logger.warning("voice_id parameter is deprecated, please use tts_workflow instead")
+                logger.warning("Tham số voice_id đã lỗi thời, vui lòng dùng tts_workflow thay thế")
                 video_params["voice_id"] = request_body.voice_id
-            
-            # Add custom template parameters if specified
+
+            # Thêm tham số template tuỳ chỉnh nếu được chỉ định
             if request_body.template_params:
                 video_params["template_params"] = request_body.template_params
-            
+
             result = await pixelle_video.generate_video(**video_params)
-            
-            # Get file size
+
+            # Lấy kích thước file
             file_size = os.path.getsize(result.video_path) if os.path.exists(result.video_path) else 0
-            
-            # Convert path to URL
+
+            # Chuyển đường dẫn sang URL
             video_url = path_to_url(request, result.video_path)
-            
+
             return {
                 "video_url": video_url,
                 "duration": result.duration,
                 "file_size": file_size
             }
-        
-        # Start execution
+
+        # Bắt đầu thực thi
         await task_manager.execute_task(
             task_id=task.task_id,
             coro_func=execute_video_generation
         )
-        
+
         return VideoGenerateAsyncResponse(
             task_id=task.task_id
         )
-        
-    except Exception as e:
-        logger.error(f"Async video generation error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
 
+    except Exception as e:
+        logger.error(f"Lỗi tạo video bất đồng bộ: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

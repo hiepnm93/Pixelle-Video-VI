@@ -11,9 +11,9 @@
 # limitations under the License.
 
 """
-Asset-Based Pipeline UI
+UI cho Pipeline dựa trên Asset
 
-Implements the UI for generating videos from user-provided assets.
+Cài đặt UI để sinh video từ các asset do người dùng cung cấp.
 """
 
 import os
@@ -35,54 +35,54 @@ from pixelle_video.models.progress import ProgressEvent
 
 class AssetBasedPipelineUI(PipelineUI):
     """
-    UI for the Asset-Based Video Generation Pipeline.
-    Generates videos from user-provided assets (images/videos).
+    UI cho Pipeline Sinh Video dựa trên Asset.
+    Sinh video từ các asset do người dùng cung cấp (ảnh/video).
     """
     name = "custom_media"
     icon = "🎨"
-    
+
     @property
     def display_name(self):
         return tr("pipeline.custom_media.name")
-    
+
     @property
     def description(self):
         return tr("pipeline.custom_media.description")
-    
+
     def render(self, pixelle_video: Any):
-        # Three-column layout
+        # Bố cục ba cột
         left_col, middle_col, right_col = st.columns([1, 1, 1])
-        
+
         # ====================================================================
-        # Left Column: Asset Upload & Video Info
+        # Cột trái: Tải lên Asset & Thông tin video
         # ====================================================================
         with left_col:
             asset_params = self._render_asset_input()
             bgm_params = render_bgm_section(key_prefix="asset_")
             render_version_info()
-        
+
         # ====================================================================
-        # Middle Column: Video Configuration
+        # Cột giữa: Cấu hình video
         # ====================================================================
         with middle_col:
             config_params = self._render_video_config(pixelle_video)
-        
+
         # ====================================================================
-        # Right Column: Output Preview
+        # Cột phải: Xem trước Output
         # ====================================================================
         with right_col:
-            # Combine all parameters
+            # Gộp tất cả tham số
             video_params = {
                 "pipeline": self.name,
                 **asset_params,
                 **bgm_params,
                 **config_params
             }
-            
+
             self._render_output_preview(pixelle_video, video_params)
-    
+
     def _render_asset_input(self) -> dict:
-        """Render asset upload section"""
+        """Render phần tải lên asset"""
         with st.container(border=True):
             st.markdown(f"**{tr('asset_based.section.assets')}**")
             
@@ -92,7 +92,7 @@ class AssetBasedPipelineUI(PipelineUI):
                 st.markdown(f"**{tr('help.how')}**")
                 st.markdown(tr("asset_based.assets.how"))
             
-            # File uploader for multiple files
+            # File uploader cho nhiều file
             uploaded_files = st.file_uploader(
                 tr("asset_based.assets.upload"),
                 type=["jpg", "jpeg", "png", "gif", "webp", "mp4", "mov", "avi", "mkv", "webm"],
@@ -100,30 +100,30 @@ class AssetBasedPipelineUI(PipelineUI):
                 help=tr("asset_based.assets.upload_help"),
                 key="asset_files"
             )
-            
-            # Save uploaded files to temp directory with unique session ID
+
+            # Lưu file đã tải lên vào thư mục tạm với session ID duy nhất
             asset_paths = []
             if uploaded_files:
                 import uuid
                 session_id = str(uuid.uuid4()).replace('-', '')[:12]
                 temp_dir = Path(f"temp/assets_{session_id}")
                 temp_dir.mkdir(parents=True, exist_ok=True)
-                
+
                 for uploaded_file in uploaded_files:
                     file_path = temp_dir / uploaded_file.name
                     with open(file_path, "wb") as f:
                         f.write(uploaded_file.getbuffer())
                     asset_paths.append(str(file_path.absolute()))
-                
+
                 st.success(tr("asset_based.assets.count", count=len(asset_paths)))
-                
-                # Preview uploaded assets
+
+                # Xem trước asset đã tải lên
                 with st.expander(tr("asset_based.assets.preview"), expanded=True):
-                    # Show in a grid (3 columns)
+                    # Hiển thị dạng lưới (3 cột)
                     cols = st.columns(3)
                     for i, (file, path) in enumerate(zip(uploaded_files, asset_paths)):
                         with cols[i % 3]:
-                            # Check if image or video
+                            # Kiểm tra là ảnh hay video
                             ext = Path(path).suffix.lower()
                             if ext in [".jpg", ".jpeg", ".png", ".gif", ".webp"]:
                                 st.image(file, caption=file.name, use_container_width=True)
@@ -132,8 +132,8 @@ class AssetBasedPipelineUI(PipelineUI):
                                 st.caption(file.name)
             else:
                 st.info(tr("asset_based.assets.empty_hint"))
-        
-        # Video title & intent
+
+        # Tiêu đề video & ý đồ
         with st.container(border=True):
             st.markdown(f"**{tr('asset_based.section.video_info')}**")
             
@@ -159,12 +159,12 @@ class AssetBasedPipelineUI(PipelineUI):
         }
     
     def _render_video_config(self, pixelle_video: Any) -> dict:
-        """Render video configuration section"""
-        # Duration configuration
+        """Render phần cấu hình video"""
+        # Cấu hình thời lượng
         with st.container(border=True):
             st.markdown(f"**{tr('video.title')}**")
-            
-            # Duration slider
+
+            # Thanh trượt thời lượng
             duration = st.slider(
                 tr("asset_based.duration"),
                 min_value=15,
@@ -176,29 +176,29 @@ class AssetBasedPipelineUI(PipelineUI):
             )
             st.caption(tr("asset_based.duration_label", seconds=duration))
         
-        # Workflow source selection
+        # Chọn nguồn workflow
         with st.container(border=True):
             st.markdown(f"**{tr('asset_based.section.source')}**")
-            
+
             with st.expander(tr("help.feature_description"), expanded=False):
                 st.markdown(f"**{tr('help.what')}**")
                 st.markdown(tr("asset_based.source.what"))
                 st.markdown(f"**{tr('help.how')}**")
                 st.markdown(tr("asset_based.source.how"))
-            
+
             source_options = {
                 "runninghub": tr("asset_based.source.runninghub"),
                 "selfhost": tr("asset_based.source.selfhost")
             }
-            
-            # Check if RunningHub API key is configured
+
+            # Kiểm tra API key RunningHub đã cấu hình chưa
             comfyui_config = config_manager.get_comfyui_config()
             has_runninghub = bool(comfyui_config.get("runninghub_api_key"))
             has_selfhost = bool(comfyui_config.get("comfyui_url"))
-            
-            # Default to runninghub always
+
+            # Luôn mặc định là runninghub
             default_source_index = 0
-            
+
             source = st.radio(
                 tr("asset_based.source.select"),
                 options=list(source_options.keys()),
@@ -208,8 +208,8 @@ class AssetBasedPipelineUI(PipelineUI):
                 key="asset_source",
                 label_visibility="collapsed"
             )
-            
-            # Show hint based on selection
+
+            # Hiển thị gợi ý theo lựa chọn
             if source == "runninghub":
                 if not has_runninghub:
                     st.warning(tr("asset_based.source.runninghub_not_configured"))
@@ -220,39 +220,39 @@ class AssetBasedPipelineUI(PipelineUI):
                     st.warning(tr("asset_based.source.selfhost_not_configured"))
                 else:
                     st.info(tr("asset_based.source.selfhost_hint"))
-                    # Check and warn for selfhost mode (auto popup if not confirmed)
-                    # Use analyse_image.json as representative workflow
+                    # Kiểm tra và cảnh báo cho chế độ selfhost (tự hiện popup nếu chưa xác nhận)
+                    # Dùng analyse_image.json làm workflow đại diện
                     check_and_warn_selfhost_workflow("selfhost/analyse_image.json")
-        
-        # TTS configuration
+
+        # Cấu hình TTS
         with st.container(border=True):
             st.markdown(f"**{tr('section.tts')}**")
-            
-            # Import voice configuration
+
+            # Import cấu hình giọng đọc
             from pixelle_video.tts_voices import EDGE_TTS_VOICES, get_voice_display_name
-            
-            # Get saved voice from config
+
+            # Lấy giọng đã lưu trong config
             comfyui_config = config_manager.get_comfyui_config()
             tts_config = comfyui_config.get("tts", {})
             local_config = tts_config.get("local", {})
             saved_voice = local_config.get("voice", "zh-CN-YunjianNeural")
             saved_speed = local_config.get("speed", 1.2)
-            
-            # Build voice options with i18n
+
+            # Xây danh sách lựa chọn giọng kèm i18n
             voice_options = []
             voice_ids = []
             default_voice_index = 0
-            
+
             for idx, voice_config in enumerate(EDGE_TTS_VOICES):
                 voice_id = voice_config["id"]
                 display_name = get_voice_display_name(voice_id, tr, get_language())
                 voice_options.append(display_name)
                 voice_ids.append(voice_id)
-                
+
                 if voice_id == saved_voice:
                     default_voice_index = idx
-            
-            # Two-column layout
+
+            # Bố cục hai cột
             voice_col, speed_col = st.columns([1, 1])
             
             with voice_col:
@@ -285,15 +285,15 @@ class AssetBasedPipelineUI(PipelineUI):
         }
     
     def _render_output_preview(self, pixelle_video: Any, video_params: dict):
-        """Render output preview section"""
+        """Render phần xem trước output"""
         with st.container(border=True):
             st.markdown(f"**{tr('section.video_generation')}**")
-            
-            # Check configuration
+
+            # Kiểm tra cấu hình
             if not config_manager.validate():
                 st.warning(tr("settings.not_configured"))
-            
-            # Check if assets are provided
+
+            # Kiểm tra đã cung cấp asset chưa
             assets = video_params.get("assets", [])
             if not assets:
                 st.info(tr("asset_based.output.no_assets"))
@@ -305,31 +305,31 @@ class AssetBasedPipelineUI(PipelineUI):
                     key="asset_generate_disabled"
                 )
                 return
-            
-            # Show asset summary
+
+            # Hiển thị tổng kết asset
             st.info(tr("asset_based.output.ready", count=len(assets)))
-            
-            # Generate button
+
+            # Nút sinh video
             if st.button(tr("btn.generate"), type="primary", use_container_width=True, key="asset_generate"):
-                # Validate
+                # Kiểm tra
                 if not config_manager.validate():
                     st.error(tr("settings.not_configured"))
                     st.stop()
-                
-                # Show progress
+
+                # Hiển thị tiến trình
                 progress_bar = st.progress(0)
                 status_text = st.empty()
-                
+
                 start_time = time.time()
-                
+
                 try:
                     # Import pipeline
                     from pixelle_video.pipelines.asset_based import AssetBasedPipeline
-                    
-                    # Create pipeline
+
+                    # Tạo pipeline
                     pipeline = AssetBasedPipeline(pixelle_video)
-                    
-                    # Progress callback
+
+                    # Callback tiến trình
                     def update_progress(event: ProgressEvent):
                         if event.event_type == "analyzing_assets":
                             if event.extra_info == "start":
@@ -377,7 +377,7 @@ class AssetBasedPipelineUI(PipelineUI):
                         status_text.text(message)
                         progress_bar.progress(min(int(event.progress * 100), 99))
                     
-                    # Execute pipeline with progress callback
+                    # Thực thi pipeline với callback tiến trình
                     ctx = run_async(pipeline(
                         assets=video_params["assets"],
                         video_title=video_params.get("video_title", ""),
@@ -396,35 +396,35 @@ class AssetBasedPipelineUI(PipelineUI):
                     
                     progress_bar.progress(100)
                     status_text.text(tr("status.success"))
-                    
-                    # Display result
+
+                    # Hiển thị kết quả
                     st.success(tr("status.video_generated", path=ctx.final_video_path))
-                    
+
                     st.markdown("---")
-                    
-                    # Video info
+
+                    # Thông tin video
                     if os.path.exists(ctx.final_video_path):
                         file_size_mb = os.path.getsize(ctx.final_video_path) / (1024 * 1024)
                         n_scenes = len(ctx.storyboard.frames) if ctx.storyboard else 0
-                        
+
                         info_text = (
                             f"⏱️ {tr('info.generation_time')} {total_time:.1f}s   "
                             f"📦 {file_size_mb:.2f}MB   "
                             f"🎬 {n_scenes}{tr('info.scenes_unit')}"
                         )
                         st.caption(info_text)
-                        
+
                         st.markdown("---")
-                        
-                        # Video preview
+
+                        # Xem trước video
                         st.video(ctx.final_video_path)
-                        
-                        # Download button
+
+                        # Nút tải xuống
                         with open(ctx.final_video_path, "rb") as video_file:
                             video_bytes = video_file.read()
                             video_filename = os.path.basename(ctx.final_video_path)
                             st.download_button(
-                                label="⬇️ 下载视频" if get_language() == "zh_CN" else "⬇️ Download Video",
+                                label="⬇️ Tải video" if get_language() == "vi_VN" else ("⬇️ 下载视频" if get_language() == "zh_CN" else "⬇️ Download Video"),
                                 data=video_bytes,
                                 file_name=video_filename,
                                 mime="video/mp4",
@@ -432,7 +432,7 @@ class AssetBasedPipelineUI(PipelineUI):
                             )
                     else:
                         st.error(tr("status.video_not_found", path=ctx.final_video_path))
-                
+
                 except Exception as e:
                     status_text.text("")
                     progress_bar.empty()
@@ -441,6 +441,6 @@ class AssetBasedPipelineUI(PipelineUI):
                     st.stop()
 
 
-# Register self
+# Tự đăng ký
 register_pipeline_ui(AssetBasedPipelineUI)
 

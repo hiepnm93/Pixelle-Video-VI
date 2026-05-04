@@ -11,9 +11,9 @@
 # limitations under the License.
 
 """
-Pipeline UI Package
+Gói UI Pipeline
 
-Exports registry functions and automatically registers available pipelines.
+Xuất các hàm registry và tự động đăng ký các pipeline khả dụng.
 """
 
 from web.pipelines.base import (

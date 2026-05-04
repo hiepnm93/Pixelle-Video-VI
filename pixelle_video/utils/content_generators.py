@@ -11,10 +11,10 @@
 # limitations under the License.
 
 """
-Content generation utility functions
+Các hàm tiện ích sinh nội dung
 
-Pure/stateless functions for generating content using LLM.
-These functions are reusable across different pipelines.
+Các hàm thuần/không trạng thái để sinh nội dung dùng LLM.
+Các hàm này có thể tái sử dụng giữa các pipeline khác nhau.
 """
 
 import json
@@ -31,64 +31,64 @@ async def generate_title(
     max_length: int = 15
 ) -> str:
     """
-    Generate title from content
-    
+    Sinh tiêu đề từ nội dung
+
     Args:
-        llm_service: LLM service instance
-        content: Source content (topic or script)
-        strategy: Generation strategy
-            - "auto": Auto-decide based on content length (default)
-            - "direct": Use content directly (truncated if needed)
-            - "llm": Always use LLM to generate title
-        max_length: Maximum title length (default: 15)
-    
+        llm_service: Instance LLM service
+        content: Nội dung nguồn (chủ đề hoặc kịch bản)
+        strategy: Chiến lược sinh
+            - "auto": Tự quyết định dựa trên độ dài nội dung (mặc định)
+            - "direct": Dùng trực tiếp nội dung (cắt nếu cần)
+            - "llm": Luôn dùng LLM để sinh tiêu đề
+        max_length: Độ dài tiêu đề tối đa (mặc định: 15)
+
     Returns:
-        Generated title
+        Tiêu đề đã sinh
     """
     if strategy == "direct":
         content = content.strip()
         return content[:max_length] if len(content) > max_length else content
-    
+
     if strategy == "auto":
         if len(content.strip()) <= 15:
             return content.strip()
-        # Fall through to LLM
-    
-    # Use LLM to generate title
+        # Rơi xuống dùng LLM
+
+    # Dùng LLM để sinh tiêu đề
     from pixelle_video.prompts import build_title_generation_prompt
-    
-    # Pass max_length to prompt so LLM knows the character limit
+
+    # Truyền max_length vào prompt để LLM biết giới hạn ký tự
     prompt = build_title_generation_prompt(content, max_length=max_length)
     response = await llm_service(prompt, temperature=0.7, max_tokens=50)
-    
-    # Clean up response
+
+    # Dọn dẹp response
     title = response.strip()
-    
-    # Remove quotes if present
+
+    # Bỏ dấu ngoặc kép nếu có
     if title.startswith('"') and title.endswith('"'):
         title = title[1:-1]
     if title.startswith("'") and title.endswith("'"):
         title = title[1:-1]
-    
-    # Remove trailing punctuation
+
+    # Bỏ dấu câu cuối
     title = title.rstrip('.,!?;:\'"')
-    
-    # Safety: if still over limit, truncate smartly
+
+    # An toàn: nếu vẫn vượt giới hạn, cắt thông minh
     if len(title) > max_length:
-        # Try to truncate at word boundary
+        # Thử cắt ở ranh giới từ
         truncated = title[:max_length]
         last_space = truncated.rfind(' ')
-        
-        # Only use word boundary if it's not too far back (at least 60% of max_length)
+
+        # Chỉ dùng ranh giới từ nếu không lùi quá xa (ít nhất 60% của max_length)
         if last_space > max_length * 0.6:
             title = truncated[:last_space]
         else:
             title = truncated
-        
-        # Remove any trailing punctuation after truncation
+
+        # Bỏ mọi dấu câu cuối sau khi cắt
         title = title.rstrip('.,!?;:\'"')
-    
-    logger.debug(f"Generated title: '{title}' (length: {len(title)})")
+
+    logger.debug(f"Tiêu đề đã sinh: '{title}' (độ dài: {len(title)})")
     return title
 
 
@@ -100,53 +100,53 @@ async def generate_narrations_from_topic(
     max_words: int = 20
 ) -> List[str]:
     """
-    Generate narrations from topic using LLM
-    
+    Sinh thuyết minh từ chủ đề bằng LLM
+
     Args:
-        llm_service: LLM service instance
-        topic: Topic/theme to generate narrations from
-        n_scenes: Number of narrations to generate
-        min_words: Minimum narration length
-        max_words: Maximum narration length
-    
+        llm_service: Instance LLM service
+        topic: Chủ đề/đề tài để sinh thuyết minh
+        n_scenes: Số thuyết minh cần sinh
+        min_words: Độ dài thuyết minh tối thiểu
+        max_words: Độ dài thuyết minh tối đa
+
     Returns:
-        List of narration texts
+        Danh sách văn bản thuyết minh
     """
     from pixelle_video.prompts import build_topic_narration_prompt
-    
-    logger.info(f"Generating {n_scenes} narrations from topic: {topic}")
-    
+
+    logger.info(f"Đang sinh {n_scenes} thuyết minh từ chủ đề: {topic}")
+
     prompt = build_topic_narration_prompt(
         topic=topic,
         n_storyboard=n_scenes,
         min_words=min_words,
         max_words=max_words
     )
-    
+
     response = await llm_service(
         prompt=prompt,
         temperature=0.8,
         max_tokens=2000
     )
-    
-    logger.debug(f"LLM response: {response[:200]}...")
-    
+
+    logger.debug(f"Response LLM: {response[:200]}...")
+
     # Parse JSON
     result = _parse_json(response)
-    
+
     if "narrations" not in result:
-        raise ValueError("Invalid response format: missing 'narrations' key")
-    
+        raise ValueError("Định dạng response không hợp lệ: thiếu key 'narrations'")
+
     narrations = result["narrations"]
-    
-    # Validate count
+
+    # Xác thực số lượng
     if len(narrations) > n_scenes:
-        logger.warning(f"Got {len(narrations)} narrations, taking first {n_scenes}")
+        logger.warning(f"Nhận được {len(narrations)} thuyết minh, lấy {n_scenes} đầu tiên")
         narrations = narrations[:n_scenes]
     elif len(narrations) < n_scenes:
-        raise ValueError(f"Expected {n_scenes} narrations, got only {len(narrations)}")
-    
-    logger.info(f"Generated {len(narrations)} narrations successfully")
+        raise ValueError(f"Mong đợi {n_scenes} thuyết minh, chỉ nhận được {len(narrations)}")
+
+    logger.info(f"Đã sinh thành công {len(narrations)} thuyết minh")
     return narrations
 
 
@@ -158,21 +158,21 @@ async def generate_narrations_from_content(
     max_words: int = 20
 ) -> List[str]:
     """
-    Generate narrations from user-provided content using LLM
-    
+    Sinh thuyết minh từ nội dung do người dùng cung cấp bằng LLM
+
     Args:
-        llm_service: LLM service instance
-        content: User-provided content
-        n_scenes: Number of narrations to generate
-        min_words: Minimum narration length
-        max_words: Maximum narration length
-    
+        llm_service: Instance LLM service
+        content: Nội dung do người dùng cung cấp
+        n_scenes: Số thuyết minh cần sinh
+        min_words: Độ dài thuyết minh tối thiểu
+        max_words: Độ dài thuyết minh tối đa
+
     Returns:
-        List of narration texts
+        Danh sách văn bản thuyết minh
     """
     from pixelle_video.prompts import build_content_narration_prompt
-    
-    logger.info(f"Generating {n_scenes} narrations from content ({len(content)} chars)")
+
+    logger.info(f"Đang sinh {n_scenes} thuyết minh từ nội dung ({len(content)} ký tự)")
     
     prompt = build_content_narration_prompt(
         content=content,
@@ -189,20 +189,20 @@ async def generate_narrations_from_content(
     
     # Parse JSON
     result = _parse_json(response)
-    
+
     if "narrations" not in result:
-        raise ValueError("Invalid response format: missing 'narrations' key")
-    
+        raise ValueError("Định dạng response không hợp lệ: thiếu key 'narrations'")
+
     narrations = result["narrations"]
-    
-    # Validate count
+
+    # Xác thực số lượng
     if len(narrations) > n_scenes:
-        logger.warning(f"Got {len(narrations)} narrations, taking first {n_scenes}")
+        logger.warning(f"Nhận được {len(narrations)} thuyết minh, lấy {n_scenes} đầu tiên")
         narrations = narrations[:n_scenes]
     elif len(narrations) < n_scenes:
-        raise ValueError(f"Expected {n_scenes} narrations, got only {len(narrations)}")
-    
-    logger.info(f"Generated {len(narrations)} narrations successfully")
+        raise ValueError(f"Mong đợi {n_scenes} thuyết minh, chỉ nhận được {len(narrations)}")
+
+    logger.info(f"Đã sinh thành công {len(narrations)} thuyết minh")
     return narrations
 
 
@@ -211,58 +211,58 @@ async def split_narration_script(
     split_mode: Literal["paragraph", "line", "sentence"] = "paragraph",
 ) -> List[str]:
     """
-    Split user-provided narration script into segments
-    
+    Tách kịch bản thuyết minh do người dùng cung cấp thành các đoạn
+
     Args:
-        script: Fixed narration script
-        split_mode: Splitting strategy
-            - "paragraph": Split by double newline (\\n\\n), preserve single newlines within paragraphs
-            - "line": Split by single newline (\\n), each line is a segment
-            - "sentence": Split by sentence-ending punctuation (。.!?！？)
-    
+        script: Kịch bản thuyết minh cố định
+        split_mode: Chiến lược tách
+            - "paragraph": Tách theo dòng trống đôi (\\n\\n), giữ dòng trống đơn trong đoạn
+            - "line": Tách theo dòng trống đơn (\\n), mỗi dòng là một đoạn
+            - "sentence": Tách theo dấu câu kết thúc (。.!?！？)
+
     Returns:
-        List of narration segments
+        Danh sách các đoạn thuyết minh
     """
-    logger.info(f"Splitting script (mode={split_mode}, length={len(script)} chars)")
-    
+    logger.info(f"Đang tách kịch bản (mode={split_mode}, độ dài={len(script)} ký tự)")
+
     narrations = []
-    
+
     if split_mode == "paragraph":
-        # Split by double newline (paragraph mode)
-        # Preserve single newlines within paragraphs
+        # Tách theo dòng trống đôi (chế độ paragraph)
+        # Giữ các dòng trống đơn trong đoạn
         paragraphs = re.split(r'\n\s*\n', script)
         for para in paragraphs:
-            # Only strip leading/trailing whitespace, preserve internal newlines
+            # Chỉ strip whitespace đầu/cuối, giữ các dòng trống bên trong
             cleaned = para.strip()
             if cleaned:
                 narrations.append(para)
-        logger.info(f"✅ Split script into {len(narrations)} segments (by paragraph)")
-    
+        logger.info(f"✅ Đã tách kịch bản thành {len(narrations)} đoạn (theo paragraph)")
+
     elif split_mode == "line":
-        # Split by single newline (original behavior)
+        # Tách theo dòng trống đơn (hành vi gốc)
         narrations = [line.strip() for line in script.split('\n') if line.strip()]
-        logger.info(f"✅ Split script into {len(narrations)} segments (by line)")
-    
+        logger.info(f"✅ Đã tách kịch bản thành {len(narrations)} đoạn (theo line)")
+
     elif split_mode == "sentence":
-        # Split by sentence-ending punctuation
-        # Supports Chinese (。！？) and English (.!?)
-        # Use regex to split while keeping sentences intact
+        # Tách theo dấu câu kết thúc
+        # Hỗ trợ tiếng Trung (。！？) và tiếng Anh (.!?)
+        # Dùng regex để tách nhưng giữ câu nguyên vẹn
         cleaned = re.sub(r'\s+', ' ', script.strip())
-        # Split on sentence-ending punctuation, keeping the punctuation with the sentence
+        # Tách tại dấu câu kết thúc, giữ dấu câu cùng câu
         sentences = re.split(r'(?<=[。.!?！？])\s*', cleaned)
         narrations = [s.strip() for s in sentences if s.strip()]
-        logger.info(f"✅ Split script into {len(narrations)} segments (by sentence)")
-    
+        logger.info(f"✅ Đã tách kịch bản thành {len(narrations)} đoạn (theo sentence)")
+
     else:
-        # Fallback to line mode
-        logger.warning(f"Unknown split_mode '{split_mode}', falling back to 'line'")
+        # Dự phòng về chế độ line
+        logger.warning(f"split_mode '{split_mode}' không xác định, dự phòng về 'line'")
         narrations = [line.strip() for line in script.split('\n') if line.strip()]
-    
-    # Log statistics
+
+    # Log thống kê
     if narrations:
         lengths = [len(s) for s in narrations]
-        logger.info(f"   Min: {min(lengths)} chars, Max: {max(lengths)} chars, Avg: {sum(lengths)//len(lengths)} chars")
-    
+        logger.info(f"   Min: {min(lengths)} ký tự, Max: {max(lengths)} ký tự, Tb: {sum(lengths)//len(lengths)} ký tự")
+
     return narrations
 
 
@@ -276,96 +276,96 @@ async def generate_image_prompts(
     progress_callback: Optional[callable] = None
 ) -> List[str]:
     """
-    Generate image prompts from narrations (with batching and retry)
-    
+    Sinh prompt ảnh từ thuyết minh (kèm chia batch và retry)
+
     Args:
-        llm_service: LLM service instance
-        narrations: List of narrations
-        min_words: Min image prompt length
-        max_words: Max image prompt length
-        batch_size: Max narrations per batch (default: 10)
-        max_retries: Max retry attempts per batch (default: 3)
-        progress_callback: Optional callback(completed, total, message) for progress updates
-    
+        llm_service: Instance LLM service
+        narrations: Danh sách thuyết minh
+        min_words: Độ dài prompt ảnh tối thiểu
+        max_words: Độ dài prompt ảnh tối đa
+        batch_size: Số thuyết minh tối đa mỗi batch (mặc định: 10)
+        max_retries: Số lần retry tối đa mỗi batch (mặc định: 3)
+        progress_callback: Callback tuỳ chọn(completed, total, message) cho cập nhật tiến độ
+
     Returns:
-        List of image prompts (base prompts, without prefix applied)
+        Danh sách prompt ảnh (prompt cơ sở, chưa áp dụng tiền tố)
     """
     from pixelle_video.prompts import build_image_prompt_prompt
-    
-    logger.info(f"Generating image prompts for {len(narrations)} narrations (batch_size={batch_size})")
-    
-    # Split narrations into batches
+
+    logger.info(f"Đang sinh prompt ảnh cho {len(narrations)} thuyết minh (batch_size={batch_size})")
+
+    # Chia thuyết minh thành các batch
     batches = [narrations[i:i + batch_size] for i in range(0, len(narrations), batch_size)]
-    logger.info(f"Split into {len(batches)} batches")
-    
+    logger.info(f"Đã chia thành {len(batches)} batch")
+
     all_prompts = []
-    
-    # Process each batch
+
+    # Xử lý từng batch
     for batch_idx, batch_narrations in enumerate(batches, 1):
-        logger.info(f"Processing batch {batch_idx}/{len(batches)} ({len(batch_narrations)} narrations)")
-        
-        # Retry logic for this batch
+        logger.info(f"Đang xử lý batch {batch_idx}/{len(batches)} ({len(batch_narrations)} thuyết minh)")
+
+        # Logic retry cho batch này
         for attempt in range(1, max_retries + 1):
             try:
-                # Generate prompts for this batch
+                # Sinh prompt cho batch này
                 prompt = build_image_prompt_prompt(
                     narrations=batch_narrations,
                     min_words=min_words,
                     max_words=max_words
                 )
-                
+
                 response = await llm_service(
                     prompt=prompt,
                     temperature=0.7,
                     max_tokens=8192
                 )
-                
-                logger.debug(f"Batch {batch_idx} attempt {attempt}: LLM response length: {len(response)} chars")
-                
+
+                logger.debug(f"Batch {batch_idx} lần {attempt}: độ dài response LLM: {len(response)} ký tự")
+
                 # Parse JSON
                 result = _parse_json(response)
-                
+
                 if "image_prompts" not in result:
-                    raise KeyError("Invalid response format: missing 'image_prompts'")
-                
+                    raise KeyError("Định dạng response không hợp lệ: thiếu 'image_prompts'")
+
                 batch_prompts = result["image_prompts"]
-                
-                # Validate count
+
+                # Xác thực số lượng
                 if len(batch_prompts) != len(batch_narrations):
                     error_msg = (
-                        f"Batch {batch_idx} prompt count mismatch (attempt {attempt}/{max_retries}):\n"
-                        f"  Expected: {len(batch_narrations)} prompts\n"
-                        f"  Got: {len(batch_prompts)} prompts"
+                        f"Batch {batch_idx} không khớp số lượng prompt (lần {attempt}/{max_retries}):\n"
+                        f"  Mong đợi: {len(batch_narrations)} prompt\n"
+                        f"  Nhận được: {len(batch_prompts)} prompt"
                     )
                     logger.warning(error_msg)
-                    
+
                     if attempt < max_retries:
-                        logger.info(f"Retrying batch {batch_idx}...")
+                        logger.info(f"Đang thử lại batch {batch_idx}...")
                         continue
                     else:
                         raise ValueError(error_msg)
-                
-                # Success!
-                logger.info(f"✅ Batch {batch_idx} completed successfully ({len(batch_prompts)} prompts)")
+
+                # Thành công!
+                logger.info(f"✅ Batch {batch_idx} hoàn thành thành công ({len(batch_prompts)} prompt)")
                 all_prompts.extend(batch_prompts)
-                
-                # Report progress
+
+                # Báo cáo tiến độ
                 if progress_callback:
                     progress_callback(
                         len(all_prompts),
                         len(narrations),
-                        f"Batch {batch_idx}/{len(batches)} completed"
+                        f"Batch {batch_idx}/{len(batches)} hoàn thành"
                     )
-                
+
                 break
-                
+
             except json.JSONDecodeError as e:
-                logger.error(f"Batch {batch_idx} JSON parse error (attempt {attempt}/{max_retries}): {e}")
+                logger.error(f"Lỗi parse JSON batch {batch_idx} (lần {attempt}/{max_retries}): {e}")
                 if attempt >= max_retries:
                     raise
-                logger.info(f"Retrying batch {batch_idx}...")
-    
-    logger.info(f"✅ Generated {len(all_prompts)} image prompts")
+                logger.info(f"Đang thử lại batch {batch_idx}...")
+
+    logger.info(f"✅ Đã sinh {len(all_prompts)} prompt ảnh")
     return all_prompts
 
 
@@ -379,108 +379,108 @@ async def generate_video_prompts(
     progress_callback: Optional[callable] = None
 ) -> List[str]:
     """
-    Generate video prompts from narrations (with batching and retry)
-    
+    Sinh prompt video từ thuyết minh (kèm chia batch và retry)
+
     Args:
-        llm_service: LLM service instance
-        narrations: List of narrations
-        min_words: Min video prompt length
-        max_words: Max video prompt length
-        batch_size: Max narrations per batch (default: 10)
-        max_retries: Max retry attempts per batch (default: 3)
-        progress_callback: Optional callback(completed, total, message) for progress updates
-    
+        llm_service: Instance LLM service
+        narrations: Danh sách thuyết minh
+        min_words: Độ dài prompt video tối thiểu
+        max_words: Độ dài prompt video tối đa
+        batch_size: Số thuyết minh tối đa mỗi batch (mặc định: 10)
+        max_retries: Số lần retry tối đa mỗi batch (mặc định: 3)
+        progress_callback: Callback tuỳ chọn(completed, total, message) cho cập nhật tiến độ
+
     Returns:
-        List of video prompts (base prompts, without prefix applied)
+        Danh sách prompt video (prompt cơ sở, chưa áp dụng tiền tố)
     """
     from pixelle_video.prompts.video_generation import build_video_prompt_prompt
-    
-    logger.info(f"Generating video prompts for {len(narrations)} narrations (batch_size={batch_size})")
-    
-    # Split narrations into batches
+
+    logger.info(f"Đang sinh prompt video cho {len(narrations)} thuyết minh (batch_size={batch_size})")
+
+    # Chia thuyết minh thành các batch
     batches = [narrations[i:i + batch_size] for i in range(0, len(narrations), batch_size)]
-    logger.info(f"Split into {len(batches)} batches")
-    
+    logger.info(f"Đã chia thành {len(batches)} batch")
+
     all_prompts = []
-    
-    # Process each batch
+
+    # Xử lý từng batch
     for batch_idx, batch_narrations in enumerate(batches, 1):
-        logger.info(f"Processing batch {batch_idx}/{len(batches)} ({len(batch_narrations)} narrations)")
-        
-        # Retry logic for this batch
+        logger.info(f"Đang xử lý batch {batch_idx}/{len(batches)} ({len(batch_narrations)} thuyết minh)")
+
+        # Logic retry cho batch này
         for attempt in range(1, max_retries + 1):
             try:
-                # Generate prompts for this batch
+                # Sinh prompt cho batch này
                 prompt = build_video_prompt_prompt(
                     narrations=batch_narrations,
                     min_words=min_words,
                     max_words=max_words
                 )
-                
+
                 response = await llm_service(
                     prompt=prompt,
                     temperature=0.7,
                     max_tokens=8192
                 )
-                
-                logger.debug(f"Batch {batch_idx} attempt {attempt}: LLM response length: {len(response)} chars")
-                
+
+                logger.debug(f"Batch {batch_idx} lần {attempt}: độ dài response LLM: {len(response)} ký tự")
+
                 # Parse JSON
                 result = _parse_json(response)
-                
+
                 if "video_prompts" not in result:
-                    raise KeyError("Invalid response format: missing 'video_prompts'")
-                
+                    raise KeyError("Định dạng response không hợp lệ: thiếu 'video_prompts'")
+
                 batch_prompts = result["video_prompts"]
-                
-                # Validate batch result
+
+                # Xác thực kết quả batch
                 if len(batch_prompts) != len(batch_narrations):
                     raise ValueError(
-                        f"Prompt count mismatch: expected {len(batch_narrations)}, got {len(batch_prompts)}"
+                        f"Không khớp số lượng prompt: mong đợi {len(batch_narrations)}, nhận được {len(batch_prompts)}"
                     )
-                
-                # Success - add to all_prompts
+
+                # Thành công - thêm vào all_prompts
                 all_prompts.extend(batch_prompts)
-                logger.info(f"✓ Batch {batch_idx} completed: {len(batch_prompts)} video prompts")
-                
-                # Report progress
+                logger.info(f"✓ Batch {batch_idx} hoàn thành: {len(batch_prompts)} prompt video")
+
+                # Báo cáo tiến độ
                 if progress_callback:
                     completed = len(all_prompts)
                     total = len(narrations)
-                    progress_callback(completed, total, f"Batch {batch_idx}/{len(batches)} completed")
-                
-                break  # Success, move to next batch
-            
+                    progress_callback(completed, total, f"Batch {batch_idx}/{len(batches)} hoàn thành")
+
+                break  # Thành công, chuyển sang batch tiếp theo
+
             except Exception as e:
-                logger.warning(f"✗ Batch {batch_idx} attempt {attempt} failed: {e}")
+                logger.warning(f"✗ Batch {batch_idx} lần {attempt} thất bại: {e}")
                 if attempt >= max_retries:
                     raise
-                logger.info(f"Retrying batch {batch_idx}...")
-    
-    logger.info(f"✅ Generated {len(all_prompts)} video prompts")
+                logger.info(f"Đang thử lại batch {batch_idx}...")
+
+    logger.info(f"✅ Đã sinh {len(all_prompts)} prompt video")
     return all_prompts
 
 
 def _parse_json(text: str) -> dict:
     """
-    Parse JSON from text, with fallback to extract JSON from markdown code blocks
-    
+    Parse JSON từ văn bản, có dự phòng trích xuất JSON từ code block markdown
+
     Args:
-        text: Text containing JSON
-        
+        text: Văn bản chứa JSON
+
     Returns:
-        Parsed JSON dict
-        
+        Dict JSON đã parse
+
     Raises:
-        json.JSONDecodeError: If no valid JSON found
+        json.JSONDecodeError: Nếu không tìm thấy JSON hợp lệ
     """
-    # Try direct parsing first
+    # Thử parse trực tiếp trước
     try:
         return json.loads(text)
     except json.JSONDecodeError:
         pass
-    
-    # Try to extract JSON from markdown code block
+
+    # Thử trích xuất JSON từ code block markdown
     json_pattern = r'```(?:json)?\s*([\s\S]+?)\s*```'
     match = re.search(json_pattern, text, re.DOTALL)
     if match:
@@ -488,8 +488,8 @@ def _parse_json(text: str) -> dict:
             return json.loads(match.group(1))
         except json.JSONDecodeError:
             pass
-    
-    # Try to find any JSON object in the text
+
+    # Thử tìm bất kỳ object JSON nào trong văn bản
     json_pattern = r'\{[^{}]*(?:"narrations"|"image_prompts")\s*:\s*\[[^\]]*\][^{}]*\}'
     match = re.search(json_pattern, text, re.DOTALL)
     if match:
@@ -497,7 +497,7 @@ def _parse_json(text: str) -> dict:
             return json.loads(match.group(0))
         except json.JSONDecodeError:
             pass
-    
-    # If all fails, raise error
-    raise json.JSONDecodeError("No valid JSON found", text, 0)
+
+    # Nếu tất cả thất bại, raise lỗi
+    raise json.JSONDecodeError("Không tìm thấy JSON hợp lệ", text, 0)
 

@@ -11,18 +11,18 @@
 # limitations under the License.
 
 """
-HTML-based Frame Generator Service
+Service tạo Frame dựa trên HTML
 
-Renders HTML templates to frame images using Playwright for headless browser rendering.
+Render các template HTML thành ảnh frame bằng Playwright (headless browser).
 
-Linux Environment Requirements:
-    - fontconfig package must be installed
-    - Basic fonts (e.g., fonts-liberation, fonts-noto) recommended
-    
+Yêu cầu môi trường Linux:
+    - Cần cài đặt gói fontconfig
+    - Khuyến nghị cài các font cơ bản (ví dụ: fonts-liberation, fonts-noto)
+
     Ubuntu/Debian: sudo apt-get install -y fontconfig fonts-liberation fonts-noto-cjk
     CentOS/RHEL: sudo yum install -y fontconfig liberation-fonts google-noto-cjk-fonts
-    
-    Playwright browser install: playwright install --with-deps chromium
+
+    Cài trình duyệt cho Playwright: playwright install --with-deps chromium
 """
 
 import os
@@ -38,18 +38,18 @@ from pixelle_video.utils.template_util import parse_template_size
 
 class HTMLFrameGenerator:
     """
-    HTML-based frame generator
-    
-    Renders HTML templates to frame images with variable substitution.
-    Uses Playwright for reliable headless browser rendering.
-    
-    Usage:
+    Bộ tạo frame dựa trên HTML
+
+    Render template HTML thành ảnh frame với cơ chế thay thế biến.
+    Sử dụng Playwright để render headless browser một cách ổn định.
+
+    Cách dùng:
         >>> generator = HTMLFrameGenerator("templates/modern.html")
         >>> frame_path = await generator.generate_frame(
-        ...     topic="Why reading matters",
-        ...     text="Reading builds new neural pathways...",
+        ...     topic="Tại sao đọc sách lại quan trọng",
+        ...     text="Đọc sách giúp tạo ra các kết nối thần kinh mới...",
         ...     image="/path/to/image.png",
-        ...     ext={"content_title": "Sample Title", "content_author": "Author Name"}
+        ...     ext={"content_title": "Tiêu đề mẫu", "content_author": "Tên tác giả"}
         ... )
     """
     
@@ -58,137 +58,137 @@ class HTMLFrameGenerator:
 
     def __init__(self, template_path: str):
         """
-        Initialize HTML frame generator
-        
+        Khởi tạo bộ tạo frame HTML
+
         Args:
-            template_path: Path to HTML template file (e.g., "templates/1080x1920/default.html")
+            template_path: Đường dẫn tới file template HTML (ví dụ: "templates/1080x1920/default.html")
         """
         self.template_path = template_path
         self.template = self._load_template(template_path)
-        
-        # Parse video size from template path
+
+        # Phân tích kích thước video từ đường dẫn template
         self.width, self.height = parse_template_size(template_path)
-        
+
         self._check_linux_dependencies()
-        logger.debug(f"Loaded HTML template: {template_path} (size: {self.width}x{self.height})")
+        logger.debug(f"Đã tải template HTML: {template_path} (kích thước: {self.width}x{self.height})")
     
     
     def _check_linux_dependencies(self):
-        """Check Linux system dependencies and warn if missing"""
+        """Kiểm tra các phụ thuộc hệ thống Linux và cảnh báo nếu thiếu"""
         if os.name != 'posix':
             return
-        
+
         try:
             import subprocess
-            
+
             result = subprocess.run(
-                ['fc-list'], 
-                capture_output=True, 
+                ['fc-list'],
+                capture_output=True,
                 timeout=2
             )
-            
+
             if result.returncode != 0:
                 logger.warning(
-                    "fontconfig not found or not working properly. "
-                    "Install with: sudo apt-get install -y fontconfig fonts-liberation fonts-noto-cjk"
+                    "Không tìm thấy fontconfig hoặc fontconfig không hoạt động đúng. "
+                    "Cài đặt bằng: sudo apt-get install -y fontconfig fonts-liberation fonts-noto-cjk"
                 )
             elif not result.stdout:
                 logger.warning(
-                    "No fonts detected by fontconfig. "
-                    "Install fonts with: sudo apt-get install -y fonts-liberation fonts-noto-cjk"
+                    "fontconfig không phát hiện font nào. "
+                    "Cài đặt font bằng: sudo apt-get install -y fonts-liberation fonts-noto-cjk"
                 )
             else:
-                logger.debug(f"Fontconfig detected {len(result.stdout.splitlines())} fonts")
-                
+                logger.debug(f"Fontconfig đã phát hiện {len(result.stdout.splitlines())} font")
+
         except FileNotFoundError:
             logger.warning(
-                "fontconfig (fc-list) not found on system. "
-                "Install with: sudo apt-get install -y fontconfig"
+                "Không tìm thấy fontconfig (fc-list) trên hệ thống. "
+                "Cài đặt bằng: sudo apt-get install -y fontconfig"
             )
         except Exception as e:
-            logger.debug(f"Could not check fontconfig status: {e}")
+            logger.debug(f"Không thể kiểm tra trạng thái fontconfig: {e}")
     
     def _load_template(self, template_path: str) -> str:
-        """Load HTML template from file"""
+        """Tải template HTML từ file"""
         path = Path(template_path)
         if not path.exists():
-            raise FileNotFoundError(f"Template not found: {template_path}")
-        
+            raise FileNotFoundError(f"Không tìm thấy template: {template_path}")
+
         with open(path, 'r', encoding='utf-8') as f:
             content = f.read()
-        
-        logger.debug(f"Template loaded: {len(content)} chars")
+
+        logger.debug(f"Đã tải template: {len(content)} ký tự")
         return content
     
     def _parse_media_size_from_meta(self) -> tuple[Optional[int], Optional[int]]:
         """
-        Parse media size from meta tags in template
-        
-        Looks for meta tags:
+        Phân tích kích thước media từ các thẻ meta trong template
+
+        Tìm các thẻ meta:
         - <meta name="template:media-width" content="1024">
         - <meta name="template:media-height" content="1024">
-        
+
         Returns:
-            Tuple of (width, height) or (None, None) if not found
+            Tuple (width, height) hoặc (None, None) nếu không tìm thấy
         """
         from bs4 import BeautifulSoup
-        
+
         try:
             soup = BeautifulSoup(self.template, 'html.parser')
-            
+
             width_meta = soup.find('meta', attrs={'name': 'template:media-width'})
             height_meta = soup.find('meta', attrs={'name': 'template:media-height'})
-            
+
             if width_meta and height_meta:
                 width = int(width_meta.get('content', 0))
                 height = int(height_meta.get('content', 0))
-                
+
                 if width > 0 and height > 0:
-                    logger.debug(f"Found media size in meta tags: {width}x{height}")
+                    logger.debug(f"Đã tìm thấy kích thước media trong thẻ meta: {width}x{height}")
                     return width, height
-            
+
             return None, None
-            
+
         except Exception as e:
-            logger.warning(f"Failed to parse media size from meta tags: {e}")
+            logger.warning(f"Không phân tích được kích thước media từ thẻ meta: {e}")
             return None, None
     
     def get_media_size(self) -> tuple[int, int]:
         """
-        Get media size for image/video generation
-        
-        Returns media size specified in template meta tags.
-        
+        Lấy kích thước media để tạo image/video
+
+        Trả về kích thước media được khai báo trong các thẻ meta của template.
+
         Returns:
-            Tuple of (width, height)
+            Tuple (width, height)
         """
         media_width, media_height = self._parse_media_size_from_meta()
-        
+
         if media_width and media_height:
             return media_width, media_height
-        
-        logger.warning(f"No media size meta tags found in template {self.template_path}, using fallback 1024x1024")
+
+        logger.warning(f"Không tìm thấy thẻ meta kích thước media trong template {self.template_path}, sử dụng giá trị mặc định 1024x1024")
         return 1024, 1024
     
     def parse_template_parameters(self) -> Dict[str, Dict[str, Any]]:
         """
-        Parse custom parameters from HTML template
-        
-        Supports syntax: {{param:type=default}}
-        - {{param}} -> text type, no default
-        - {{param=value}} -> text type, with default
-        - {{param:type}} -> specified type, no default
-        - {{param:type=value}} -> specified type, with default
-        
-        Supported types: text, number, color, bool
-        
+        Phân tích các tham số tùy chỉnh từ template HTML
+
+        Hỗ trợ cú pháp: {{param:type=default}}
+        - {{param}} -> kiểu text, không có default
+        - {{param=value}} -> kiểu text, có default
+        - {{param:type}} -> kiểu đã chỉ định, không có default
+        - {{param:type=value}} -> kiểu đã chỉ định, có default
+
+        Các kiểu được hỗ trợ: text, number, color, bool
+
         Returns:
-            Dictionary of custom parameters with their configurations:
+            Dictionary các tham số tùy chỉnh kèm cấu hình:
             {
                 'param_name': {
                     'type': 'text' | 'number' | 'color' | 'bool',
                     'default': Any,
-                    'label': str  # same as param_name
+                    'label': str  # giống với param_name
                 }
             }
         """
@@ -210,7 +210,7 @@ class HTMLFrameGenerator:
                 continue
             
             if param_type not in {'text', 'number', 'color', 'bool'}:
-                logger.warning(f"Unknown parameter type '{param_type}' for '{param_name}', defaulting to 'text'")
+                logger.warning(f"Kiểu tham số không xác định '{param_type}' cho '{param_name}', đang dùng mặc định 'text'")
                 param_type = 'text'
             
             parsed_default = self._parse_default_value(param_type, default_value)
@@ -222,20 +222,20 @@ class HTMLFrameGenerator:
             }
         
         if params:
-            logger.debug(f"Parsed {len(params)} custom parameter(s) from template: {list(params.keys())}")
-        
+            logger.debug(f"Đã phân tích {len(params)} tham số tùy chỉnh từ template: {list(params.keys())}")
+
         return params
-    
+
     def _parse_default_value(self, param_type: str, value_str: Optional[str]) -> Any:
         """
-        Parse default value based on parameter type
-        
+        Phân tích giá trị mặc định dựa trên kiểu tham số
+
         Args:
-            param_type: Type of parameter (text, number, color, bool)
-            value_str: String value to parse (can be None)
-        
+            param_type: Kiểu của tham số (text, number, color, bool)
+            value_str: Giá trị chuỗi cần phân tích (có thể là None)
+
         Returns:
-            Parsed value with appropriate type
+            Giá trị đã phân tích với kiểu phù hợp
         """
         if value_str is None:
             return {
@@ -252,7 +252,7 @@ class HTMLFrameGenerator:
                 else:
                     return int(value_str)
             except ValueError:
-                logger.warning(f"Invalid number value '{value_str}', using 0")
+                logger.warning(f"Giá trị số không hợp lệ '{value_str}', đang dùng 0")
                 return 0
         
         elif param_type == 'bool':
@@ -269,19 +269,19 @@ class HTMLFrameGenerator:
     
     def _replace_parameters(self, html: str, values: Dict[str, Any]) -> str:
         """
-        Replace parameter placeholders with actual values
-        
-        Supports DSL syntax: {{param:type=default}}
-        - If value provided in values dict, use it
-        - Otherwise, use default value from placeholder
-        - If no default, use empty string
-        
+        Thay thế các placeholder tham số bằng giá trị thực tế
+
+        Hỗ trợ cú pháp DSL: {{param:type=default}}
+        - Nếu giá trị có trong dict values, sử dụng nó
+        - Ngược lại, sử dụng giá trị default từ placeholder
+        - Nếu không có default, dùng chuỗi rỗng
+
         Args:
-            html: HTML template content
-            values: Dictionary of parameter values
-        
+            html: Nội dung template HTML
+            values: Dictionary chứa giá trị tham số
+
         Returns:
-            HTML with placeholders replaced
+            HTML đã thay thế placeholder
         """
         PARAM_PATTERN = r'\{\{([a-zA-Z_][a-zA-Z0-9_]*)(?::([a-z]+))?(?:=([^}]+))?\}\}'
         
@@ -306,7 +306,7 @@ class HTMLFrameGenerator:
 
     @classmethod
     async def _ensure_browser(cls):
-        """Lazily initialize a shared Playwright browser instance"""
+        """Khởi tạo lazy một instance trình duyệt Playwright dùng chung"""
         if cls._browser is None or not cls._browser.is_connected():
             from playwright.async_api import async_playwright
             cls._playwright = await async_playwright().start()
@@ -318,19 +318,19 @@ class HTMLFrameGenerator:
                     '--disable-extensions',
                 ]
             )
-            logger.debug("Initialized Playwright Chromium browser")
+            logger.debug("Đã khởi tạo trình duyệt Playwright Chromium")
         return cls._browser
 
     @classmethod
     async def close_browser(cls):
-        """Shutdown the shared browser instance (call on app teardown)"""
+        """Tắt instance trình duyệt dùng chung (gọi khi tắt ứng dụng)"""
         if cls._browser:
             await cls._browser.close()
             cls._browser = None
         if cls._playwright:
             await cls._playwright.stop()
             cls._playwright = None
-            logger.debug("Playwright browser closed")
+            logger.debug("Đã đóng trình duyệt Playwright")
 
     async def generate_frame(
         self,
@@ -341,30 +341,30 @@ class HTMLFrameGenerator:
         output_path: Optional[str] = None
     ) -> str:
         """
-        Generate frame from HTML template
-        
-        Video size is automatically determined from template path during initialization.
-        
+        Tạo frame từ template HTML
+
+        Kích thước video được xác định tự động từ đường dẫn template trong lúc khởi tạo.
+
         Args:
-            title: Video title
-            text: Narration text for this frame
-            image: Path to AI-generated image (supports relative path, absolute path, or HTTP URL)
-            ext: Additional data (content_title, content_author, etc.)
-            output_path: Custom output path (auto-generated if None)
-        
+            title: Tiêu đề video
+            text: Nội dung lời thuyết minh cho frame này
+            image: Đường dẫn ảnh do AI tạo (hỗ trợ đường dẫn tương đối, tuyệt đối, hoặc HTTP URL)
+            ext: Dữ liệu bổ sung (content_title, content_author, v.v.)
+            output_path: Đường dẫn output tùy chỉnh (tự động tạo nếu là None)
+
         Returns:
-            Path to generated frame image
+            Đường dẫn tới ảnh frame được tạo
         """
         if image and not image.startswith(('http://', 'https://', 'data:', 'file://')):
             image_path = Path(image)
             if not image_path.is_absolute():
                 image_path = Path.cwd() / image
-            
+
             if not image_path.exists():
-                logger.warning(f"Image file not found: {image_path}")
+                logger.warning(f"Không tìm thấy file ảnh: {image_path}")
             else:
                 image = image_path.as_uri()
-                logger.debug(f"Converted image path to: {image}")
+                logger.debug(f"Đã chuyển đổi đường dẫn ảnh thành: {image}")
         
         context = {
             "title": title,
@@ -384,7 +384,7 @@ class HTMLFrameGenerator:
         else:
             os.makedirs(os.path.dirname(output_path), exist_ok=True)
         
-        logger.debug(f"Rendering HTML template to {output_path} (size: {self.width}x{self.height})")
+        logger.debug(f"Đang render template HTML ra {output_path} (kích thước: {self.width}x{self.height})")
         tmp_html_path = None
         try:
             browser = await self._ensure_browser()
@@ -393,22 +393,22 @@ class HTMLFrameGenerator:
                 device_scale_factor=1,
             )
             try:
-                # Write HTML to a temp file and navigate via file:// URL so that
-                # local file:// image references are loaded under the same origin.
+                # Ghi HTML ra file tạm và điều hướng qua URL file:// để các tham chiếu
+                # ảnh file:// cục bộ được tải trong cùng origin.
                 fd, tmp_html_path = tempfile.mkstemp(suffix='.html', prefix='pv_frame_')
                 with os.fdopen(fd, 'w', encoding='utf-8') as f:
                     f.write(html)
-                
+
                 await page.goto(Path(tmp_html_path).as_uri(), wait_until='networkidle')
                 await page.screenshot(path=output_path, type='png', omit_background=True)
             finally:
                 await page.close()
                 if tmp_html_path and os.path.exists(tmp_html_path):
                     os.unlink(tmp_html_path)
-            
-            logger.info(f"Frame generated: {output_path}")
+
+            logger.info(f"Đã tạo frame: {output_path}")
             return output_path
-            
+
         except Exception as e:
-            logger.error(f"Failed to render HTML template: {e}")
-            raise RuntimeError(f"HTML rendering failed: {e}")
+            logger.error(f"Không render được template HTML: {e}")
+            raise RuntimeError(f"Render HTML thất bại: {e}")

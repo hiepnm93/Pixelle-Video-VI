@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Image generation API schemas
+Các schema cho API tạo ảnh
 """
 
 from typing import Optional
@@ -19,12 +19,12 @@ from pydantic import BaseModel, Field
 
 
 class ImageGenerateRequest(BaseModel):
-    """Image generation request"""
-    prompt: str = Field(..., description="Image generation prompt")
-    width: int = Field(1024, ge=512, le=2048, description="Image width")
-    height: int = Field(1024, ge=512, le=2048, description="Image height")
-    workflow: Optional[str] = Field(None, description="Custom workflow filename")
-    
+    """Yêu cầu tạo ảnh"""
+    prompt: str = Field(..., description="Prompt tạo ảnh")
+    width: int = Field(1024, ge=512, le=2048, description="Chiều rộng ảnh")
+    height: int = Field(1024, ge=512, le=2048, description="Chiều cao ảnh")
+    workflow: Optional[str] = Field(None, description="Tên file workflow tuỳ chỉnh")
+
     class Config:
         json_schema_extra = {
             "example": {
@@ -36,8 +36,8 @@ class ImageGenerateRequest(BaseModel):
 
 
 class ImageGenerateResponse(BaseModel):
-    """Image generation response"""
+    """Phản hồi tạo ảnh"""
     success: bool = True
     message: str = "Success"
-    image_path: str = Field(..., description="Path to generated image")
+    image_path: str = Field(..., description="Đường dẫn tới ảnh đã tạo")
 

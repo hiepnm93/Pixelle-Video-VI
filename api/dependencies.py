@@ -11,9 +11,9 @@
 # limitations under the License.
 
 """
-FastAPI Dependencies
+Dependencies cho FastAPI
 
-Provides dependency injection for PixelleVideoCore and other services.
+Cung cấp dependency injection cho PixelleVideoCore và các dịch vụ khác.
 """
 
 from typing import Annotated
@@ -23,39 +23,39 @@ from loguru import logger
 from pixelle_video.service import PixelleVideoCore
 
 
-# Global Pixelle-Video instance
+# Instance Pixelle-Video toàn cục
 _pixelle_video_instance: PixelleVideoCore = None
 
 
 async def get_pixelle_video() -> PixelleVideoCore:
     """
-    Get Pixelle-Video core instance (dependency injection)
-    
+    Lấy instance core của Pixelle-Video (dependency injection)
+
     Returns:
-        PixelleVideoCore instance
+        Instance PixelleVideoCore
     """
     global _pixelle_video_instance
-    
+
     if _pixelle_video_instance is None:
         _pixelle_video_instance = PixelleVideoCore()
         await _pixelle_video_instance.initialize()
-        logger.info("✅ Pixelle-Video initialized for API")
-    
+        logger.info("✅ Pixelle-Video đã được khởi tạo cho API")
+
     return _pixelle_video_instance
 
 
 async def shutdown_pixelle_video():
-    """Shutdown Pixelle-Video instance and cleanup resources"""
+    """Tắt instance Pixelle-Video và giải phóng tài nguyên"""
     global _pixelle_video_instance
     if _pixelle_video_instance:
-        logger.info("Shutting down Pixelle-Video...")
+        logger.info("Đang tắt Pixelle-Video...")
         await _pixelle_video_instance.cleanup()
         _pixelle_video_instance = None
-    
+
     from pixelle_video.services.frame_html import HTMLFrameGenerator
     await HTMLFrameGenerator.close_browser()
 
 
-# Type alias for dependency injection
+# Alias kiểu cho dependency injection
 PixelleVideoDep = Annotated[PixelleVideoCore, Depends(get_pixelle_video)]
 

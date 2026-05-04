@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Content input components for web UI (left column)
+Component nhập nội dung cho web UI (cột trái)
 """
 
 import streamlit as st
@@ -21,45 +21,45 @@ from web.utils.async_helpers import get_project_version
 
 
 def render_content_input():
-    """Render content input section (left column) with batch support"""
+    """Render phần nhập nội dung (cột trái) có hỗ trợ batch"""
     with st.container(border=True):
         st.markdown(f"**{tr('section.content_input')}**")
-        
+
         # ====================================================================
-        # Step 1: Batch mode toggle (highest priority)
+        # Bước 1: Bật/tắt chế độ batch (ưu tiên cao nhất)
         # ====================================================================
         batch_mode = st.checkbox(
             tr("batch.mode_label"),
             value=False,
             help=tr("batch.mode_help")
         )
-        
+
         if not batch_mode:
             # ================================================================
-            # Single task mode (original logic, unchanged)
+            # Chế độ tác vụ đơn (logic gốc, không đổi)
             # ================================================================
-            # Processing mode selection
+            # Chọn chế độ xử lý
             mode = st.radio(
-                "Processing Mode",
+                "Chế độ xử lý",
                 ["generate", "fixed"],
                 horizontal=True,
                 format_func=lambda x: tr(f"mode.{x}"),
                 label_visibility="collapsed"
             )
-            
-            # Text input (unified for both modes)
+
+            # Ô nhập text (dùng chung cho cả hai chế độ)
             text_placeholder = tr("input.topic_placeholder") if mode == "generate" else tr("input.content_placeholder")
             text_height = 120 if mode == "generate" else 200
             text_help = tr("input.text_help_generate") if mode == "generate" else tr("input.text_help_fixed")
-            
+
             text = st.text_area(
                 tr("input.text"),
                 placeholder=text_placeholder,
                 height=text_height,
                 help=text_help
             )
-            
-            # Split mode selector (only show in fixed mode)
+
+            # Bộ chọn chế độ chia (chỉ hiển thị ở chế độ fixed)
             if mode == "fixed":
                 split_mode_options = {
                     "paragraph": tr("split.mode_paragraph"),
@@ -70,20 +70,20 @@ def render_content_input():
                     tr("split.mode_label"),
                     options=list(split_mode_options.keys()),
                     format_func=lambda x: split_mode_options[x],
-                    index=0,  # Default to paragraph mode
+                    index=0,  # Mặc định chia theo đoạn
                     help=tr("split.mode_help")
                 )
             else:
-                split_mode = "paragraph"  # Default for generate mode (not used)
-            
-            # Title input (optional for both modes)
+                split_mode = "paragraph"  # Mặc định cho chế độ generate (không sử dụng)
+
+            # Ô nhập tiêu đề (tuỳ chọn cho cả hai chế độ)
             title = st.text_input(
                 tr("input.title"),
                 placeholder=tr("input.title_placeholder"),
                 help=tr("input.title_help")
             )
-            
-            # Number of scenes (only show in generate mode)
+
+            # Số phân cảnh (chỉ hiển thị ở chế độ generate)
             if mode == "generate":
                 n_scenes = st.slider(
                     tr("video.frames"),
@@ -95,10 +95,10 @@ def render_content_input():
                 )
                 st.caption(tr("video.frames_label", n=n_scenes))
             else:
-                # Fixed mode: n_scenes is ignored, set default value
+                # Chế độ fixed: bỏ qua n_scenes, đặt giá trị mặc định
                 n_scenes = 5
                 st.info(tr("video.frames_fixed_mode_hint"))
-            
+
             return {
                 "batch_mode": False,
                 "mode": mode,
@@ -107,47 +107,47 @@ def render_content_input():
                 "n_scenes": n_scenes,
                 "split_mode": split_mode
             }
-        
+
         else:
             # ================================================================
-            # Batch mode (simplified YAGNI version)
+            # Chế độ batch (phiên bản đơn giản hoá YAGNI)
             # ================================================================
             st.markdown(f"**{tr('batch.section_title')}**")
             
-            # Batch rules info
+            # Thông tin quy tắc batch
             st.info(f"""
 **{tr('batch.rules_title')}**
 - ✅ {tr('batch.rule_1')}
 - ✅ {tr('batch.rule_2')}
 - ✅ {tr('batch.rule_3')}
             """)
-            
-            # Batch topics input
+
+            # Ô nhập danh sách chủ đề batch
             text_input = st.text_area(
                 tr("batch.topics_label"),
                 height=300,
                 placeholder=tr("batch.topics_placeholder"),
                 help=tr("batch.topics_help")
             )
-            
-            # Split topics by newline
+
+            # Tách chủ đề theo dòng
             if text_input:
-                # Simple split by newline, filter empty lines
+                # Tách đơn giản theo dòng, lọc các dòng trống
                 topics = [
-                    line.strip() 
-                    for line in text_input.strip().split('\n') 
+                    line.strip()
+                    for line in text_input.strip().split('\n')
                     if line.strip()
                 ]
-                
+
                 if topics:
-                    # Check count limit
+                    # Kiểm tra giới hạn số lượng
                     if len(topics) > 100:
                         st.error(tr("batch.count_error", count=len(topics)))
                         topics = []
                     else:
                         st.success(tr("batch.count_success", count=len(topics)))
-                        
-                        # Preview topics list
+
+                        # Xem trước danh sách chủ đề
                         with st.expander(tr("batch.preview_title"), expanded=False):
                             for i, topic in enumerate(topics, 1):
                                 st.markdown(f"`{i}.` {topic}")
@@ -155,17 +155,17 @@ def render_content_input():
                     topics = []
             else:
                 topics = []
-            
+
             st.markdown("---")
-            
-            # Title prefix (optional)
+
+            # Tiền tố tiêu đề (tuỳ chọn)
             title_prefix = st.text_input(
                 tr("batch.title_prefix_label"),
                 placeholder=tr("batch.title_prefix_placeholder"),
                 help=tr("batch.title_prefix_help")
             )
-            
-            # Number of scenes (unified for all videos)
+
+            # Số phân cảnh (dùng chung cho mọi video)
             n_scenes = st.slider(
                 tr("batch.n_scenes_label"),
                 min_value=3,
@@ -174,50 +174,50 @@ def render_content_input():
                 help=tr("batch.n_scenes_help")
             )
             st.caption(tr("batch.n_scenes_caption", n=n_scenes))
-            
-            # Config info
+
+            # Thông tin cấu hình
             st.info(f"📌 {tr('batch.config_info')}")
-            
+
             return {
                 "batch_mode": True,
                 "topics": topics,
-                "mode": "generate",  # Fixed to AI generate content
+                "mode": "generate",  # Cố định để AI sinh nội dung
                 "title_prefix": title_prefix,
                 "n_scenes": n_scenes,
             }
 
 
 def render_bgm_section(key_prefix=""):
-    """Render BGM selection section"""
+    """Render phần chọn BGM"""
     with st.container(border=True):
         st.markdown(f"**{tr('section.bgm')}**")
-        
+
         with st.expander(tr("help.feature_description"), expanded=False):
             st.markdown(f"**{tr('help.what')}**")
             st.markdown(tr("bgm.what"))
             st.markdown(f"**{tr('help.how')}**")
             st.markdown(tr("bgm.how"))
-        
-        # Dynamically scan bgm folder for music files (merged from bgm/ and data/bgm/)
+
+        # Quét động thư mục bgm để lấy file nhạc (gộp từ bgm/ và data/bgm/)
         from pixelle_video.utils.os_util import list_resource_files
-        
+
         try:
             all_files = list_resource_files("bgm")
-            # Filter to audio files only
+            # Chỉ lọc các file âm thanh
             audio_extensions = ('.mp3', '.wav', '.flac', '.m4a', '.aac', '.ogg')
             bgm_files = sorted([f for f in all_files if f.lower().endswith(audio_extensions)])
         except Exception as e:
-            st.warning(f"Failed to load BGM files: {e}")
+            st.warning(f"Không tải được danh sách BGM: {e}")
             bgm_files = []
-        
-        # Add special "None" option
+
+        # Thêm tuỳ chọn đặc biệt "None"
         bgm_options = [tr("bgm.none")] + bgm_files
-        
-        # Default to "default.mp3" if exists, otherwise first option
+
+        # Mặc định "default.mp3" nếu có, nếu không lấy lựa chọn đầu tiên
         default_index = 0
         if "default.mp3" in bgm_files:
             default_index = bgm_options.index("default.mp3")
-        
+
         bgm_choice = st.selectbox(
             "BGM",
             bgm_options,
@@ -225,8 +225,8 @@ def render_bgm_section(key_prefix=""):
             label_visibility="collapsed",
             key=f"{key_prefix}bgm_selector"
         )
-        
-        # BGM volume slider (only show when BGM is selected)
+
+        # Thanh trượt âm lượng BGM (chỉ hiển thị khi đã chọn BGM)
         if bgm_choice != tr("bgm.none"):
             bgm_volume = st.slider(
                 tr("bgm.volume"),
@@ -239,9 +239,9 @@ def render_bgm_section(key_prefix=""):
                 help=tr("bgm.volume_help")
             )
         else:
-            bgm_volume = 0.2  # Default value when no BGM selected
-        
-        # BGM preview button (only if BGM is not "None")
+            bgm_volume = 0.2  # Giá trị mặc định khi không chọn BGM
+
+        # Nút nghe thử BGM (chỉ khi BGM khác "None")
         if bgm_choice != tr("bgm.none"):
             if st.button(tr("bgm.preview"), key=f"{key_prefix}preview_bgm", use_container_width=True):
                 from pixelle_video.utils.os_util import get_resource_path, resource_exists
@@ -253,10 +253,10 @@ def render_bgm_section(key_prefix=""):
                         st.error(tr("bgm.preview_failed", file=bgm_choice))
                 except Exception as e:
                     st.error(f"{tr('bgm.preview_failed', file=bgm_choice)}: {e}")
-        
-        # Use full filename for bgm_path (including extension)
+
+        # Dùng tên file đầy đủ cho bgm_path (kèm phần mở rộng)
         bgm_path = None if bgm_choice == tr("bgm.none") else bgm_choice
-    
+
     return {
         "bgm_path": bgm_path,
         "bgm_volume": bgm_volume
@@ -264,13 +264,13 @@ def render_bgm_section(key_prefix=""):
 
 
 def render_version_info():
-    """Render version info and GitHub link"""
+    """Render thông tin phiên bản và liên kết GitHub"""
     with st.container(border=True):
         st.markdown(f"**{tr('version.title')}**")
         version = get_project_version()
         github_url = "https://github.com/AIDC-AI/Pixelle-Video"
-        
-        # Version and GitHub link in one line
+
+        # Phiên bản và liên kết GitHub trên cùng một dòng
         github_url = "https://github.com/AIDC-AI/Pixelle-Video"
         badge_url = "https://img.shields.io/github/stars/AIDC-AI/Pixelle-Video"
 

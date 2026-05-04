@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Health check and system info endpoints
+Endpoint health check và thông tin hệ thống
 """
 
 from fastapi import APIRouter
@@ -21,14 +21,14 @@ router = APIRouter(tags=["Health"])
 
 
 class HealthResponse(BaseModel):
-    """Health check response"""
+    """Phản hồi health check"""
     status: str = "healthy"
     version: str = "0.1.0"
     service: str = "Pixelle-Video API"
 
 
 class CapabilitiesResponse(BaseModel):
-    """Capabilities response"""
+    """Phản hồi capabilities"""
     success: bool = True
     capabilities: dict
 
@@ -36,9 +36,9 @@ class CapabilitiesResponse(BaseModel):
 @router.get("/health", response_model=HealthResponse)
 async def health_check():
     """
-    Health check endpoint
-    
-    Returns service status and version information.
+    Endpoint health check
+
+    Trả về trạng thái dịch vụ và thông tin phiên bản.
     """
     return HealthResponse()
 
@@ -46,9 +46,9 @@ async def health_check():
 @router.get("/version", response_model=HealthResponse)
 async def get_version():
     """
-    Get API version
-    
-    Returns version information.
+    Lấy phiên bản API
+
+    Trả về thông tin phiên bản.
     """
     return HealthResponse()
 

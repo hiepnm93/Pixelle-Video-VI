@@ -11,9 +11,9 @@
 # limitations under the License.
 
 """
-Content generation endpoints
+Các endpoint tạo nội dung
 
-Endpoints for generating narrations, image prompts, and titles.
+Endpoint dùng để tạo lời thoại, prompt ảnh và tiêu đề.
 """
 
 from fastapi import APIRouter, HTTPException
@@ -43,21 +43,21 @@ async def generate_narration(
     pixelle_video: PixelleVideoDep
 ):
     """
-    Generate narrations from text
-    
-    Uses LLM to break down text into multiple narration segments.
-    
-    - **text**: Source text
-    - **n_scenes**: Number of narrations to generate
-    - **min_words**: Minimum words per narration
-    - **max_words**: Maximum words per narration
-    
-    Returns list of narration strings.
+    Tạo lời thoại từ văn bản
+
+    Dùng LLM để tách văn bản thành nhiều đoạn lời thoại.
+
+    - **text**: Văn bản nguồn
+    - **n_scenes**: Số lượng lời thoại cần tạo
+    - **min_words**: Số từ tối thiểu mỗi lời thoại
+    - **max_words**: Số từ tối đa mỗi lời thoại
+
+    Trả về danh sách các chuỗi lời thoại.
     """
     try:
-        logger.info(f"Generating {request.n_scenes} narrations from text")
-        
-        # Call narration generator utility function
+        logger.info(f"Đang tạo {request.n_scenes} lời thoại từ văn bản")
+
+        # Gọi hàm tiện ích tạo lời thoại
         narrations = await generate_narrations_from_topic(
             llm_service=pixelle_video.llm,
             topic=request.text,
@@ -65,13 +65,13 @@ async def generate_narration(
             min_words=request.min_words,
             max_words=request.max_words
         )
-        
+
         return NarrationGenerateResponse(
             narrations=narrations
         )
-        
+
     except Exception as e:
-        logger.error(f"Narration generation error: {e}")
+        logger.error(f"Lỗi tạo lời thoại: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -81,33 +81,33 @@ async def generate_image_prompt(
     pixelle_video: PixelleVideoDep
 ):
     """
-    Generate image prompts from narrations
-    
-    Uses LLM to create detailed image generation prompts.
-    
-    - **narrations**: List of narration texts
-    - **min_words**: Minimum words per prompt
-    - **max_words**: Maximum words per prompt
-    
-    Returns list of image prompts.
+    Tạo prompt ảnh từ lời thoại
+
+    Dùng LLM để tạo các prompt tạo ảnh chi tiết.
+
+    - **narrations**: Danh sách các lời thoại
+    - **min_words**: Số từ tối thiểu mỗi prompt
+    - **max_words**: Số từ tối đa mỗi prompt
+
+    Trả về danh sách các prompt ảnh.
     """
     try:
-        logger.info(f"Generating image prompts for {len(request.narrations)} narrations")
-        
-        # Call image prompt generator utility function
+        logger.info(f"Đang tạo prompt ảnh cho {len(request.narrations)} lời thoại")
+
+        # Gọi hàm tiện ích tạo prompt ảnh
         image_prompts = await generate_image_prompts(
             llm_service=pixelle_video.llm,
             narrations=request.narrations,
             min_words=request.min_words,
             max_words=request.max_words
         )
-        
+
         return ImagePromptGenerateResponse(
             image_prompts=image_prompts
         )
-        
+
     except Exception as e:
-        logger.error(f"Image prompt generation error: {e}")
+        logger.error(f"Lỗi tạo prompt ảnh: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -117,30 +117,30 @@ async def generate_title_endpoint(
     pixelle_video: PixelleVideoDep
 ):
     """
-    Generate video title from text
-    
-    Uses LLM to create an engaging title.
-    
-    - **text**: Source text
-    - **style**: Optional title style hint
-    
-    Returns generated title.
+    Tạo tiêu đề video từ văn bản
+
+    Dùng LLM để tạo một tiêu đề hấp dẫn.
+
+    - **text**: Văn bản nguồn
+    - **style**: Gợi ý phong cách tiêu đề (tuỳ chọn)
+
+    Trả về tiêu đề đã tạo.
     """
     try:
-        logger.info("Generating title from text")
-        
-        # Call title generator utility function
+        logger.info("Đang tạo tiêu đề từ văn bản")
+
+        # Gọi hàm tiện ích tạo tiêu đề
         title = await generate_title(
             llm_service=pixelle_video.llm,
             content=request.text,
             strategy="llm"
         )
-        
+
         return TitleGenerateResponse(
             title=title
         )
-        
+
     except Exception as e:
-        logger.error(f"Title generation error: {e}")
+        logger.error(f"Lỗi tạo tiêu đề: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 

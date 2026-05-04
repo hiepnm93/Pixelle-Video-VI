@@ -11,35 +11,35 @@
 # limitations under the License.
 
 """
-Pixelle-Video - AI-powered video generator
+Pixelle-Video - Trình tạo video bằng AI
 
-Convention-based system with unified configuration management.
+Hệ thống dựa trên quy ước với quản lý cấu hình thống nhất.
 
-Usage:
+Cách dùng:
     from pixelle_video import pixelle_video
-    
-    # Initialize
+
+    # Khởi tạo
     await pixelle_video.initialize()
-    
-    # Use capabilities
-    answer = await pixelle_video.llm("Explain atomic habits")
-    audio = await pixelle_video.tts("Hello world")
-    
-    # Generate video with different pipelines
-    # Standard pipeline (default)
+
+    # Sử dụng các tính năng
+    answer = await pixelle_video.llm("Giải thích về thói quen nguyên tử")
+    audio = await pixelle_video.tts("Xin chào thế giới")
+
+    # Tạo video với các pipeline khác nhau
+    # Pipeline tiêu chuẩn (mặc định)
     result = await pixelle_video.generate_video(
-        text="如何提高学习效率",
+        text="Cách nâng cao hiệu quả học tập",
         n_scenes=5
     )
-    
-    # Custom pipeline (template for your own logic)
+
+    # Pipeline tuỳ chỉnh (mẫu cho logic của riêng bạn)
     result = await pixelle_video.generate_video(
         text=your_content,
         pipeline="custom",
         custom_param_example="custom_value"
     )
-    
-    # Check available pipelines
+
+    # Kiểm tra các pipeline có sẵn
     print(pixelle_video.pipelines.keys())  # dict_keys(['standard', 'custom'])
 """
 

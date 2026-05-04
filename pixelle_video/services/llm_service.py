@@ -11,9 +11,9 @@
 # limitations under the License.
 
 """
-LLM (Large Language Model) Service - Direct OpenAI SDK implementation
+LLM (Large Language Model) Service - Triển khai trực tiếp bằng OpenAI SDK
 
-Supports structured output via response_type parameter (Pydantic model).
+Hỗ trợ structured output thông qua tham số response_type (model Pydantic).
 """
 
 import json
@@ -30,26 +30,26 @@ T = TypeVar("T", bound=BaseModel)
 
 class LLMService:
     """
-    LLM (Large Language Model) service
-    
-    Direct implementation using OpenAI SDK. No capability layer needed.
-    
-    Supports all OpenAI SDK compatible providers:
+    Service LLM (Large Language Model)
+
+    Triển khai trực tiếp bằng OpenAI SDK. Không cần lớp capability.
+
+    Hỗ trợ tất cả các nhà cung cấp tương thích OpenAI SDK:
     - OpenAI (gpt-4o, gpt-4o-mini, gpt-3.5-turbo)
     - Alibaba Qwen (qwen-max, qwen-plus, qwen-turbo)
     - Anthropic Claude (claude-sonnet-4-5, claude-opus-4, claude-haiku-4)
     - DeepSeek (deepseek-chat)
     - Moonshot Kimi (moonshot-v1-8k, moonshot-v1-32k, moonshot-v1-128k)
-    - Ollama (llama3.2, qwen2.5, mistral, codellama) - FREE & LOCAL!
-    - Any custom provider with OpenAI-compatible API
-    
-    Usage:
-        # Direct call
-        answer = await pixelle_video.llm("Explain atomic habits")
-        
-        # With parameters
+    - Ollama (llama3.2, qwen2.5, mistral, codellama) - MIỄN PHÍ & LOCAL!
+    - Bất kỳ provider tùy chỉnh nào có API tương thích OpenAI
+
+    Cách dùng:
+        # Gọi trực tiếp
+        answer = await pixelle_video.llm("Giải thích về atomic habits")
+
+        # Có tham số
         answer = await pixelle_video.llm(
-            prompt="Explain atomic habits in 3 sentences",
+            prompt="Giải thích atomic habits trong 3 câu",
             temperature=0.7,
             max_tokens=2000
         )
@@ -57,25 +57,25 @@ class LLMService:
     
     def __init__(self, config: dict):
         """
-        Initialize LLM service
-        
+        Khởi tạo service LLM
+
         Args:
-            config: Full application config dict (kept for backward compatibility)
+            config: Dict cấu hình đầy đủ của ứng dụng (giữ lại để tương thích ngược)
         """
-        # Note: We no longer cache config here to support hot reload
-        # Config is read dynamically from config_manager in _get_config_value()
+        # Lưu ý: Không cache config ở đây nữa để hỗ trợ hot reload
+        # Config được đọc động từ config_manager trong _get_config_value()
         self._client: Optional[AsyncOpenAI] = None
-    
+
     def _get_config_value(self, key: str, default=None):
         """
-        Get config value dynamically from config_manager (supports hot reload)
-        
+        Lấy giá trị config động từ config_manager (hỗ trợ hot reload)
+
         Args:
-            key: Config key name
-            default: Default value if not found
-        
+            key: Tên key config
+            default: Giá trị mặc định nếu không tìm thấy
+
         Returns:
-            Config value
+            Giá trị config
         """
         from pixelle_video.config import config_manager
         return getattr(config_manager.config.llm, key, default)
@@ -86,33 +86,33 @@ class LLMService:
         base_url: Optional[str] = None,
     ) -> AsyncOpenAI:
         """
-        Create OpenAI client
-        
+        Tạo client OpenAI
+
         Args:
-            api_key: API key (optional, uses config if not provided)
-            base_url: Base URL (optional, uses config if not provided)
-        
+            api_key: API Key (tùy chọn, dùng config nếu không truyền)
+            base_url: Base URL (tùy chọn, dùng config nếu không truyền)
+
         Returns:
-            AsyncOpenAI client instance
+            Instance AsyncOpenAI client
         """
-        # Get API key (priority: parameter > config)
+        # Lấy API Key (ưu tiên: tham số > config)
         final_api_key = (
             api_key
             or self._get_config_value("api_key")
-            or "dummy-key"  # Ollama doesn't need real key
+            or "dummy-key"  # Ollama không cần key thật
         )
-        
-        # Get base URL (priority: parameter > config)
+
+        # Lấy base URL (ưu tiên: tham số > config)
         final_base_url = (
             base_url
             or self._get_config_value("base_url")
         )
-        
-        # Create client
+
+        # Tạo client
         client_kwargs = {"api_key": final_api_key}
         if final_base_url:
             client_kwargs["base_url"] = final_base_url
-        
+
         return AsyncOpenAI(**client_kwargs)
     
     async def __call__(
@@ -127,53 +127,53 @@ class LLMService:
         **kwargs
     ) -> Union[str, T]:
         """
-        Generate text using LLM
-        
+        Sinh văn bản bằng LLM
+
         Args:
-            prompt: The prompt to generate from
-            api_key: API key (optional, uses config if not provided)
-            base_url: Base URL (optional, uses config if not provided)
-            model: Model name (optional, uses config if not provided)
-            temperature: Sampling temperature (0.0-2.0). Lower is more deterministic.
-            max_tokens: Maximum tokens to generate
-            response_type: Optional Pydantic model class for structured output.
-                          If provided, returns parsed model instance instead of string.
-            **kwargs: Additional provider-specific parameters
-        
+            prompt: Prompt để sinh văn bản
+            api_key: API Key (tùy chọn, dùng config nếu không truyền)
+            base_url: Base URL (tùy chọn, dùng config nếu không truyền)
+            model: Tên model (tùy chọn, dùng config nếu không truyền)
+            temperature: Nhiệt độ sampling (0.0-2.0). Thấp hơn = tất định hơn.
+            max_tokens: Số token tối đa được sinh
+            response_type: Lớp Pydantic model tùy chọn cho structured output.
+                          Nếu được cung cấp, trả về instance model đã parse thay vì chuỗi.
+            **kwargs: Tham số bổ sung tùy theo provider
+
         Returns:
-            Generated text (str) or parsed Pydantic model instance (if response_type provided)
-        
-        Examples:
-            # Basic text generation
-            answer = await pixelle_video.llm("Explain atomic habits")
-            
-            # Structured output with Pydantic model
+            Văn bản đã sinh (str) hoặc instance Pydantic model đã parse (nếu có response_type)
+
+        Ví dụ:
+            # Sinh văn bản cơ bản
+            answer = await pixelle_video.llm("Giải thích atomic habits")
+
+            # Structured output với Pydantic model
             class MovieReview(BaseModel):
                 title: str
                 rating: int
                 summary: str
-            
+
             review = await pixelle_video.llm(
-                prompt="Review the movie Inception",
+                prompt="Đánh giá phim Inception",
                 response_type=MovieReview
             )
-            print(review.title)  # Structured access
+            print(review.title)  # Truy cập có cấu trúc
         """
-        # Create client (new instance each time to support parameter overrides)
+        # Tạo client (instance mới mỗi lần để hỗ trợ ghi đè tham số)
         client = self._create_client(api_key=api_key, base_url=base_url)
-        
-        # Get model (priority: parameter > config)
+
+        # Lấy model (ưu tiên: tham số > config)
         final_model = (
             model
             or self._get_config_value("model")
-            or "gpt-3.5-turbo"  # Default fallback
+            or "gpt-3.5-turbo"  # Mặc định dự phòng
         )
-        
-        logger.debug(f"LLM call: model={final_model}, base_url={client.base_url}, response_type={response_type}")
-        
+
+        logger.debug(f"Gọi LLM: model={final_model}, base_url={client.base_url}, response_type={response_type}")
+
         try:
             if response_type is not None:
-                # Structured output mode - try beta.chat.completions.parse first
+                # Chế độ structured output - thử beta.chat.completions.parse trước
                 return await self._call_with_structured_output(
                     client=client,
                     model=final_model,
@@ -184,7 +184,7 @@ class LLMService:
                     **kwargs
                 )
             else:
-                # Standard text output mode
+                # Chế độ output văn bản thông thường
                 response = await client.chat.completions.create(
                     model=final_model,
                     messages=[{"role": "user", "content": prompt}],
@@ -192,14 +192,14 @@ class LLMService:
                     max_tokens=max_tokens,
                     **kwargs
                 )
-                
+
                 result = response.choices[0].message.content
-                logger.debug(f"LLM response length: {len(result)} chars")
-                
+                logger.debug(f"Độ dài phản hồi LLM: {len(result)} ký tự")
+
                 return result
-        
+
         except Exception as e:
-            logger.error(f"LLM call error (model={final_model}, base_url={client.base_url}): {e}")
+            logger.error(f"Lỗi khi gọi LLM (model={final_model}, base_url={client.base_url}): {e}")
             raise
     
     async def _call_with_structured_output(
@@ -213,28 +213,28 @@ class LLMService:
         **kwargs
     ) -> T:
         """
-        Call LLM with structured output support
-        
-        Uses JSON schema instruction appended to prompt for maximum compatibility
-        across all OpenAI-compatible providers (Qwen, DeepSeek, etc.).
-        
+        Gọi LLM với hỗ trợ structured output
+
+        Sử dụng cách nhồi chỉ thị JSON schema vào cuối prompt để tương thích tối đa
+        với tất cả các provider tương thích OpenAI (Qwen, DeepSeek, v.v.).
+
         Args:
-            client: OpenAI client
-            model: Model name
-            prompt: The prompt
-            response_type: Pydantic model class
-            temperature: Sampling temperature
-            max_tokens: Max tokens
-            **kwargs: Additional parameters
-        
+            client: Client OpenAI
+            model: Tên model
+            prompt: Prompt
+            response_type: Lớp Pydantic model
+            temperature: Nhiệt độ sampling
+            max_tokens: Số token tối đa
+            **kwargs: Tham số bổ sung
+
         Returns:
-            Parsed Pydantic model instance
+            Instance Pydantic model đã parse
         """
-        # Build JSON schema instruction and append to prompt
+        # Xây dựng chỉ thị JSON schema và nối vào cuối prompt
         json_schema_instruction = self._get_json_schema_instruction(response_type)
         enhanced_prompt = f"{prompt}\n\n{json_schema_instruction}"
-        
-        # Call LLM with enhanced prompt
+
+        # Gọi LLM với prompt đã được tăng cường
         response = await client.chat.completions.create(
             model=model,
             messages=[{"role": "user", "content": enhanced_prompt}],
@@ -243,60 +243,60 @@ class LLMService:
             **kwargs
         )
         content = response.choices[0].message.content
-        
-        logger.debug(f"Structured output response length: {len(content)} chars")
-        
-        # Parse JSON from response content
+
+        logger.debug(f"Độ dài phản hồi structured output: {len(content)} ký tự")
+
+        # Parse JSON từ nội dung phản hồi
         return self._parse_response_as_model(content, response_type)
     
     def _get_json_schema_instruction(self, response_type: Type[T]) -> str:
         """
-        Generate JSON schema instruction for LLM fallback mode
-        
+        Sinh chỉ thị JSON schema cho chế độ fallback của LLM
+
         Args:
-            response_type: Pydantic model class
-        
+            response_type: Lớp Pydantic model
+
         Returns:
-            Formatted instruction string with JSON schema
+            Chuỗi chỉ thị đã định dạng kèm JSON schema
         """
         try:
-            # Get JSON schema from Pydantic model
+            # Lấy JSON schema từ Pydantic model
             schema = response_type.model_json_schema()
             schema_str = json.dumps(schema, indent=2, ensure_ascii=False)
-            
-            return f"""## IMPORTANT: JSON Output Format Required
-You MUST respond with ONLY a valid JSON object (no markdown, no extra text).
-The JSON must strictly follow this schema:
+
+            return f"""## QUAN TRỌNG: Bắt buộc định dạng output JSON
+Bạn PHẢI phản hồi CHỈ bằng một đối tượng JSON hợp lệ (không markdown, không có văn bản thừa).
+JSON phải tuân thủ NGHIÊM NGẶT schema sau:
 
 ```json
 {schema_str}
 ```
 
-Output ONLY the JSON object, nothing else."""
+Chỉ xuất ra đối tượng JSON, không gì khác. Mọi nội dung văn bản tự nhiên phải bằng tiếng Việt."""
         except Exception as e:
-            logger.warning(f"Failed to generate JSON schema: {e}")
-            return """## IMPORTANT: JSON Output Format Required
-You MUST respond with ONLY a valid JSON object (no markdown, no extra text)."""
+            logger.warning(f"Không sinh được JSON schema: {e}")
+            return """## QUAN TRỌNG: Bắt buộc định dạng output JSON
+Bạn PHẢI phản hồi CHỈ bằng một đối tượng JSON hợp lệ (không markdown, không có văn bản thừa). Mọi nội dung văn bản tự nhiên phải bằng tiếng Việt."""
     
     def _parse_response_as_model(self, content: str, response_type: Type[T]) -> T:
         """
-        Parse LLM response content as Pydantic model
-        
+        Parse nội dung phản hồi LLM thành Pydantic model
+
         Args:
-            content: Raw LLM response text
-            response_type: Target Pydantic model class
-        
+            content: Văn bản phản hồi LLM thô
+            response_type: Lớp Pydantic model đích
+
         Returns:
-            Parsed model instance
+            Instance model đã parse
         """
-        # Try direct JSON parsing first
+        # Thử parse JSON trực tiếp trước
         try:
             data = json.loads(content)
             return response_type.model_validate(data)
         except json.JSONDecodeError:
             pass
-        
-        # Try extracting from markdown code block
+
+        # Thử trích xuất từ khối code markdown
         json_pattern = r'```(?:json)?\s*([\s\S]+?)\s*```'
         match = re.search(json_pattern, content, re.DOTALL)
         if match:
@@ -305,8 +305,8 @@ You MUST respond with ONLY a valid JSON object (no markdown, no extra text)."""
                 return response_type.model_validate(data)
             except json.JSONDecodeError:
                 pass
-        
-        # Try to find any JSON object in the text
+
+        # Thử tìm bất kỳ đối tượng JSON nào trong văn bản
         brace_start = content.find('{')
         brace_end = content.rfind('}')
         if brace_start != -1 and brace_end > brace_start:
@@ -316,24 +316,24 @@ You MUST respond with ONLY a valid JSON object (no markdown, no extra text)."""
                 return response_type.model_validate(data)
             except json.JSONDecodeError:
                 pass
-        
-        raise ValueError(f"Failed to parse LLM response as {response_type.__name__}: {content[:200]}...")
-    
+
+        raise ValueError(f"Không parse được phản hồi LLM thành {response_type.__name__}: {content[:200]}...")
+
     @property
     def active(self) -> str:
         """
-        Get active model name
-        
+        Lấy tên model đang hoạt động
+
         Returns:
-            Active model name
-        
-        Example:
-            print(f"Using model: {pixelle_video.llm.active}")
+            Tên model đang hoạt động
+
+        Ví dụ:
+            print(f"Đang dùng model: {pixelle_video.llm.active}")
         """
         return self._get_config_value("model", "gpt-3.5-turbo")
-    
+
     def __repr__(self) -> str:
-        """String representation"""
+        """Chuỗi đại diện"""
         model = self.active
         base_url = self._get_config_value("base_url", "default")
         return f"<LLMService model={model!r} base_url={base_url!r}>"

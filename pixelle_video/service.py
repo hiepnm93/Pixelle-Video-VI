@@ -11,9 +11,9 @@
 # limitations under the License.
 
 """
-Pixelle-Video Core - Service Layer
+Pixelle-Video Core - Lớp Service
 
-Provides unified access to all capabilities (LLM, TTS, Image, etc.)
+Cung cấp truy cập thống nhất tới tất cả tính năng (LLM, TTS, Image, v.v.)
 """
 
 import hashlib
@@ -40,53 +40,53 @@ from pixelle_video.pipelines.asset_based import AssetBasedPipeline
 
 class PixelleVideoCore:
     """
-    Pixelle-Video Core - Service Layer
-    
-    Provides unified access to all capabilities.
-    
-    Usage:
+    Pixelle-Video Core - Lớp Service
+
+    Cung cấp truy cập thống nhất tới tất cả tính năng.
+
+    Cách dùng:
         from pixelle_video import pixelle_video
-        
-        # Initialize
+
+        # Khởi tạo
         await pixelle_video.initialize()
-        
-        # Use capabilities directly
-        answer = await pixelle_video.llm("Explain atomic habits")
-        audio = await pixelle_video.tts("Hello world")
-        media = await pixelle_video.media(prompt="a cat")
-        
-        # Check active capabilities
-        print(f"Using LLM: {pixelle_video.llm.active}")
-        print(f"Available TTS: {pixelle_video.tts.available}")
-    
-    Architecture (Simplified):
-        PixelleVideoCore (this class)
-          ├── config (configuration)
-          ├── llm (LLM service - direct OpenAI SDK)
-          ├── tts (TTS service - ComfyKit workflows)
-          ├── media (Media service - ComfyKit workflows, supports image & video)
-          └── pipelines (video generation pipelines)
-              ├── standard (standard workflow)
-              ├── custom (custom workflow template)
-              └── ... (extensible)
+
+        # Dùng tính năng trực tiếp
+        answer = await pixelle_video.llm("Giải thích về thói quen nguyên tử")
+        audio = await pixelle_video.tts("Xin chào thế giới")
+        media = await pixelle_video.media(prompt="một con mèo")
+
+        # Kiểm tra các tính năng đang hoạt động
+        print(f"Đang dùng LLM: {pixelle_video.llm.active}")
+        print(f"TTS có sẵn: {pixelle_video.tts.available}")
+
+    Kiến trúc (đơn giản hoá):
+        PixelleVideoCore (lớp này)
+          ├── config (cấu hình)
+          ├── llm (LLM service - dùng trực tiếp OpenAI SDK)
+          ├── tts (TTS service - workflow của ComfyKit)
+          ├── media (Media service - workflow của ComfyKit, hỗ trợ ảnh & video)
+          └── pipelines (các pipeline tạo video)
+              ├── standard (workflow tiêu chuẩn)
+              ├── custom (mẫu workflow tuỳ chỉnh)
+              └── ... (có thể mở rộng)
     """
-    
+
     def __init__(self, config_path: str = "config.yaml"):
         """
-        Initialize Pixelle-Video Core
-        
+        Khởi tạo Pixelle-Video Core
+
         Args:
-            config_path: Path to configuration file
+            config_path: Đường dẫn tới file cấu hình
         """
-        # Use global config manager singleton
+        # Dùng singleton config manager toàn cục
         self.config = config_manager.config.to_dict()
         self._initialized = False
-        
-        # ComfyKit lazy initialization (created on first use, recreated on config change)
+
+        # ComfyKit khởi tạo lười (tạo khi sử dụng lần đầu, tạo lại khi cấu hình thay đổi)
         self._comfykit: Optional[ComfyKit] = None
         self._comfykit_config_hash: Optional[str] = None
-        
-        # Core services (initialized in initialize())
+
+        # Các service core (được khởi tạo trong initialize())
         self.llm: Optional[LLMService] = None
         self.tts: Optional[TTSService] = None
         self.media: Optional[MediaService] = None
@@ -94,163 +94,163 @@ class PixelleVideoCore:
         self.frame_processor: Optional[FrameProcessor] = None
         self.persistence: Optional[PersistenceService] = None
         self.history: Optional[HistoryManager] = None
-        
-        # Video generation pipelines (dictionary of pipeline_name -> pipeline_instance)
+
+        # Các pipeline tạo video (dictionary pipeline_name -> pipeline_instance)
         self.pipelines = {}
-        
-        # Default pipeline callable (for backward compatibility)
+
+        # Pipeline mặc định callable (giữ tương thích ngược)
         self.generate_video = None
-    
+
     def _get_comfykit_config(self) -> dict:
         """
-        Get current ComfyKit configuration from config_manager
-        
+        Lấy cấu hình ComfyKit hiện tại từ config_manager
+
         Returns:
-            ComfyKit configuration dict
+            Dict cấu hình ComfyKit
         """
-        # Reload config from global config_manager (to support hot reload)
+        # Reload cấu hình từ config_manager toàn cục (để hỗ trợ hot reload)
         self.config = config_manager.config.to_dict()
-        
+
         comfyui_config = self.config.get("comfyui", {})
         kit_config = {}
-        
+
         if comfyui_config.get("comfyui_url"):
             kit_config["comfyui_url"] = comfyui_config["comfyui_url"]
         if comfyui_config.get("comfyui_api_key"):
             kit_config["api_key"] = comfyui_config["comfyui_api_key"]
         if comfyui_config.get("runninghub_api_key"):
             kit_config["runninghub_api_key"] = comfyui_config["runninghub_api_key"]
-        # Only pass instance_type if it has a non-empty value
+        # Chỉ truyền instance_type nếu có giá trị không rỗng
         instance_type = comfyui_config.get("runninghub_instance_type")
         if instance_type and instance_type.strip():
             kit_config["runninghub_instance_type"] = instance_type
-        
+
         return kit_config
-    
+
     def _compute_comfykit_config_hash(self, config: dict) -> str:
         """
-        Compute hash of ComfyKit configuration for change detection
-        
+        Tính hash của cấu hình ComfyKit để phát hiện thay đổi
+
         Args:
-            config: ComfyKit configuration dict
-        
+            config: Dict cấu hình ComfyKit
+
         Returns:
-            MD5 hash of config
+            MD5 hash của cấu hình
         """
-        # Sort keys for consistent hash
+        # Sắp xếp keys để hash nhất quán
         config_str = json.dumps(config, sort_keys=True)
         return hashlib.md5(config_str.encode()).hexdigest()
-    
+
     async def _get_or_create_comfykit(self) -> ComfyKit:
         """
-        Get or create ComfyKit instance (lazy initialization with config change detection)
-        
-        This method:
-        1. Creates ComfyKit on first use (lazy initialization)
-        2. Detects configuration changes and recreates instance if needed
-        3. Ensures proper cleanup of old instances
-        
+        Lấy hoặc tạo instance ComfyKit (khởi tạo lười kèm phát hiện thay đổi cấu hình)
+
+        Phương thức này:
+        1. Tạo ComfyKit khi dùng lần đầu (lazy init)
+        2. Phát hiện thay đổi cấu hình và tạo lại instance nếu cần
+        3. Đảm bảo dọn dẹp instance cũ đúng cách
+
         Returns:
-            ComfyKit instance
+            Instance ComfyKit
         """
         current_config = self._get_comfykit_config()
         current_hash = self._compute_comfykit_config_hash(current_config)
-        
-        # Check if we need to create or recreate ComfyKit
+
+        # Kiểm tra xem có cần tạo hoặc tạo lại ComfyKit không
         if self._comfykit is None or self._comfykit_config_hash != current_hash:
-            # Close old instance if exists
+            # Đóng instance cũ nếu tồn tại
             if self._comfykit is not None:
-                logger.info("🔄 ComfyUI configuration changed, recreating ComfyKit instance...")
+                logger.info("🔄 Cấu hình ComfyUI đã thay đổi, đang tạo lại instance ComfyKit...")
                 try:
                     await self._comfykit.close()
                 except Exception as e:
-                    logger.warning(f"Failed to close old ComfyKit instance: {e}")
+                    logger.warning(f"Không thể đóng instance ComfyKit cũ: {e}")
                 self._comfykit = None
-            
-            # Create new instance with current config
-            logger.info("✨ Creating ComfyKit instance...")
-            logger.debug(f"ComfyKit config: {current_config}")
+
+            # Tạo instance mới với cấu hình hiện tại
+            logger.info("✨ Đang tạo instance ComfyKit...")
+            logger.debug(f"Cấu hình ComfyKit: {current_config}")
             self._comfykit = ComfyKit(**current_config)
             self._comfykit_config_hash = current_hash
-            logger.info("✅ ComfyKit instance created")
-        
+            logger.info("✅ Đã tạo instance ComfyKit")
+
         return self._comfykit
-    
+
     async def initialize(self):
         """
-        Initialize core capabilities
-        
-        This initializes all services and must be called before using any capabilities.
-        Note: ComfyKit is NOT initialized here - it's lazily initialized on first use.
-        
-        Example:
+        Khởi tạo các tính năng core
+
+        Khởi tạo tất cả service và phải được gọi trước khi sử dụng bất kỳ tính năng nào.
+        Lưu ý: ComfyKit KHÔNG được khởi tạo ở đây - nó sẽ được khởi tạo lười khi dùng lần đầu.
+
+        Ví dụ:
             await pixelle_video.initialize()
         """
         if self._initialized:
-            logger.warning("Pixelle-Video already initialized")
+            logger.warning("Pixelle-Video đã được khởi tạo rồi")
             return
-        
-        logger.info("🚀 Initializing Pixelle-Video...")
-        
-        # 1. Initialize core services (ComfyKit will be lazy-loaded later)
-        # Initialize services
+
+        logger.info("🚀 Đang khởi tạo Pixelle-Video...")
+
+        # 1. Khởi tạo các service core (ComfyKit sẽ được lazy-load sau)
+        # Khởi tạo các service
         self.llm = LLMService(self.config)
         self.tts = TTSService(self.config, core=self)
         self.media = MediaService(self.config, core=self)
-        self.image = self.media  # Alias for backward compatibility
+        self.image = self.media  # Alias để tương thích ngược
         self.image_analysis = ImageAnalysisService(self.config, core=self)
         self.video_analysis = VideoAnalysisService(self.config, core=self)
         self.video = VideoService()
         self.frame_processor = FrameProcessor(self)
         self.persistence = PersistenceService(output_dir="output")
         self.history = HistoryManager(self.persistence)
-        
-        # 2. Register video generation pipelines
+
+        # 2. Đăng ký các pipeline tạo video
         self.pipelines = {
             "standard": StandardPipeline(self),
             "custom": CustomPipeline(self),
             "asset_based": AssetBasedPipeline(self),
         }
-        logger.info(f"📹 Registered pipelines: {', '.join(self.pipelines.keys())}")
-        
-        # 3. Set default pipeline callable (for backward compatibility)
+        logger.info(f"📹 Đã đăng ký pipeline: {', '.join(self.pipelines.keys())}")
+
+        # 3. Đặt callable pipeline mặc định (giữ tương thích ngược)
         self.generate_video = self._create_generate_video_wrapper()
-        
+
         self._initialized = True
-        logger.info("✅ Pixelle-Video initialized successfully\n")
-    
+        logger.info("✅ Pixelle-Video đã khởi tạo thành công\n")
+
     async def cleanup(self):
         """
-        Cleanup resources (close ComfyKit session)
-        
-        Example:
+        Dọn dẹp tài nguyên (đóng phiên ComfyKit)
+
+        Ví dụ:
             await pixelle_video.cleanup()
         """
         if self._comfykit:
-            logger.info("🧹 Closing ComfyKit session...")
+            logger.info("🧹 Đang đóng phiên ComfyKit...")
             try:
                 await self._comfykit.close()
-                logger.info("✅ ComfyKit session closed")
+                logger.info("✅ Đã đóng phiên ComfyKit")
             except Exception as e:
-                logger.error(f"Failed to close ComfyKit: {e}")
+                logger.error(f"Không thể đóng ComfyKit: {e}")
             finally:
                 self._comfykit = None
                 self._comfykit_config_hash = None
-    
+
     async def __aenter__(self):
-        """Async context manager entry"""
+        """Async context manager - vào"""
         await self.initialize()
         return self
-    
+
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        """Async context manager exit"""
+        """Async context manager - thoát"""
         await self.cleanup()
-    
+
     def _create_generate_video_wrapper(self):
         """
-        Create a wrapper function for generate_video that supports pipeline selection
-        
-        This maintains backward compatibility while adding pipeline support.
+        Tạo hàm wrapper cho generate_video hỗ trợ chọn pipeline
+
+        Giữ tương thích ngược đồng thời thêm hỗ trợ pipeline.
         """
         async def generate_video_wrapper(
             text: str,
@@ -258,24 +258,24 @@ class PixelleVideoCore:
             **kwargs
         ):
             """
-            Generate video using specified pipeline
-            
+            Tạo video bằng pipeline được chỉ định
+
             Args:
-                text: Input text
-                pipeline: Pipeline name ("standard", "book_summary", etc.)
-                **kwargs: Pipeline-specific parameters
-            
+                text: Văn bản đầu vào
+                pipeline: Tên pipeline ("standard", "book_summary", v.v.)
+                **kwargs: Tham số riêng cho từng pipeline
+
             Returns:
                 VideoGenerationResult
-            
-            Examples:
-                # Use standard pipeline (default)
+
+            Ví dụ:
+                # Dùng pipeline tiêu chuẩn (mặc định)
                 result = await pixelle_video.generate_video(
-                    text="如何提高学习效率",
+                    text="Cách nâng cao hiệu quả học tập",
                     n_scenes=5
                 )
-                
-                # Use custom pipeline
+
+                # Dùng pipeline tuỳ chỉnh
                 result = await pixelle_video.generate_video(
                     text=your_content,
                     pipeline="custom",
@@ -285,26 +285,26 @@ class PixelleVideoCore:
             if pipeline not in self.pipelines:
                 available = ", ".join(self.pipelines.keys())
                 raise ValueError(
-                    f"Unknown pipeline: '{pipeline}'. "
-                    f"Available pipelines: {available}"
+                    f"Không tìm thấy pipeline: '{pipeline}'. "
+                    f"Pipeline có sẵn: {available}"
                 )
-            
+
             pipeline_instance = self.pipelines[pipeline]
             return await pipeline_instance(text=text, **kwargs)
-        
+
         return generate_video_wrapper
-    
+
     @property
     def project_name(self) -> str:
-        """Get project name from config"""
+        """Lấy tên project từ cấu hình"""
         return self.config.get("project_name", "Pixelle-Video")
-    
+
     def __repr__(self) -> str:
-        """String representation"""
-        status = "initialized" if self._initialized else "not initialized"
+        """Biểu diễn dạng chuỗi"""
+        status = "đã khởi tạo" if self._initialized else "chưa khởi tạo"
         pipelines = f"pipelines={list(self.pipelines.keys())}" if self._initialized else ""
         return f"<PixelleVideoCore project={self.project_name!r} status={status} {pipelines}>"
 
 
-# Global instance
+# Instance toàn cục
 pixelle_video = PixelleVideoCore()

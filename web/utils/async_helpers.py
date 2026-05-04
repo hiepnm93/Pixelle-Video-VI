@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Async helper functions for web UI
+Các hàm hỗ trợ async cho web UI
 """
 
 import asyncio
@@ -22,23 +22,23 @@ from loguru import logger
 
 
 def run_async(coro):
-    """Run async coroutine in sync context"""
+    """Chạy coroutine async trong ngữ cảnh đồng bộ"""
     return asyncio.run(coro)
 
 
 def get_project_version():
-    """Get project version from pyproject.toml"""
+    """Lấy phiên bản dự án từ pyproject.toml"""
     try:
-        # Get project root (web parent directory)
+        # Lấy thư mục gốc dự án (thư mục cha của web)
         web_dir = Path(__file__).resolve().parent.parent
         project_root = web_dir.parent
         pyproject_path = project_root / "pyproject.toml"
-        
+
         if pyproject_path.exists():
             with open(pyproject_path, "rb") as f:
                 pyproject_data = tomllib.load(f)
                 return pyproject_data.get("project", {}).get("version", "Unknown")
     except Exception as e:
-        logger.warning(f"Failed to read version from pyproject.toml: {e}")
+        logger.warning(f"Không đọc được phiên bản từ pyproject.toml: {e}")
     return "Unknown"
 

@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-TTS (Text-to-Speech) endpoints
+Các endpoint TTS (Text-to-Speech)
 """
 
 from fastapi import APIRouter, HTTPException
@@ -30,26 +30,26 @@ async def tts_synthesize(
     pixelle_video: PixelleVideoDep
 ):
     """
-    Text-to-Speech synthesis endpoint
-    
-    Convert text to speech audio using ComfyUI workflows.
-    
-    - **text**: Text to synthesize
-    - **workflow**: TTS workflow key (optional, uses default if not specified)
-    - **ref_audio**: Reference audio for voice cloning (optional)
-    - **voice_id**: (Deprecated) Voice ID for legacy compatibility
-    
-    Returns path to generated audio file and duration.
-    
-    Examples:
+    Endpoint tổng hợp TTS (Text-to-Speech)
+
+    Chuyển văn bản thành audio giọng nói bằng các workflow ComfyUI.
+
+    - **text**: Văn bản cần tổng hợp
+    - **workflow**: Khoá workflow TTS (tuỳ chọn, dùng mặc định nếu không chỉ định)
+    - **ref_audio**: Audio tham chiếu để nhân bản giọng (tuỳ chọn)
+    - **voice_id**: (Đã lỗi thời) ID giọng để tương thích với phiên bản cũ
+
+    Trả về đường dẫn tới file audio đã tạo và thời lượng.
+
+    Ví dụ:
     ```json
     {
         "text": "Hello, welcome to Pixelle-Video!",
         "workflow": "runninghub/tts_edge.json"
     }
     ```
-    
-    With voice cloning:
+
+    Với nhân bản giọng:
     ```json
     {
         "text": "Hello, this is a cloned voice",
@@ -59,36 +59,36 @@ async def tts_synthesize(
     ```
     """
     try:
-        logger.info(f"TTS synthesis request: {request.text[:50]}...")
-        
-        # Build TTS parameters
+        logger.info(f"Yêu cầu tổng hợp TTS: {request.text[:50]}...")
+
+        # Xây dựng tham số TTS
         tts_params = {"text": request.text}
-        
-        # Add workflow if specified
+
+        # Thêm workflow nếu được chỉ định
         if request.workflow:
             tts_params["workflow"] = request.workflow
-        
-        # Add ref_audio if specified
+
+        # Thêm ref_audio nếu được chỉ định
         if request.ref_audio:
             tts_params["ref_audio"] = request.ref_audio
-        
-        # Legacy voice_id support (deprecated)
+
+        # Hỗ trợ voice_id cũ (đã lỗi thời)
         if request.voice_id and not request.workflow:
-            logger.warning("voice_id parameter is deprecated, please use workflow instead")
+            logger.warning("Tham số voice_id đã lỗi thời, vui lòng dùng workflow thay thế")
             tts_params["voice"] = request.voice_id
-        
-        # Call TTS service
+
+        # Gọi dịch vụ TTS
         audio_path = await pixelle_video.tts(**tts_params)
-        
-        # Get audio duration
+
+        # Lấy thời lượng audio
         duration = get_audio_duration(audio_path)
-        
+
         return TTSSynthesizeResponse(
             audio_path=audio_path,
             duration=duration
         )
-        
+
     except Exception as e:
-        logger.error(f"TTS synthesis error: {e}")
+        logger.error(f"Lỗi tổng hợp TTS: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 

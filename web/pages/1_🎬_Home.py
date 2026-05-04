@@ -11,13 +11,13 @@
 # limitations under the License.
 
 """
-Home Page - Main video generation interface
+Trang chủ - Giao diện sinh video chính
 """
 
 import sys
 from pathlib import Path
 
-# Add project root to sys.path
+# Thêm thư mục gốc dự án vào sys.path
 _script_dir = Path(__file__).resolve().parent
 _project_root = _script_dir.parent.parent
 if str(_project_root) not in sys.path:
@@ -25,17 +25,17 @@ if str(_project_root) not in sys.path:
 
 import streamlit as st
 
-# Import state management
+# Import quản lý state
 from web.state.session import init_session_state, init_i18n, get_pixelle_video
 
-# Import components
+# Import các component
 from web.components.header import render_header
 from web.components.settings import render_advanced_settings
 from web.components.faq import render_faq_sidebar
 
-# Page config
+# Cấu hình trang
 st.set_page_config(
-    page_title="Home - Pixelle-Video",
+    page_title="Trang chủ - Pixelle-Video",
     page_icon="🎬",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -43,44 +43,44 @@ st.set_page_config(
 
 
 def main():
-    """Main UI entry point"""
-    # Initialize session state and i18n
+    """Điểm khởi chạy UI chính"""
+    # Khởi tạo session state và i18n
     init_session_state()
     init_i18n()
-    
-    # Render header (title + language selector)
+
+    # Render header (tiêu đề + bộ chọn ngôn ngữ)
     render_header()
-    
-    # Render FAQ in sidebar
+
+    # Render FAQ trong sidebar
     render_faq_sidebar()
-    
-    # Initialize Pixelle-Video
+
+    # Khởi tạo Pixelle-Video
     pixelle_video = get_pixelle_video()
-    
-    # Render system configuration (LLM + ComfyUI)
+
+    # Render cấu hình hệ thống (LLM + ComfyUI)
     render_advanced_settings()
-    
+
     # ========================================================================
-    # Pipeline Selection & Delegation
+    # Chọn và uỷ quyền Pipeline
     # ========================================================================
     from web.pipelines import get_all_pipeline_uis
-    
-    # Get all registered pipelines
+
+    # Lấy tất cả pipeline đã đăng ký
     pipelines = get_all_pipeline_uis()
-    
-    # Use Tabs for pipeline selection
-    # Note: st.tabs returns a list of containers, one for each tab
+
+    # Sử dụng Tabs để chọn pipeline
+    # Lưu ý: st.tabs trả về danh sách container, mỗi tab một container
     tab_labels = [f"{p.icon} {p.display_name}" for p in pipelines]
     tabs = st.tabs(tab_labels)
-    
-    # Render each pipeline in its corresponding tab
+
+    # Render mỗi pipeline trong tab tương ứng
     for i, pipeline in enumerate(pipelines):
         with tabs[i]:
-            # Show description if available
+            # Hiển thị mô tả nếu có
             if pipeline.description:
                 st.caption(pipeline.description)
-            
-            # Delegate rendering
+
+            # Uỷ quyền render
             pipeline.render(pixelle_video)
 
 

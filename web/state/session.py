@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Session state management for web UI
+Quản lý session state cho web UI
 """
 
 import streamlit as st
@@ -22,68 +22,68 @@ from web.utils.async_helpers import run_async
 
 
 def init_session_state():
-    """Initialize session state variables"""
+    """Khởi tạo các biến session state"""
     if "language" not in st.session_state:
-        # Use auto-detected system language
+        # Dùng ngôn ngữ hệ thống tự phát hiện
         st.session_state.language = get_language()
 
 
 def init_i18n():
-    """Initialize internationalization"""
-    # Locales are already loaded and system language detected on import
-    # Get language from session state or use auto-detected system language
+    """Khởi tạo đa ngôn ngữ (i18n)"""
+    # Các locale đã được load và ngôn ngữ hệ thống đã được phát hiện khi import
+    # Lấy ngôn ngữ từ session state hoặc dùng ngôn ngữ hệ thống đã phát hiện
     if "language" not in st.session_state:
-        st.session_state.language = get_language()  # Use auto-detected language
-    
-    # Set current language
+        st.session_state.language = get_language()  # Dùng ngôn ngữ tự phát hiện
+
+    # Đặt ngôn ngữ hiện tại
     set_language(st.session_state.language)
 
 
 def get_pixelle_video():
     """
-    Get initialized Pixelle-Video instance with proper caching and cleanup
-    
-    Uses st.session_state to cache the instance per user session.
-    ComfyKit is lazily initialized and automatically recreated on config changes.
+    Lấy instance Pixelle-Video đã khởi tạo với cache và cleanup phù hợp
+
+    Dùng st.session_state để cache instance theo session người dùng.
+    ComfyKit được khởi tạo lười và tự động tạo lại khi config thay đổi.
     """
     from pixelle_video.service import PixelleVideoCore
     from pixelle_video.config import config_manager
-    
-    # Compute config hash for change detection
+
+    # Tính hash config để phát hiện thay đổi
     import hashlib
     import json
     config_dict = config_manager.config.to_dict()
-    # Only track ComfyUI config for hash (other config changes don't need core recreation)
+    # Chỉ theo dõi config ComfyUI cho hash (các thay đổi config khác không cần tạo lại core)
     comfyui_config = config_dict.get("comfyui", {})
     config_hash = hashlib.md5(json.dumps(comfyui_config, sort_keys=True).encode()).hexdigest()
-    
-    # Check if we need to create or recreate core instance
+
+    # Kiểm tra có cần tạo hoặc tạo lại instance core không
     need_recreate = False
     if 'pixelle_video' not in st.session_state:
         need_recreate = True
-        logger.info("Creating new PixelleVideoCore instance (first time)")
+        logger.info("Tạo instance PixelleVideoCore mới (lần đầu tiên)")
     elif st.session_state.get('pixelle_video_config_hash') != config_hash:
         need_recreate = True
-        logger.info("Configuration changed, recreating PixelleVideoCore instance")
-        # Cleanup old instance
+        logger.info("Cấu hình đã thay đổi, đang tạo lại instance PixelleVideoCore")
+        # Dọn dẹp instance cũ
         old_core = st.session_state.pixelle_video
         try:
             run_async(old_core.cleanup())
         except Exception as e:
-            logger.warning(f"Failed to cleanup old PixelleVideoCore: {e}")
-    
+            logger.warning(f"Không thể dọn dẹp PixelleVideoCore cũ: {e}")
+
     if need_recreate:
-        # Create and initialize new instance
+        # Tạo và khởi tạo instance mới
         pixelle_video = PixelleVideoCore()
         run_async(pixelle_video.initialize())
-        
-        # Cache in session state
+
+        # Cache trong session state
         st.session_state.pixelle_video = pixelle_video
         st.session_state.pixelle_video_config_hash = config_hash
-        logger.info("✅ PixelleVideoCore initialized and cached")
+        logger.info("✅ Đã khởi tạo và cache PixelleVideoCore")
     else:
         pixelle_video = st.session_state.pixelle_video
-        logger.debug("Reusing cached PixelleVideoCore instance")
-    
+        logger.debug("Tái sử dụng instance PixelleVideoCore đã cache")
+
     return pixelle_video
 

@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Image generation endpoints
+Các endpoint tạo ảnh
 """
 
 from fastapi import APIRouter, HTTPException
@@ -29,42 +29,42 @@ async def image_generate(
     pixelle_video: PixelleVideoDep
 ):
     """
-    Image generation endpoint
-    
-    Generate image from text prompt using ComfyKit.
-    
-    - **prompt**: Image description/prompt
-    - **width**: Image width (512-2048)
-    - **height**: Image height (512-2048)
-    - **workflow**: Optional custom workflow filename
-    
-    Returns path to generated image.
+    Endpoint tạo ảnh
+
+    Tạo ảnh từ prompt văn bản bằng ComfyKit.
+
+    - **prompt**: Mô tả/prompt cho ảnh
+    - **width**: Chiều rộng ảnh (512-2048)
+    - **height**: Chiều cao ảnh (512-2048)
+    - **workflow**: Tên file workflow tuỳ chỉnh (tuỳ chọn)
+
+    Trả về đường dẫn tới ảnh đã tạo.
     """
     try:
-        logger.info(f"Image generation request: {request.prompt[:50]}...")
-        
-        # Call media service (backward compatible with image API)
+        logger.info(f"Yêu cầu tạo ảnh: {request.prompt[:50]}...")
+
+        # Gọi dịch vụ media (tương thích ngược với API image)
         media_result = await pixelle_video.media(
             prompt=request.prompt,
             width=request.width,
             height=request.height,
             workflow=request.workflow
         )
-        
-        # For backward compatibility, only support image results in /image endpoint
+
+        # Để tương thích ngược, endpoint /image chỉ hỗ trợ kết quả là ảnh
         if media_result.is_video:
             raise HTTPException(
                 status_code=400,
-                detail="Video workflow used. Please use /media/generate endpoint for video generation."
+                detail="Workflow video đã được sử dụng. Vui lòng dùng endpoint /media/generate để tạo video."
             )
-        
+
         return ImageGenerateResponse(
             image_path=media_result.url
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Image generation error: {e}")
+        logger.error(f"Lỗi tạo ảnh: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 

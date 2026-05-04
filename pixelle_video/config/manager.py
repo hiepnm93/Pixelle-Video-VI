@@ -11,9 +11,9 @@
 # limitations under the License.
 
 """
-Configuration Manager - Singleton pattern
+Configuration Manager - Mẫu Singleton
 
-Provides unified access to configuration with automatic validation.
+Cung cấp truy cập thống nhất tới cấu hình kèm xác thực tự động.
 """
 from pathlib import Path
 from typing import Any, Optional
@@ -25,68 +25,68 @@ from .loader import load_config_dict, save_config_dict
 class ConfigManager:
     """
     Configuration Manager (Singleton)
-    
-    Provides unified access to configuration with automatic validation.
+
+    Cung cấp truy cập thống nhất tới cấu hình kèm xác thực tự động.
     """
     _instance: Optional['ConfigManager'] = None
-    
+
     def __new__(cls, config_path: str = "config.yaml"):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
-    
+
     def __init__(self, config_path: str = "config.yaml"):
-        # Only initialize once
+        # Chỉ khởi tạo một lần
         if hasattr(self, '_initialized'):
             return
-        
+
         self.config_path = Path(config_path)
         self.config: PixelleVideoConfig = self._load()
         self._initialized = True
-    
+
     def _load(self) -> PixelleVideoConfig:
-        """Load configuration from file"""
+        """Nạp cấu hình từ file"""
         data = load_config_dict(str(self.config_path))
         config = PixelleVideoConfig(**data)
-        
-        # Validate template path exists
+
+        # Xác thực rằng đường dẫn template tồn tại
         self._validate_template(config.template.default_template)
-        
+
         return config
-    
+
     def _validate_template(self, template_path: str):
-        """Validate that the configured template exists"""
+        """Xác thực rằng template đã cấu hình tồn tại"""
         from pixelle_video.utils.template_util import resolve_template_path
-        
+
         try:
-            # Try to resolve the template path
+            # Thử phân giải đường dẫn template
             resolved_path = resolve_template_path(template_path)
-            logger.debug(f"Template validation passed: {template_path} -> {resolved_path}")
+            logger.debug(f"Xác thực template thành công: {template_path} -> {resolved_path}")
         except FileNotFoundError as e:
             logger.warning(
-                f"Configured default template '{template_path}' not found. "
-                f"Will fall back to '1080x1920/default.html' if needed. Error: {e}"
+                f"Không tìm thấy template mặc định đã cấu hình '{template_path}'. "
+                f"Sẽ dùng dự phòng '1080x1920/default.html' nếu cần. Lỗi: {e}"
             )
-    
+
     def reload(self):
-        """Reload configuration from file"""
+        """Nạp lại cấu hình từ file"""
         self.config = self._load()
-        logger.info("Configuration reloaded")
-    
+        logger.info("Đã nạp lại cấu hình")
+
     def save(self):
-        """Save current configuration to file"""
+        """Lưu cấu hình hiện tại ra file"""
         save_config_dict(self.config.to_dict(), str(self.config_path))
-    
+
     def update(self, updates: dict):
         """
-        Update configuration with new values
-        
+        Cập nhật cấu hình với giá trị mới
+
         Args:
-            updates: Dictionary of updates (e.g., {"llm": {"api_key": "xxx"}})
+            updates: Dictionary chứa các cập nhật (ví dụ: {"llm": {"api_key": "xxx"}})
         """
         current = self.config.to_dict()
-        
-        # Deep merge
+
+        # Hợp nhất sâu (deep merge)
         def deep_merge(base: dict, updates: dict) -> dict:
             for key, value in updates.items():
                 if key in base and isinstance(base[key], dict) and isinstance(value, dict):
@@ -94,28 +94,28 @@ class ConfigManager:
                 else:
                     base[key] = value
             return base
-        
+
         merged = deep_merge(current, updates)
         self.config = PixelleVideoConfig(**merged)
-    
+
     def get(self, key: str, default: Any = None) -> Any:
-        """Dict-like access (for backward compatibility)"""
+        """Truy cập kiểu dict (giữ tương thích ngược)"""
         return self.config.to_dict().get(key, default)
-    
+
     def validate(self) -> bool:
-        """Validate configuration completeness"""
+        """Xác thực tính đầy đủ của cấu hình"""
         return self.config.validate_required()
-    
+
     def get_llm_config(self) -> dict:
-        """Get LLM configuration as dict"""
+        """Lấy cấu hình LLM dạng dict"""
         return {
             "api_key": self.config.llm.api_key,
             "base_url": self.config.llm.base_url,
             "model": self.config.llm.model,
         }
-    
+
     def set_llm_config(self, api_key: str, base_url: str, model: str):
-        """Set LLM configuration"""
+        """Đặt cấu hình LLM"""
         self.update({
             "llm": {
                 "api_key": api_key,
@@ -123,9 +123,9 @@ class ConfigManager:
                 "model": model,
             }
         })
-    
+
     def get_comfyui_config(self) -> dict:
-        """Get ComfyUI configuration as dict"""
+        """Lấy cấu hình ComfyUI dạng dict"""
         return {
             "comfyui_url": self.config.comfyui.comfyui_url,
             "comfyui_api_key": self.config.comfyui.comfyui_api_key,
@@ -144,16 +144,16 @@ class ConfigManager:
                 "prompt_prefix": self.config.comfyui.video.prompt_prefix,
             }
         }
-    
+
     def set_comfyui_config(
-        self, 
+        self,
         comfyui_url: Optional[str] = None,
         comfyui_api_key: Optional[str] = None,
         runninghub_api_key: Optional[str] = None,
         runninghub_concurrent_limit: Optional[int] = None,
         runninghub_instance_type: Optional[str] = None
     ):
-        """Set ComfyUI global configuration"""
+        """Đặt cấu hình ComfyUI toàn cục"""
         updates = {}
         if comfyui_url is not None:
             updates["comfyui_url"] = comfyui_url
@@ -164,9 +164,9 @@ class ConfigManager:
         if runninghub_concurrent_limit is not None:
             updates["runninghub_concurrent_limit"] = runninghub_concurrent_limit
         if runninghub_instance_type is not None:
-            # Empty string means disable (treat as None for storage)
+            # Chuỗi rỗng nghĩa là tắt (lưu thành None)
             updates["runninghub_instance_type"] = runninghub_instance_type if runninghub_instance_type else None
-        
+
         if updates:
             self.update({"comfyui": updates})
 

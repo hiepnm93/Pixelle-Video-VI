@@ -11,13 +11,13 @@
 # limitations under the License.
 
 """
-Frame processor - Process single frame through complete pipeline
+Frame processor - Xử lý một frame đơn qua toàn bộ pipeline
 
-Orchestrates: TTS → Image Generation → Frame Composition → Video Segment
+Điều phối: TTS → Tạo Image → Compose Frame → Tạo Video Segment
 
-Key Feature:
-- TTS-driven video duration: Audio duration from TTS is passed to video generation workflows
-  to ensure perfect sync between audio and video (no padding, no trimming needed)
+Tính năng chính:
+- Thời lượng video do TTS quyết định: Thời lượng audio từ TTS được truyền vào các workflow
+  tạo video để đảm bảo audio và video đồng bộ hoàn hảo (không cần padding hay trim)
 """
 
 from typing import Callable, Optional
@@ -31,13 +31,13 @@ from pixelle_video.models.storyboard import Storyboard, StoryboardFrame, Storybo
 
 class FrameProcessor:
     """Frame processor"""
-    
+
     def __init__(self, pixelle_video_core):
         """
-        Initialize
-        
+        Khởi tạo
+
         Args:
-            pixelle_video_core: PixelleVideoCore instance
+            pixelle_video_core: Instance của PixelleVideoCore
         """
         self.core = pixelle_video_core
     
@@ -50,35 +50,35 @@ class FrameProcessor:
         progress_callback: Optional[Callable[[ProgressEvent], None]] = None
     ) -> StoryboardFrame:
         """
-        Process single frame through complete pipeline
-        
-        Steps:
-        1. Generate audio (TTS)
-        2. Generate image (ComfyKit)
-        3. Compose frame (add subtitle)
-        4. Create video segment (image + audio)
-        
+        Xử lý một frame đơn qua toàn bộ pipeline
+
+        Các bước:
+        1. Tạo audio (TTS)
+        2. Tạo image (ComfyKit)
+        3. Compose frame (thêm phụ đề)
+        4. Tạo video segment (image + audio)
+
         Args:
-            frame: Storyboard frame to process
-            storyboard: Storyboard instance
-            config: Storyboard configuration
-            total_frames: Total number of frames in storyboard
-            progress_callback: Optional callback for progress updates (receives ProgressEvent)
-            
+            frame: Storyboard frame cần xử lý
+            storyboard: Instance Storyboard
+            config: Cấu hình Storyboard
+            total_frames: Tổng số frame trong storyboard
+            progress_callback: Callback tùy chọn cho cập nhật tiến độ (nhận ProgressEvent)
+
         Returns:
-            Processed frame with all paths filled
+            Frame đã xử lý xong với đầy đủ các đường dẫn
         """
-        logger.info(f"Processing frame {frame.index}...")
-        
+        logger.info(f"Đang xử lý frame {frame.index}...")
+
         frame_num = frame.index + 1
-        
-        # Determine if this frame needs image generation
-        # If image_path or video_path is already set (e.g. asset-based pipeline), we consider it "has existing media" but skip generation
+
+        # Xác định xem frame này có cần tạo ảnh hay không
+        # Nếu image_path hoặc video_path đã được set sẵn (ví dụ pipeline dựa trên asset), ta coi là "đã có media sẵn" nhưng bỏ qua bước tạo
         has_existing_media = frame.image_path is not None or frame.video_path is not None
         needs_generation = frame.image_prompt is not None
-        
+
         try:
-            # Step 1: Generate audio (TTS)
+            # Bước 1: Tạo audio (TTS)
             if not frame.audio_path:
                 if progress_callback:
                     progress_callback(ProgressEvent(
@@ -91,9 +91,9 @@ class FrameProcessor:
                     ))
                 await self._step_generate_audio(frame, config)
             else:
-                logger.debug(f"  1/4: Using existing audio: {frame.audio_path}")
-            
-            # Step 2: Generate media (image or video, conditional)
+                logger.debug(f"  1/4: Sử dụng audio có sẵn: {frame.audio_path}")
+
+            # Bước 2: Tạo media (image hoặc video, có điều kiện)
             if needs_generation:
                 if progress_callback:
                     progress_callback(ProgressEvent(
@@ -106,17 +106,17 @@ class FrameProcessor:
                     ))
                 await self._step_generate_media(frame, config)
             elif has_existing_media:
-                # Log appropriate message based on media type
+                # Ghi log thông điệp tương ứng theo loại media
                 if frame.video_path:
-                    logger.debug(f"  2/4: Using existing video: {frame.video_path}")
+                    logger.debug(f"  2/4: Sử dụng video có sẵn: {frame.video_path}")
                 else:
-                    logger.debug(f"  2/4: Using existing image: {frame.image_path}")
+                    logger.debug(f"  2/4: Sử dụng image có sẵn: {frame.image_path}")
             else:
                 frame.image_path = None
                 frame.media_type = None
-                logger.debug(f"  2/4: Skipped media generation (not required by template)")
-        
-            # Step 3: Compose frame (add subtitle)
+                logger.debug(f"  2/4: Đã bỏ qua tạo media (template không yêu cầu)")
+
+            # Bước 3: Compose frame (thêm phụ đề)
             if progress_callback:
                 progress_callback(ProgressEvent(
                     event_type="frame_step",
@@ -127,8 +127,8 @@ class FrameProcessor:
                     action="compose"
                 ))
             await self._step_compose_frame(frame, storyboard, config)
-            
-            # Step 4: Create video segment
+
+            # Bước 4: Tạo video segment
             if progress_callback:
                 progress_callback(ProgressEvent(
                     event_type="frame_step",
@@ -140,12 +140,12 @@ class FrameProcessor:
                 ))
             
             await self._step_create_video_segment(frame, config)
-            
-            logger.info(f"✅ Frame {frame.index} completed")
+
+            logger.info(f"✅ Hoàn tất frame {frame.index}")
             return frame
 
         except Exception as e:
-            logger.error(f"❌ Failed to process frame {frame.index}: {e}")
+            logger.error(f"❌ Xử lý frame {frame.index} thất bại: {e}")
             raise
     
     async def _step_generate_audio(
@@ -153,29 +153,29 @@ class FrameProcessor:
         frame: StoryboardFrame,
         config: StoryboardConfig
     ):
-        """Step 1: Generate audio using TTS"""
-        logger.debug(f"  1/4: Generating audio for frame {frame.index}...")
-        
-        # Generate output path using task_id
+        """Bước 1: Tạo audio bằng TTS"""
+        logger.debug(f"  1/4: Đang tạo audio cho frame {frame.index}...")
+
+        # Tạo đường dẫn output dùng task_id
         from pixelle_video.utils.os_util import get_task_frame_path
         output_path = get_task_frame_path(config.task_id, frame.index, "audio")
-        
-        # Build TTS params based on inference mode
+
+        # Xây dựng tham số TTS dựa trên inference mode
         tts_params = {
             "text": frame.narration,
             "inference_mode": config.tts_inference_mode,
             "output_path": output_path,
-            "index": frame.index + 1,  # 1-based index for workflow
+            "index": frame.index + 1,  # Index 1-based cho workflow
         }
-        
+
         if config.tts_inference_mode == "local":
-            # Local mode: pass voice and speed
+            # Chế độ local: truyền voice và speed
             if config.voice_id:
                 tts_params["voice"] = config.voice_id
             if config.tts_speed is not None:
                 tts_params["speed"] = config.tts_speed
         else:  # comfyui
-            # ComfyUI mode: pass workflow, voice, speed, and ref_audio
+            # Chế độ ComfyUI: truyền workflow, voice, speed, và ref_audio
             if config.tts_workflow:
                 tts_params["workflow"] = config.tts_workflow
             if config.voice_id:
@@ -184,56 +184,56 @@ class FrameProcessor:
                 tts_params["speed"] = config.tts_speed
             if config.ref_audio:
                 tts_params["ref_audio"] = config.ref_audio
-        
+
         audio_path = await self.core.tts(**tts_params)
-        
+
         frame.audio_path = audio_path
-        
-        # Get audio duration
+
+        # Lấy thời lượng audio
         frame.duration = await self._get_audio_duration(audio_path)
-        
-        logger.debug(f"  ✓ Audio generated: {audio_path} ({frame.duration:.2f}s)")
+
+        logger.debug(f"  ✓ Đã tạo audio: {audio_path} ({frame.duration:.2f}s)")
     
     async def _step_generate_media(
         self,
         frame: StoryboardFrame,
         config: StoryboardConfig
     ):
-        """Step 2: Generate media (image or video) using ComfyKit"""
-        logger.debug(f"  2/4: Generating media for frame {frame.index}...")
-        
-        # Determine media type based on workflow
-        # video_ prefix in workflow name indicates video generation
+        """Bước 2: Tạo media (image hoặc video) bằng ComfyKit"""
+        logger.debug(f"  2/4: Đang tạo media cho frame {frame.index}...")
+
+        # Xác định loại media dựa trên workflow
+        # Tiền tố video_ trong tên workflow cho biết sẽ tạo video
         workflow_name = config.media_workflow or ""
         is_video_workflow = "video_" in workflow_name.lower()
         media_type = "video" if is_video_workflow else "image"
-        
-        logger.debug(f"  → Media type: {media_type} (workflow: {workflow_name})")
-        
-        # Build media generation parameters
+
+        logger.debug(f"  → Loại media: {media_type} (workflow: {workflow_name})")
+
+        # Xây dựng tham số tạo media
         media_params = {
             "prompt": frame.image_prompt,
-            "workflow": config.media_workflow,  # Pass workflow from config (None = use default)
+            "workflow": config.media_workflow,  # Truyền workflow từ config (None = dùng mặc định)
             "media_type": media_type,
             "width": config.media_width,
             "height": config.media_height,
-            "index": frame.index + 1,  # 1-based index for workflow
+            "index": frame.index + 1,  # Index 1-based cho workflow
         }
-        
-        # For video workflows: pass audio duration as target video duration
-        # This ensures video length matches audio length from the source
+
+        # Với workflow video: truyền thời lượng audio làm thời lượng video mục tiêu
+        # Điều này đảm bảo độ dài video khớp với độ dài audio nguồn
         if is_video_workflow and frame.duration:
             media_params["duration"] = frame.duration
-            logger.info(f"  → Generating video with target duration: {frame.duration:.2f}s (from TTS audio)")
-        
-        # Call Media generation
+            logger.info(f"  → Đang tạo video với thời lượng mục tiêu: {frame.duration:.2f}s (từ TTS audio)")
+
+        # Gọi tạo Media
         media_result = await self.core.media(**media_params)
-        
-        # Store media type
+
+        # Lưu loại media
         frame.media_type = media_result.media_type
-        
+
         if media_result.is_image:
-            # Download image to local (pass task_id)
+            # Tải ảnh về local (truyền task_id)
             local_path = await self._download_media(
                 media_result.url,
                 frame.index,
@@ -241,10 +241,10 @@ class FrameProcessor:
                 media_type="image"
             )
             frame.image_path = local_path
-            logger.debug(f"  ✓ Image generated: {local_path}")
-        
+            logger.debug(f"  ✓ Đã tạo image: {local_path}")
+
         elif media_result.is_video:
-            # Download video to local (pass task_id)
+            # Tải video về local (truyền task_id)
             local_path = await self._download_media(
                 media_result.url,
                 frame.index,
@@ -252,18 +252,18 @@ class FrameProcessor:
                 media_type="video"
             )
             frame.video_path = local_path
-            
-            # Update duration from video if available
+
+            # Cập nhật thời lượng từ video nếu có
             if media_result.duration:
                 frame.duration = media_result.duration
-                logger.debug(f"  ✓ Video generated: {local_path} (duration: {frame.duration:.2f}s)")
+                logger.debug(f"  ✓ Đã tạo video: {local_path} (thời lượng: {frame.duration:.2f}s)")
             else:
-                # Get video duration from file
+                # Lấy thời lượng video từ file
                 frame.duration = await self._get_video_duration(local_path)
-                logger.debug(f"  ✓ Video generated: {local_path} (duration: {frame.duration:.2f}s)")
-        
+                logger.debug(f"  ✓ Đã tạo video: {local_path} (thời lượng: {frame.duration:.2f}s)")
+
         else:
-            raise ValueError(f"Unknown media type: {media_result.media_type}")
+            raise ValueError(f"Loại media không xác định: {media_result.media_type}")
     
     async def _step_compose_frame(
         self,
@@ -271,21 +271,21 @@ class FrameProcessor:
         storyboard: 'Storyboard',
         config: StoryboardConfig
     ):
-        """Step 3: Compose frame with subtitle using HTML template"""
-        logger.debug(f"  3/4: Composing frame {frame.index}...")
-        
-        # Generate output path using task_id
+        """Bước 3: Compose frame có phụ đề bằng template HTML"""
+        logger.debug(f"  3/4: Đang compose frame {frame.index}...")
+
+        # Tạo đường dẫn output dùng task_id
         from pixelle_video.utils.os_util import get_task_frame_path
         output_path = get_task_frame_path(config.task_id, frame.index, "composed")
-        
-        # For video type: render HTML as transparent overlay image
-        # For image type: render HTML with image background
-        # In both cases, we need the composed image
+
+        # Với loại video: render HTML thành ảnh overlay trong suốt
+        # Với loại image: render HTML có ảnh nền
+        # Cả hai trường hợp đều cần ảnh đã compose
         composed_path = await self._compose_frame_html(frame, storyboard, config, output_path)
-        
+
         frame.composed_image_path = composed_path
-        
-        logger.debug(f"  ✓ Frame composed: {composed_path}")
+
+        logger.debug(f"  ✓ Đã compose frame: {composed_path}")
     
     async def _compose_frame_html(
         self,
@@ -294,36 +294,36 @@ class FrameProcessor:
         config: StoryboardConfig,
         output_path: str
     ) -> str:
-        """Compose frame using HTML template"""
+        """Compose frame bằng template HTML"""
         from pixelle_video.services.frame_html import HTMLFrameGenerator
         from pixelle_video.utils.template_util import resolve_template_path
-        
-        # Resolve template path (handles various input formats)
+
+        # Resolve đường dẫn template (xử lý nhiều dạng input khác nhau)
         template_path = resolve_template_path(config.frame_template)
-        
-        # Get content metadata from storyboard
+
+        # Lấy metadata nội dung từ storyboard
         content_metadata = storyboard.content_metadata if storyboard else None
-        
-        # Build ext data
+
+        # Xây dựng dữ liệu ext
         ext = {
             "index": frame.index + 1,
         }
-        
-        # Add custom template parameters
+
+        # Thêm các tham số tùy chỉnh của template
         if config.template_params:
             ext.update(config.template_params)
-        
-        # Generate frame using HTML (size is auto-parsed from template path)
+
+        # Tạo frame bằng HTML (kích thước được tự động lấy từ đường dẫn template)
         generator = HTMLFrameGenerator(template_path)
-        
-        # Use video_path for video media, image_path for images
+
+        # Dùng video_path với media là video, image_path với image
         media_path = frame.video_path if frame.media_type == "video" else frame.image_path
-        logger.debug(f"Generating frame with media: '{media_path}' (type: {frame.media_type})")
+        logger.debug(f"Đang tạo frame với media: '{media_path}' (loại: {frame.media_type})")
         
         composed_path = await generator.generate_frame(
             title=storyboard.title,
             text=frame.narration,
-            image=media_path,  # HTMLFrameGenerator handles both image and video paths
+            image=media_path,  # HTMLFrameGenerator xử lý cả đường dẫn image lẫn video
             ext=ext,
             output_path=output_path
         )
@@ -335,82 +335,82 @@ class FrameProcessor:
         frame: StoryboardFrame,
         config: StoryboardConfig
     ):
-        """Step 4: Create video segment from media + audio"""
-        logger.debug(f"  4/4: Creating video segment for frame {frame.index}...")
-        
-        # Generate output path using task_id
+        """Bước 4: Tạo video segment từ media + audio"""
+        logger.debug(f"  4/4: Đang tạo video segment cho frame {frame.index}...")
+
+        # Tạo đường dẫn output dùng task_id
         from pixelle_video.utils.os_util import get_task_frame_path
         output_path = get_task_frame_path(config.task_id, frame.index, "segment")
-        
+
         from pixelle_video.services.video import VideoService
         video_service = VideoService()
-        
-        # Branch based on media type
+
+        # Phân nhánh theo loại media
         if frame.media_type == "video":
-            # Video workflow: overlay HTML template on video, then add audio
-            logger.debug(f"  → Using video-based composition with HTML overlay")
-            
-            # Step 1: Overlay transparent HTML image on video
-            # The composed_image_path contains the rendered HTML with transparent background
+            # Workflow video: overlay template HTML lên video, rồi thêm audio
+            logger.debug(f"  → Sử dụng compose dựa trên video với overlay HTML")
+
+            # Bước 1: Overlay ảnh HTML trong suốt lên video
+            # composed_image_path chứa HTML đã render với nền trong suốt
             temp_video_with_overlay = get_task_frame_path(config.task_id, frame.index, "video") + "_overlay.mp4"
-            
+
             video_service.overlay_image_on_video(
                 video=frame.video_path,
                 overlay_image=frame.composed_image_path,
                 output=temp_video_with_overlay,
-                scale_mode="contain"  # Scale video to fit template size (contain mode)
+                scale_mode="contain"  # Scale video vừa kích thước template (chế độ contain)
             )
-            
-            # Step 2: Add narration audio to the overlaid video
-            # Note: The video might have audio (replaced) or be silent (audio added)
+
+            # Bước 2: Thêm audio thuyết minh vào video đã overlay
+            # Lưu ý: Video có thể có audio (sẽ thay thế) hoặc không có (sẽ thêm vào)
             segment_path = video_service.merge_audio_video(
                 video=temp_video_with_overlay,
                 audio=frame.audio_path,
                 output=output_path,
-                replace_audio=True,  # Replace video audio with narration
+                replace_audio=True,  # Thay audio của video bằng audio thuyết minh
                 audio_volume=1.0
             )
-            
-            # Clean up temp file
+
+            # Dọn dẹp file tạm
             import os
             if os.path.exists(temp_video_with_overlay):
                 os.unlink(temp_video_with_overlay)
-        
+
         elif frame.media_type == "image" or frame.media_type is None:
-            # Image workflow: Use composed image directly
-            # The asset_default.html template includes the image in the composition
-            logger.debug(f"  → Using image-based composition")
-            
+            # Workflow image: dùng trực tiếp ảnh đã compose
+            # Template asset_default.html đã bao gồm ảnh trong khung compose
+            logger.debug(f"  → Sử dụng compose dựa trên image")
+
             segment_path = video_service.create_video_from_image(
                 image=frame.composed_image_path,
                 audio=frame.audio_path,
                 output=output_path,
                 fps=config.video_fps
             )
-        
+
         else:
-            raise ValueError(f"Unknown media type: {frame.media_type}")
-        
+            raise ValueError(f"Loại media không xác định: {frame.media_type}")
+
         frame.video_segment_path = segment_path
-        
-        logger.debug(f"  ✓ Video segment created: {segment_path}")
+
+        logger.debug(f"  ✓ Đã tạo video segment: {segment_path}")
     
     async def _get_audio_duration(self, audio_path: str) -> float:
-        """Get audio duration in seconds"""
+        """Lấy thời lượng audio tính bằng giây"""
         try:
-            # Try using ffmpeg-python
+            # Thử dùng ffmpeg-python
             import ffmpeg
             probe = ffmpeg.probe(audio_path)
             duration = float(probe['format']['duration'])
             return duration
         except Exception as e:
-            logger.warning(f"Failed to get audio duration: {e}, using estimate")
-            # Fallback: estimate based on file size (very rough)
+            logger.warning(f"Không lấy được thời lượng audio: {e}, đang ước lượng")
+            # Phương án dự phòng: ước lượng theo kích thước file (rất thô)
             import os
             file_size = os.path.getsize(audio_path)
-            # Assume ~16kbps for MP3, so 2KB per second
+            # Giả định ~16kbps cho MP3, tức ~2KB mỗi giây
             estimated_duration = file_size / 2000
-            return max(1.0, estimated_duration)  # At least 1 second
+            return max(1.0, estimated_duration)  # Tối thiểu 1 giây
     
     async def _download_media(
         self,
@@ -419,7 +419,7 @@ class FrameProcessor:
         task_id: str,
         media_type: str
     ) -> str:
-        """Download media (image or video) from URL to local file"""
+        """Tải media (image hoặc video) từ URL về file local"""
         from pixelle_video.utils.os_util import get_task_frame_path
         output_path = get_task_frame_path(task_id, frame_index, media_type)
         
@@ -434,14 +434,14 @@ class FrameProcessor:
         return output_path
     
     async def _get_video_duration(self, video_path: str) -> float:
-        """Get video duration in seconds"""
+        """Lấy thời lượng video tính bằng giây"""
         try:
             import ffmpeg
             probe = ffmpeg.probe(video_path)
             duration = float(probe['format']['duration'])
             return duration
         except Exception as e:
-            logger.warning(f"Failed to get video duration: {e}, using audio duration")
-            # Fallback: use audio duration if available
-            return 1.0  # Default to 1 second if unable to determine
+            logger.warning(f"Không lấy được thời lượng video: {e}, sử dụng thời lượng audio")
+            # Phương án dự phòng: dùng thời lượng audio nếu có
+            return 1.0  # Mặc định 1 giây nếu không xác định được
 

@@ -11,9 +11,9 @@
 # limitations under the License.
 
 """
-Image Analysis Service - ComfyUI Workflow-based implementation
+Service phân tích ảnh - Triển khai dựa trên Workflow ComfyUI
 
-Uses Florence-2 or other vision models to analyze images and generate descriptions.
+Sử dụng Florence-2 hoặc các model thị giác khác để phân tích ảnh và sinh mô tả.
 """
 
 from typing import Optional, Literal
@@ -27,26 +27,26 @@ from pixelle_video.services.comfy_base_service import ComfyBaseService
 
 class ImageAnalysisService(ComfyBaseService):
     """
-    Image analysis service - Workflow-based
-    
-    Uses ComfyKit to execute image analysis workflows (e.g., Florence-2, BLIP, etc.).
-    Returns detailed textual descriptions of images.
-    
-    Convention: workflows follow {source}/analyse_image.json pattern
-    - runninghub/analyse_image.json (default, cloud-based)
-    - selfhost/analyse_image.json (local ComfyUI)
-    
-    Usage:
-        # Use default (runninghub cloud)
+    Service phân tích ảnh - Dựa trên Workflow
+
+    Dùng ComfyKit để thực thi các workflow phân tích ảnh (vd: Florence-2, BLIP, v.v.).
+    Trả về mô tả văn bản chi tiết của ảnh.
+
+    Quy ước: workflow theo mẫu {source}/analyse_image.json
+    - runninghub/analyse_image.json (mặc định, dựa trên cloud)
+    - selfhost/analyse_image.json (ComfyUI local)
+
+    Cách dùng:
+        # Dùng mặc định (cloud runninghub)
         description = await pixelle_video.image_analysis("path/to/image.jpg")
-        
-        # Use local ComfyUI
+
+        # Dùng ComfyUI local
         description = await pixelle_video.image_analysis(
             "path/to/image.jpg",
             source="selfhost"
         )
-        
-        # List available workflows
+
+        # Liệt kê các workflow có sẵn
         workflows = pixelle_video.image_analysis.list_workflows()
     """
     
@@ -55,11 +55,11 @@ class ImageAnalysisService(ComfyBaseService):
     
     def __init__(self, config: dict, core=None):
         """
-        Initialize image analysis service
-        
+        Khởi tạo service phân tích ảnh
+
         Args:
-            config: Full application config dict
-            core: PixelleVideoCore instance (for accessing shared ComfyKit)
+            config: Dict cấu hình đầy đủ của ứng dụng
+            core: Instance PixelleVideoCore (để truy cập ComfyKit dùng chung)
         """
         super().__init__(config, service_name="image_analysis", core=core)
     
@@ -76,89 +76,89 @@ class ImageAnalysisService(ComfyBaseService):
         **params
     ) -> str:
         """
-        Analyze an image using workflow
-        
+        Phân tích ảnh bằng workflow
+
         Args:
-            image_path: Path to the image file (local or URL)
-            source: Workflow source - 'runninghub' (cloud, default) or 'selfhost' (local ComfyUI)
-            workflow: Workflow filename (optional, overrides source-based resolution)
-            comfyui_url: ComfyUI URL (optional, overrides config)
-            runninghub_api_key: RunningHub API key (optional, overrides config)
-            **params: Additional workflow parameters
-        
+            image_path: Đường dẫn tới file ảnh (local hoặc URL)
+            source: Nguồn workflow - 'runninghub' (cloud, mặc định) hoặc 'selfhost' (ComfyUI local)
+            workflow: Tên file workflow (tuỳ chọn, ghi đè phân giải dựa trên source)
+            comfyui_url: URL ComfyUI (tuỳ chọn, ghi đè config)
+            runninghub_api_key: API key RunningHub (tuỳ chọn, ghi đè config)
+            **params: Tham số workflow bổ sung
+
         Returns:
-            str: Text description of the image
-        
-        Examples:
-            # Simplest: use default (runninghub cloud)
+            str: Mô tả văn bản của ảnh
+
+        Ví dụ:
+            # Đơn giản nhất: dùng mặc định (cloud runninghub)
             description = await pixelle_video.image_analysis("temp/06.JPG")
-            
-            # Use local ComfyUI
+
+            # Dùng ComfyUI local
             description = await pixelle_video.image_analysis(
                 "temp/06.JPG",
                 source="selfhost"
             )
-            
-            # Use specific workflow (bypass source-based resolution)
+
+            # Dùng workflow cụ thể (bỏ qua phân giải dựa trên source)
             description = await pixelle_video.image_analysis(
                 "temp/06.JPG",
                 workflow="selfhost/custom_analysis.json"
             )
         """
         from pixelle_video.utils.workflow_util import resolve_workflow_path
-        
-        # 1. Validate image path
+
+        # 1. Xác thực đường dẫn ảnh
         image_path_obj = Path(image_path)
         if not image_path_obj.exists():
-            raise FileNotFoundError(f"Image file not found: {image_path}")
-        
-        # 2. Resolve workflow path using convention
+            raise FileNotFoundError(f"Không tìm thấy file ảnh: {image_path}")
+
+        # 2. Phân giải đường dẫn workflow theo quy ước
         if workflow is None:
-            # Use standardized naming: {source}/analyse_image.json
+            # Dùng tên chuẩn hoá: {source}/analyse_image.json
             workflow = resolve_workflow_path("analyse_image", source)
-            logger.info(f"Using {source} workflow: {workflow}")
-        
-        # 2. Resolve workflow (returns structured info)
+            logger.info(f"Đang dùng workflow {source}: {workflow}")
+
+        # 2. Phân giải workflow (trả về thông tin có cấu trúc)
         workflow_info = self._resolve_workflow(workflow=workflow)
-        
-        # 3. Build workflow parameters
+
+        # 3. Xây dựng tham số workflow
         workflow_params = {
-            "image": str(image_path)  # Pass image path to workflow
+            "image": str(image_path)  # Truyền đường dẫn ảnh tới workflow
         }
-        
-        # Add any additional parameters
+
+        # Thêm các tham số bổ sung
         workflow_params.update(params)
-        
-        logger.debug(f"Workflow parameters: {workflow_params}")
-        
-        # 4. Execute workflow using shared ComfyKit instance from core
+
+        logger.debug(f"Tham số workflow: {workflow_params}")
+
+        # 4. Thực thi workflow dùng instance ComfyKit dùng chung từ core
         try:
-            # Get shared ComfyKit instance (lazy initialization + config hot-reload)
+            # Lấy instance ComfyKit dùng chung (khởi tạo lười + hot-reload config)
             kit = await self.core._get_or_create_comfykit()
-            
-            # Determine what to pass to ComfyKit based on source
+
+            # Xác định truyền gì cho ComfyKit dựa trên source
             if workflow_info["source"] == "runninghub" and "workflow_id" in workflow_info:
-                # RunningHub: pass workflow_id
+                # RunningHub: truyền workflow_id
                 workflow_input = workflow_info["workflow_id"]
-                logger.info(f"Executing RunningHub workflow: {workflow_input}")
+                logger.info(f"Đang thực thi workflow RunningHub: {workflow_input}")
             else:
-                # Selfhost: pass file path
+                # Selfhost: truyền đường dẫn file
                 workflow_input = workflow_info["path"]
-                logger.info(f"Executing selfhost workflow: {workflow_input}")
-            
+                logger.info(f"Đang thực thi workflow selfhost: {workflow_input}")
+
             result = await kit.execute(workflow_input, workflow_params)
-            
-            # 5. Extract description from result
+
+            # 5. Trích xuất mô tả từ kết quả
             if result.status != "completed":
-                error_msg = result.msg or "Unknown error"
-                logger.error(f"Image analysis failed: {error_msg}")
-                raise Exception(f"Image analysis failed: {error_msg}")
-            
-            # Extract text description from result (format varies by source)
+                error_msg = result.msg or "Lỗi không xác định"
+                logger.error(f"Phân tích ảnh thất bại: {error_msg}")
+                raise Exception(f"Phân tích ảnh thất bại: {error_msg}")
+
+            # Trích xuất mô tả văn bản từ kết quả (định dạng tuỳ thuộc vào source)
             description = None
-            
-            # Try format 1: Selfhost outputs (direct text in outputs)
-            # Format: {'6': {'text': ['description text']}}
+
+            # Thử định dạng 1: Output selfhost (text trực tiếp trong outputs)
+            # Định dạng: {'6': {'text': ['nội dung mô tả']}}
             if result.outputs:
                 for node_id, node_output in result.outputs.items():
                     if 'text' in node_output:
@@ -166,16 +166,16 @@ class ImageAnalysisService(ComfyBaseService):
                         if text_list and len(text_list) > 0:
                             description = text_list[0]
                             break
-            
-            # Try format 2: RunningHub raw_data (text file URL)
-            # Format: {'raw_data': [{'fileUrl': 'https://...txt', 'fileType': 'txt', ...}]}
+
+            # Thử định dạng 2: raw_data của RunningHub (URL file text)
+            # Định dạng: {'raw_data': [{'fileUrl': 'https://...txt', 'fileType': 'txt', ...}]}
             if not description and result.outputs and 'raw_data' in result.outputs:
                 raw_data = result.outputs['raw_data']
                 if raw_data and len(raw_data) > 0:
-                    # Find text file entry
+                    # Tìm entry file text
                     for item in raw_data:
                         if item.get('fileType') == 'txt' and 'fileUrl' in item:
-                            # Download text content from URL
+                            # Tải nội dung text từ URL
                             import aiohttp
                             async with aiohttp.ClientSession() as session:
                                 async with session.get(item['fileUrl']) as resp:
@@ -183,15 +183,15 @@ class ImageAnalysisService(ComfyBaseService):
                                         description = await resp.text()
                                         description = description.strip()
                                         break
-            
+
             if not description:
-                logger.error(f"No text found in outputs: {result.outputs}")
-                raise Exception("No description generated")
-            
-            logger.info(f"✅ Image analyzed: {description[:100]}...")
-            
+                logger.error(f"Không tìm thấy text trong outputs: {result.outputs}")
+                raise Exception("Không sinh được mô tả")
+
+            logger.info(f"✅ Đã phân tích ảnh: {description[:100]}...")
+
             return description
-        
+
         except Exception as e:
-            logger.error(f"Image analysis error: {e}")
+            logger.error(f"Lỗi phân tích ảnh: {e}")
             raise

@@ -11,34 +11,34 @@
 # limitations under the License.
 
 """
-Pixelle-Video Configuration System
+Hệ thống cấu hình Pixelle-Video
 
-Unified configuration management with Pydantic validation.
+Quản lý cấu hình thống nhất với validation bằng Pydantic.
 
-Usage:
+Cách dùng:
     from pixelle_video.config import config_manager
-    
-    # Access config (type-safe)
+
+    # Truy cập config (an toàn về kiểu)
     api_key = config_manager.config.llm.api_key
-    
-    # Update config
+
+    # Cập nhật config
     config_manager.update({"llm": {"api_key": "xxx"}})
     config_manager.save()
-    
-    # Validate
+
+    # Xác thực
     if config_manager.validate():
-        print("Config is valid!")
+        print("Config hợp lệ!")
 """
 from .schema import PixelleVideoConfig, LLMConfig, ComfyUIConfig, TTSSubConfig, ImageSubConfig, VideoSubConfig
 from .manager import ConfigManager
 from .loader import load_config_dict, save_config_dict
 
-# Global singleton instance
+# Instance singleton toàn cục
 config_manager = ConfigManager()
 
 __all__ = [
     "PixelleVideoConfig",
-    "LLMConfig", 
+    "LLMConfig",
     "ComfyUIConfig",
     "TTSSubConfig",
     "ImageSubConfig",

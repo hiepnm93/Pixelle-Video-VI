@@ -11,7 +11,7 @@
 # limitations under the License.
 
 """
-Streamlit helper functions
+Các hàm trợ giúp cho Streamlit
 """
 
 import streamlit as st
@@ -22,7 +22,7 @@ from pixelle_video.config import config_manager
 
 
 def safe_rerun():
-    """Safe rerun that works with both old and new Streamlit versions"""
+    """Rerun an toàn, hoạt động với cả phiên bản Streamlit cũ và mới"""
     if hasattr(st, 'rerun'):
         st.rerun()
     else:
@@ -30,68 +30,68 @@ def safe_rerun():
 
 
 # ============================================================================
-# SelfHost Workflow Warning - Using Native JavaScript Alert
+# Cảnh báo workflow SelfHost - Dùng alert JavaScript gốc
 # ============================================================================
-# Uses native browser alert() to avoid Streamlit's dialog limitations.
-# This is simple, reliable, and works across all browsers.
+# Dùng alert() gốc của trình duyệt để tránh hạn chế dialog của Streamlit.
+# Đơn giản, tin cậy, hoạt động trên mọi trình duyệt.
 
 def check_and_warn_selfhost_workflow(workflow_path: str):
     """
-    Check if user just switched to a selfhost workflow and show JS alert.
-    
-    Uses native JavaScript alert() which bypasses all Streamlit dialog limitations.
-    The alert is shown immediately when user switches to a selfhost workflow.
-    
+    Kiểm tra xem người dùng vừa chuyển sang workflow selfhost và hiển thị alert JS.
+
+    Sử dụng alert() JavaScript gốc, vượt qua mọi hạn chế dialog của Streamlit.
+    Alert hiện ngay khi người dùng chuyển sang workflow selfhost.
+
     Args:
-        workflow_path: The workflow path (e.g., "selfhost/image_flux.json")
+        workflow_path: Đường dẫn workflow (ví dụ: "selfhost/image_flux.json")
     """
     if not workflow_path:
         return
-    
-    # Check if this is a transition TO selfhost
+
+    # Kiểm tra có phải chuyển SANG selfhost không
     is_selfhost = workflow_path.startswith("selfhost/")
-    
-    # Only show alert when transitioning TO selfhost
+
+    # Chỉ hiển thị alert khi chuyển SANG selfhost
     if is_selfhost:
         _show_js_alert(workflow_path)
 
 
 def _show_js_alert(workflow_path: str):
     """
-    Show a native JavaScript alert with selfhost workflow warning.
-    
+    Hiển thị alert JavaScript gốc kèm cảnh báo workflow selfhost.
+
     Args:
-        workflow_path: The workflow path to display in the alert
+        workflow_path: Đường dẫn workflow để hiển thị trong alert
     """
-    # Get ComfyUI URL from config
+    # Lấy URL ComfyUI từ config
     comfyui_config = config_manager.get_comfyui_config()
     comfyui_url = comfyui_config.get("comfyui_url", "http://localhost:8188")
-    
-    # Build alert message
+
+    # Xây thông điệp alert
     title = tr("selfhost.warning.title")
-    message = tr("selfhost.warning.message", 
-                 comfyui_url=comfyui_url, 
+    message = tr("selfhost.warning.message",
+                 comfyui_url=comfyui_url,
                  workflow_path=f"workflows/{workflow_path}")
     hint = tr("selfhost.warning.hint")
-    
-    # Clean up markdown formatting for plain text alert
-    # Remove ** (bold markers) and other markdown
+
+    # Dọn định dạng markdown cho alert dạng plain text
+    # Xoá ** (đậm) và các ký tự markdown khác
     message = message.replace("**", "").replace("*", "")
     hint = hint.replace("**", "").replace("*", "")
-    
-    # Combine into single alert message
+
+    # Gộp thành một thông điệp alert
     full_message = f"{title}\\n\\n{message}\\n\\n{hint}"
-    
-    # Escape for JavaScript string
+
+    # Escape cho chuỗi JavaScript
     full_message = full_message.replace("'", "\\'").replace('"', '\\"')
     full_message = full_message.replace("\n", "\\n")
-    
-    # Inject JavaScript alert
+
+    # Inject alert JavaScript
     js_code = f"""
     <script>
         alert("{full_message}");
     </script>
     """
-    
+
     components.html(js_code, height=0, width=0)
 

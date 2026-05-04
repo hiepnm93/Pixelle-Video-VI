@@ -11,9 +11,9 @@
 # limitations under the License.
 
 """
-Resource discovery endpoints
+Các endpoint khám phá tài nguyên
 
-Provides endpoints to discover available workflows, templates, and BGM.
+Cung cấp endpoint để khám phá các workflow, template và BGM có sẵn.
 """
 
 from pathlib import Path
@@ -38,11 +38,11 @@ router = APIRouter(prefix="/resources", tags=["Resources"])
 @router.get("/workflows/tts", response_model=WorkflowListResponse)
 async def list_tts_workflows(pixelle_video: PixelleVideoDep):
     """
-    List available TTS workflows
-    
-    Returns list of TTS workflows from both RunningHub and self-hosted sources.
-    
-    Example response:
+    Liệt kê các workflow TTS có sẵn
+
+    Trả về danh sách workflow TTS từ cả nguồn RunningHub và self-hosted.
+
+    Ví dụ phản hồi:
     ```json
     {
         "workflows": [
@@ -59,31 +59,31 @@ async def list_tts_workflows(pixelle_video: PixelleVideoDep):
     ```
     """
     try:
-        # Get all workflows from TTS service
+        # Lấy tất cả workflow từ dịch vụ TTS
         all_workflows = pixelle_video.tts.list_workflows()
-        
-        # Filter to TTS workflows only (filename starts with "tts_")
+
+        # Lọc chỉ lấy workflow TTS (tên file bắt đầu bằng "tts_")
         tts_workflows = [
-            WorkflowInfo(**wf) 
-            for wf in all_workflows 
+            WorkflowInfo(**wf)
+            for wf in all_workflows
             if wf["name"].startswith("tts_")
         ]
-        
+
         return WorkflowListResponse(workflows=tts_workflows)
-        
+
     except Exception as e:
-        logger.error(f"List TTS workflows error: {e}")
+        logger.error(f"Lỗi liệt kê workflow TTS: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/workflows/media", response_model=WorkflowListResponse)
 async def list_media_workflows(pixelle_video: PixelleVideoDep):
     """
-    List available media workflows (both image and video)
-    
-    Returns list of all media workflows from both RunningHub and self-hosted sources.
-    
-    Example response:
+    Liệt kê các workflow media có sẵn (cả ảnh và video)
+
+    Trả về danh sách tất cả workflow media từ cả nguồn RunningHub và self-hosted.
+
+    Ví dụ phản hồi:
     ```json
     {
         "workflows": [
@@ -108,52 +108,52 @@ async def list_media_workflows(pixelle_video: PixelleVideoDep):
     ```
     """
     try:
-        # Get all workflows from media service (includes both image and video)
+        # Lấy tất cả workflow từ dịch vụ media (gồm cả ảnh và video)
         all_workflows = pixelle_video.media.list_workflows()
-        
+
         media_workflows = [WorkflowInfo(**wf) for wf in all_workflows]
-        
+
         return WorkflowListResponse(workflows=media_workflows)
-        
+
     except Exception as e:
-        logger.error(f"List media workflows error: {e}")
+        logger.error(f"Lỗi liệt kê workflow media: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# Keep old endpoint for backward compatibility
+# Giữ endpoint cũ để tương thích ngược
 @router.get("/workflows/image", response_model=WorkflowListResponse)
 async def list_image_workflows(pixelle_video: PixelleVideoDep):
     """
-    List available image workflows (deprecated, use /workflows/media instead)
-    
-    This endpoint is kept for backward compatibility but will filter to image_ workflows only.
+    Liệt kê các workflow ảnh có sẵn (đã lỗi thời, hãy dùng /workflows/media)
+
+    Endpoint này được giữ để tương thích ngược nhưng chỉ lọc các workflow image_.
     """
     try:
         all_workflows = pixelle_video.media.list_workflows()
-        
-        # Filter to image workflows only (filename starts with "image_")
+
+        # Lọc chỉ lấy workflow ảnh (tên file bắt đầu bằng "image_")
         image_workflows = [
-            WorkflowInfo(**wf) 
-            for wf in all_workflows 
+            WorkflowInfo(**wf)
+            for wf in all_workflows
             if wf["name"].startswith("image_")
         ]
-        
+
         return WorkflowListResponse(workflows=image_workflows)
-        
+
     except Exception as e:
-        logger.error(f"List image workflows error: {e}")
+        logger.error(f"Lỗi liệt kê workflow ảnh: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/templates", response_model=TemplateListResponse)
 async def list_templates():
     """
-    List available video templates
-    
-    Returns list of HTML templates grouped by size (portrait, landscape, square).
-    Templates are merged from both default (templates/) and custom (data/templates/) directories.
-    
-    Example response:
+    Liệt kê các template video có sẵn
+
+    Trả về danh sách template HTML được nhóm theo kích thước (dọc, ngang, vuông).
+    Các template được gộp từ cả thư mục mặc định (templates/) và tuỳ chỉnh (data/templates/).
+
+    Ví dụ phản hồi:
     ```json
     {
         "templates": [
@@ -172,10 +172,10 @@ async def list_templates():
     ```
     """
     try:
-        # Get all templates with info
+        # Lấy tất cả template kèm thông tin
         all_templates = get_all_templates_with_info()
-        
-        # Convert to API response format
+
+        # Chuyển sang định dạng phản hồi của API
         templates = []
         for t in all_templates:
             templates.append(TemplateInfo(
@@ -188,25 +188,25 @@ async def list_templates():
                 path=t.template_path,
                 key=t.template_path
             ))
-        
+
         return TemplateListResponse(templates=templates)
-        
+
     except Exception as e:
-        logger.error(f"List templates error: {e}")
+        logger.error(f"Lỗi liệt kê template: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/bgm", response_model=BGMListResponse)
 async def list_bgm():
     """
-    List available background music files
-    
-    Returns list of BGM files merged from both default (bgm/) and custom (data/bgm/) directories.
-    Custom files take precedence over default files with the same name.
-    
-    Supported formats: mp3, wav, flac, m4a, aac, ogg
-    
-    Example response:
+    Liệt kê các file nhạc nền có sẵn
+
+    Trả về danh sách file BGM được gộp từ cả thư mục mặc định (bgm/) và tuỳ chỉnh (data/bgm/).
+    File tuỳ chỉnh ưu tiên hơn file mặc định trùng tên.
+
+    Định dạng được hỗ trợ: mp3, wav, flac, m4a, aac, ogg
+
+    Ví dụ phản hồi:
     ```json
     {
         "bgm_files": [
@@ -225,13 +225,13 @@ async def list_bgm():
     ```
     """
     try:
-        # Supported audio extensions
+        # Các phần mở rộng audio được hỗ trợ
         audio_extensions = ('.mp3', '.wav', '.flac', '.m4a', '.aac', '.ogg')
-        
-        # Collect BGM files from both locations
+
+        # Thu thập file BGM từ cả hai vị trí
         bgm_files_dict = {}  # {filename: {"path": str, "source": str}}
-        
-        # Scan default bgm/ directory
+
+        # Quét thư mục bgm/ mặc định
         default_bgm_dir = Path(get_root_path("bgm"))
         if default_bgm_dir.exists() and default_bgm_dir.is_dir():
             for item in default_bgm_dir.iterdir():
@@ -240,8 +240,8 @@ async def list_bgm():
                         "path": f"bgm/{item.name}",
                         "source": "default"
                     }
-        
-        # Scan custom data/bgm/ directory (overrides default)
+
+        # Quét thư mục data/bgm/ tuỳ chỉnh (ghi đè mặc định)
         custom_bgm_dir = Path(get_data_path("bgm"))
         if custom_bgm_dir.exists() and custom_bgm_dir.is_dir():
             for item in custom_bgm_dir.iterdir():
@@ -250,8 +250,8 @@ async def list_bgm():
                         "path": f"data/bgm/{item.name}",
                         "source": "custom"
                     }
-        
-        # Convert to response format
+
+        # Chuyển sang định dạng phản hồi
         bgm_files = [
             BGMInfo(
                 name=name,
@@ -260,10 +260,9 @@ async def list_bgm():
             )
             for name, info in sorted(bgm_files_dict.items())
         ]
-        
-        return BGMListResponse(bgm_files=bgm_files)
-        
-    except Exception as e:
-        logger.error(f"List BGM error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
 
+        return BGMListResponse(bgm_files=bgm_files)
+
+    except Exception as e:
+        logger.error(f"Lỗi liệt kê BGM: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

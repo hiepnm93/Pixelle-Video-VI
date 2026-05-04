@@ -11,91 +11,91 @@
 # limitations under the License.
 
 """
-Video prompt generation template
+Template sinh prompt video
 
-For generating video prompts from narrations.
+Dùng để sinh prompt video từ thuyết minh.
 """
 
 import json
 from typing import List
 
 
-VIDEO_PROMPT_GENERATION_PROMPT = """# Role Definition
-You are a professional video creative designer, skilled at creating dynamic and expressive video generation prompts for video scripts, transforming narrative content into vivid video scenes.
+VIDEO_PROMPT_GENERATION_PROMPT = """# Định nghĩa vai trò
+Bạn là một nhà thiết kế sáng tạo video chuyên nghiệp, có khả năng tạo các prompt sinh video động và biểu cảm cho kịch bản video, biến nội dung kể chuyện thành các cảnh video sống động.
 
-# Core Task
-Based on the existing video script, create corresponding **English** video generation prompts for each storyboard's "narration content", ensuring video scenes perfectly match the narrative content and enhance audience understanding and memory through dynamic visuals.
+# Nhiệm vụ chính
+Dựa trên kịch bản video sẵn có, hãy tạo các prompt sinh video **bằng tiếng Anh** tương ứng cho "nội dung thuyết minh" của mỗi storyboard, đảm bảo cảnh video khớp hoàn hảo với nội dung kể chuyện và tăng cường khả năng hiểu, ghi nhớ của khán giả thông qua hình ảnh động.
 
-**Important: The input contains {narrations_count} narrations. You must generate one corresponding video prompt for each narration, totaling {narrations_count} video prompts.**
+**Quan trọng: Đầu vào chứa {narrations_count} thuyết minh. Bạn phải sinh một prompt video tương ứng cho mỗi thuyết minh, tổng cộng {narrations_count} prompt video.**
 
-# Input Content
+# Nội dung đầu vào
 {narrations_json}
 
-# Output Requirements
+# Yêu cầu output
 
-## Video Prompt Specifications
-- Language: **Must use English** (for AI video generation models)
-- Description structure: scene + character action + camera movement + emotion + atmosphere
-- Description length: Ensure clear, complete, and creative descriptions (recommended 50-100 English words)
-- Dynamic elements: Emphasize actions, movements, changes, and other dynamic effects
+## Đặc tả prompt video
+- Ngôn ngữ: **Phải dùng tiếng Anh** (cho các model AI sinh video)
+- Cấu trúc mô tả: cảnh + hành động nhân vật + chuyển động camera + cảm xúc + bầu không khí
+- Độ dài mô tả: Đảm bảo mô tả rõ ràng, đầy đủ và sáng tạo (khuyến nghị 50-100 từ tiếng Anh)
+- Yếu tố động: Nhấn mạnh hành động, chuyển động, biến đổi và các hiệu ứng động khác
 
-## Visual Creative Requirements
-- Each video must accurately reflect the specific content and emotion of the corresponding narration
-- Highlight visual dynamics: character actions, object movements, camera movements, scene transitions, etc.
-- Use symbolic techniques to visualize abstract concepts (e.g., use flowing water to represent the passage of time, rising stairs to represent progress, etc.)
-- Scenes should express rich emotions and actions to enhance visual impact
-- Enhance expressiveness through camera language (push, pull, pan, tilt) and editing rhythm
+## Yêu cầu sáng tạo hình ảnh
+- Mỗi video phải phản ánh chính xác nội dung và cảm xúc cụ thể của thuyết minh tương ứng
+- Làm nổi bật tính động: hành động nhân vật, chuyển động đối tượng, chuyển động camera, chuyển cảnh, v.v.
+- Sử dụng kỹ thuật biểu tượng để hình ảnh hoá khái niệm trừu tượng (vd: dùng dòng nước để biểu thị thời gian trôi qua, cầu thang đi lên để biểu thị tiến bộ, v.v.)
+- Cảnh nên diễn đạt cảm xúc và hành động phong phú để tăng tác động hình ảnh
+- Tăng cường tính biểu cảm thông qua ngôn ngữ camera (đẩy, kéo, lia, nghiêng) và nhịp dựng
 
-## Key English Vocabulary Reference
-- Actions: moving, running, flowing, transforming, growing, falling
+## Tham khảo từ vựng tiếng Anh quan trọng
+- Hành động: moving, running, flowing, transforming, growing, falling
 - Camera: camera pan, zoom in, zoom out, tracking shot, aerial view
-- Transitions: transition, fade in, fade out, dissolve
-- Atmosphere: dynamic, energetic, peaceful, dramatic, mysterious
-- Lighting: lighting changes, shadows moving, sunlight streaming
+- Chuyển cảnh: transition, fade in, fade out, dissolve
+- Bầu không khí: dynamic, energetic, peaceful, dramatic, mysterious
+- Ánh sáng: lighting changes, shadows moving, sunlight streaming
 
-## Video and Copy Coordination Principles
-- Videos should serve the copy, becoming a visual extension of the copy content
-- Avoid visual elements unrelated to or contradicting the copy content
-- Choose dynamic presentation methods that best enhance the persuasiveness of the copy
-- Ensure the audience can quickly understand the core viewpoint of the copy through video dynamics
+## Nguyên tắc phối hợp video và lời thoại
+- Video phải phục vụ lời thoại, trở thành phần mở rộng hình ảnh của nội dung lời thoại
+- Tránh các yếu tố hình ảnh không liên quan hoặc mâu thuẫn với nội dung lời thoại
+- Chọn cách trình bày động tăng cường tính thuyết phục của lời thoại tốt nhất
+- Đảm bảo khán giả có thể nhanh chóng hiểu quan điểm cốt lõi của lời thoại qua hình ảnh động
 
-## Creative Guidance
-1. **Phenomenon Description Copy**: Use dynamic scenes to represent the occurrence process of social phenomena
-2. **Cause Analysis Copy**: Use dynamic evolution of cause-and-effect relationships to represent internal logic
-3. **Impact Argumentation Copy**: Use dynamic unfolding of consequence scenes or contrasts to represent the degree of impact
-4. **In-depth Discussion Copy**: Use dynamic concretization of abstract concepts to represent deep thinking
-5. **Conclusion Inspiration Copy**: Use open-ended dynamic scenes or guiding movements to represent inspiration
+## Hướng dẫn sáng tạo
+1. **Lời thoại mô tả hiện tượng**: Dùng cảnh động để biểu thị quá trình xảy ra hiện tượng xã hội
+2. **Lời thoại phân tích nguyên nhân**: Dùng sự tiến hoá động của quan hệ nhân-quả để biểu thị logic bên trong
+3. **Lời thoại lập luận tác động**: Dùng diễn biến động của cảnh hậu quả hoặc tương phản để biểu thị mức độ tác động
+4. **Lời thoại thảo luận sâu**: Dùng cụ thể hoá động của khái niệm trừu tượng để biểu thị suy nghĩ sâu
+5. **Lời thoại kết luận truyền cảm hứng**: Dùng cảnh động kết mở hoặc chuyển động dẫn dắt để biểu thị cảm hứng
 
-## Video-Specific Considerations
-- Emphasize dynamics: Each video should include obvious actions or movements
-- Camera language: Appropriately use camera techniques such as push, pull, pan, tilt to enhance expressiveness
-- Duration consideration: Videos should be a coherent dynamic process, not static images
-- Fluidity: Pay attention to the fluidity and naturalness of actions
+## Cân nhắc đặc thù cho video
+- Nhấn mạnh tính động: Mỗi video nên có hành động hoặc chuyển động rõ ràng
+- Ngôn ngữ camera: Sử dụng kỹ thuật camera như đẩy, kéo, lia, nghiêng phù hợp để tăng tính biểu cảm
+- Cân nhắc thời lượng: Video phải là một quá trình động mạch lạc, không phải ảnh tĩnh
+- Tính trôi chảy: Chú ý tính trôi chảy và tự nhiên của các hành động
 
-# Output Format
-Strictly output in the following JSON format, **video prompts must be in English**:
+# Định dạng output
+Xuất nghiêm ngặt theo định dạng JSON sau, **prompt video phải bằng tiếng Anh**:
 
 ```json
 {{
   "video_prompts": [
-    "[detailed English video prompt with dynamic elements and camera movements]",
-    "[detailed English video prompt with dynamic elements and camera movements]"
+    "[prompt video tiếng Anh chi tiết với các yếu tố động và chuyển động camera]",
+    "[prompt video tiếng Anh chi tiết với các yếu tố động và chuyển động camera]"
   ]
 }}
 ```
 
-# Important Reminders
-1. Only output JSON format content, do not add any explanations
-2. Ensure JSON format is strictly correct and can be directly parsed by the program
-3. Input is {{"narrations": [narration array]}} format, output is {{"video_prompts": [video prompt array]}} format
-4. **The output video_prompts array must contain exactly {narrations_count} elements, corresponding one-to-one with the input narrations array**
-5. **Video prompts must use English** (for AI video generation models)
-6. Video prompts must accurately reflect the specific content and emotion of the corresponding narration
-7. Each video must emphasize dynamics and sense of movement, avoid static descriptions
-8. Appropriately use camera language to enhance expressiveness
-9. Ensure video scenes can enhance the persuasiveness of the copy and audience understanding
+# Nhắc nhở quan trọng
+1. Chỉ xuất nội dung định dạng JSON, không thêm giải thích
+2. Đảm bảo định dạng JSON nghiêm ngặt đúng và có thể parse trực tiếp bởi chương trình
+3. Đầu vào là định dạng {{"narrations": [mảng thuyết minh]}}, output là định dạng {{"video_prompts": [mảng prompt video]}}
+4. **Mảng video_prompts xuất ra phải chứa chính xác {narrations_count} phần tử, tương ứng một-một với mảng thuyết minh đầu vào**
+5. **Prompt video phải dùng tiếng Anh** (cho các model AI sinh video)
+6. Prompt video phải phản ánh chính xác nội dung và cảm xúc cụ thể của thuyết minh tương ứng
+7. Mỗi video phải nhấn mạnh tính động và cảm giác chuyển động, tránh mô tả tĩnh
+8. Sử dụng ngôn ngữ camera phù hợp để tăng tính biểu cảm
+9. Đảm bảo cảnh video có thể tăng cường tính thuyết phục của lời thoại và sự hiểu của khán giả
 
-Now, please create {narrations_count} corresponding **English** video prompts for the above {narrations_count} narrations. Only output JSON, no other content.
+Bây giờ, hãy tạo {narrations_count} prompt video **tiếng Anh** tương ứng cho {narrations_count} thuyết minh trên. Chỉ xuất JSON, không có nội dung khác.
 """
 
 
@@ -105,17 +105,17 @@ def build_video_prompt_prompt(
     max_words: int
 ) -> str:
     """
-    Build video prompt generation prompt
-    
+    Xây dựng prompt sinh prompt video
+
     Args:
-        narrations: List of narrations
-        min_words: Minimum word count
-        max_words: Maximum word count
-    
+        narrations: Danh sách thuyết minh
+        min_words: Số từ tối thiểu
+        max_words: Số từ tối đa
+
     Returns:
-        Formatted prompt for LLM
-    
-    Example:
+        Prompt đã định dạng cho LLM
+
+    Ví dụ:
         >>> build_video_prompt_prompt(narrations, 50, 100)
     """
     narrations_json = json.dumps(
@@ -123,7 +123,7 @@ def build_video_prompt_prompt(
         ensure_ascii=False,
         indent=2
     )
-    
+
     return VIDEO_PROMPT_GENERATION_PROMPT.format(
         narrations_json=narrations_json,
         narrations_count=len(narrations),
