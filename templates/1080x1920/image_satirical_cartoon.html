@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="template:media-width" content="1024">
     <meta name="template:media-height" content="1024">
     <meta name="viewport" content="width=1080, height=1920">
-    <title>80年代讽刺漫画风格 全屏图片 只有标题 - 1080x1920</title>
-    <!-- Google Fonts - 中文字体 -->
+    <title>Phong cách biếm họa thập niên 80, hình ảnh toàn màn hình, chỉ có tiêu đề - 1080x1920</title>
+    <!-- Google Fonts - Phông chữ tiếng Trung -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&family=Noto+Serif+SC:wght@400;700;900&family=Liu+Jian+Mao+Cao&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
@@ -20,10 +20,10 @@
             font-family: 'Noto Sans SC', 'PingFang SC', 'Source Han Sans', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, sans-serif;
             color: #fff;
             position: relative;
-            background: transparent; /* 移除黑色背景 */
+            background: transparent; /* Loại bỏ nền màu đen */
         }
 
-        /* 背景使用图片并做模糊处理，完全覆盖整个页面 */
+        /* Nền sử dụng hình ảnh và làm mờ, phủ kín toàn trang */
         .bg {
             position: relative;
             width: 100%;
@@ -49,7 +49,7 @@
                         -2px 2px 0 #000,
                         2px 2px 0 #000;
             letter-spacing: 4px;
-            /* 确保文本不会溢出 */
+            /* Đảm bảo văn bản không bị tràn */
             word-wrap: break-word;
             overflow-wrap: break-word;
             white-space: nowrap;
@@ -153,11 +153,11 @@
     </div>
     <script>
         /**
-         * 根据文本宽度自动调整字体大小
-         * @param {HTMLElement} element - 要调整的元素
-         * @param {number} maxWidth - 最大宽度（px）
-         * @param {number} minFontSize - 最小字体大小（px）
-         * @param {number} maxFontSize - 最大字体大小（px）
+         * Tự động điều chỉnh kích thước phông chữ theo chiều rộng văn bản
+         * @param {HTMLElement} element - Phần tử cần điều chỉnh
+         * @param {number} maxWidth - Chiều rộng tối đa (px)
+         * @param {number} minFontSize - Kích thước phông chữ tối thiểu (px)
+         * @param {number} maxFontSize - Kích thước phông chữ tối đa (px)
          */
         function autoFitFontSize(element, maxWidth, minFontSize, maxFontSize) {
             try {
@@ -169,7 +169,7 @@
                     return;
                 }
                 
-                // 创建一个临时的测量元素
+                // Tạo phần tử đo lường tạm thời
                 const measure = document.createElement('span');
                 measure.style.visibility = 'hidden';
                 measure.style.position = 'absolute';
@@ -177,7 +177,7 @@
                 measure.style.left = '-9999px';
                 measure.style.whiteSpace = 'nowrap';
                 
-                // 复制元素的样式
+                // Sao chép kiểu dáng của phần tử
                 const computedStyle = window.getComputedStyle(element);
                 measure.style.fontFamily = computedStyle.fontFamily;
                 measure.style.fontSize = computedStyle.fontSize;
@@ -187,17 +187,17 @@
                 
                 document.body.appendChild(measure);
                 
-                // 二分查找合适的字体大小
+                // Tìm kiếm nhị phân kích thước phông chữ phù hợp
                 let low = minFontSize;
                 let high = maxFontSize;
                 let bestSize = maxFontSize;
                 
-                // 先检查最大字体是否合适
+                // Kiểm tra trước xem phông chữ tối đa có phù hợp không
                 measure.style.fontSize = maxFontSize + 'px';
                 if (measure.offsetWidth <= maxWidth) {
                     bestSize = maxFontSize;
                 } else {
-                    // 使用二分查找
+                    // Sử dụng tìm kiếm nhị phân
                     while (high - low > 0.5) {
                         const mid = (low + high) / 2;
                         measure.style.fontSize = mid + 'px';
@@ -211,43 +211,43 @@
                     }
                 }
                 
-                // 应用找到的字体大小
+                // Áp dụng kích thước phông chữ đã tìm
                 element.style.fontSize = bestSize + 'px';
                 
-                // 清理临时元素
+                // Dọn dẹp phần tử tạm thời
                 if (measure.parentNode) {
                     document.body.removeChild(measure);
                 }
             } catch (error) {
-                console.error('自动调整字体大小出错:', error);
+                console.error('Lỗi khi tự động điều chỉnh kích thước phông chữ:', error);
             }
         }
         
-        // 页面加载完成后自动调整字体大小
+        // Tự động điều chỉnh kích thước phông chữ sau khi trang tải xong
         function initAutoFit() {
             try {
                 const titleElement = document.querySelector('.title');
                 if (titleElement) {
-                    // 获取容器的实际宽度
+                    // Lấy chiều rộng thực tế của khung chứa
                     const maxWidth = 900;
-                    // 自动调整字体大小：最小12px，最大72px
+                    // Tự động điều chỉnh kích thước phông chữ: tối thiểu 12px, tối đa 72px
                     autoFitFontSize(titleElement, maxWidth, 12, 72);
                 }
             } catch (error) {
-                console.error('初始化自动调整字体大小出错:', error);
+                console.error('Lỗi khi khởi tạo tự động điều chỉnh kích thước phông chữ:', error);
             }
         }
         
-        // 等待 DOM 加载完成
+        // Đợi DOM tải xong
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initAutoFit);
         } else {
-            // DOM 已经加载完成
+            // DOM đã tải xong
             initAutoFit();
         }
         
-        // 如果内容是通过模板引擎动态插入的，可以监听内容变化
-        // 使用 MutationObserver 监听文本变化
+        // Nếu nội dung được chèn động qua template engine, có thể theo dõi thay đổi nội dung
+        // Sử dụng MutationObserver để theo dõi thay đổi văn bản
         if (typeof MutationObserver !== 'undefined') {
             try {
                 const observer = new MutationObserver(function(mutations) {
@@ -259,12 +259,12 @@
                     });
                     
                     if (shouldUpdate) {
-                        // 延迟执行，避免频繁调用
+                        // Trì hoãn thực thi, tránh gọi quá thường xuyên
                         setTimeout(initAutoFit, 100);
                     }
                 });
                 
-                // 等待 body 元素存在后再观察
+                // Đợi đến khi phần tử body tồn tại rồi mới quan sát
                 if (document.body) {
                     observer.observe(document.body, {
                         childList: true,
@@ -283,7 +283,7 @@
                     });
                 }
             } catch (error) {
-                console.error('设置 MutationObserver 出错:', error);
+                console.error('Lỗi khi thiết lập MutationObserver:', error);
             }
         }
     </script>

@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="template:media-width" content="1024">
     <meta name="template:media-height" content="1024">
     <meta name="viewport" content="width=1080, height=1920">
-    <title>图书解读 - 1080x1920</title>
-    <!-- Google Fonts - 中文字体 -->
+    <title>Giải nghĩa sách - 1080x1920</title>
+    <!-- Google Fonts - Phông chữ tiếng Trung -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=Dancing+Script:wght@400;700&family=Liu+Jian+Mao+Cao&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
@@ -26,7 +26,7 @@
             background-position: center bottom 400px;
         }
 
-        /* 顶部区域 */
+        /* Vùng trên cùng */
         .top-section {
             position: absolute;
             top: 10%;
@@ -69,7 +69,7 @@
             letter-spacing: 2px;
         }
 
-        /* 底部文字区域 */
+        /* Vùng văn bản dưới cùng */
         .bottom-section {
             position: absolute;
             top: 1000px;
@@ -102,15 +102,15 @@
     </style>
 </head>
 <body>
-    <!-- 顶部标题区 -->
+    <!-- Vùng tiêu đề trên cùng -->
     <div class="top-section">
         <div class="title">{{title}}</div>
-        <div class="subtitle">{{subtitle=作者}}</div>
+        <div class="subtitle">{{subtitle=Tác giả}}</div>
     </div>
 
-    <!-- <img class="img" src="{{image}}" alt="内容图片"> -->
-    
-    <!-- 底部文字区 -->
+    <!-- <img class="img" src="{{image}}" alt="Hình ảnh nội dung"> -->
+
+    <!-- Vùng văn bản dưới cùng -->
     <div class="bottom-section">
         <div class="main-text">{{text}}</div>
         <div class="author">{{author=@Pixelle.AI}}</div>

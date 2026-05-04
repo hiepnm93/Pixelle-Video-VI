@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="template:media-width" content="1024">
     <meta name="template:media-height" content="1024">
     <meta name="viewport" content="width=1080, height=1920">
-    <title>长文本 - 1080x1920</title>
-    <!-- Google Fonts - 中文字体 -->
+    <title>Văn bản dài - 1080x1920</title>
+    <!-- Google Fonts - Phông chữ tiếng Trung -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&family=Noto+Serif+SC:wght@400&display=swap" rel="stylesheet">
@@ -24,14 +24,14 @@
             background-image: url("{{image}}");
             background-size: cover;
             background-position: center;
-            /* 背景模糊效果 */
+            /* Hiệu ứng làm mờ nền */
             display: flex;
             flex-direction: column;
             align-items: center;
             padding: 0 60px;
         }
 
-        /* 背景遮罩层 */
+        /* Lớp phủ nền */
         body::before {
             content: '';
             position: absolute;
@@ -42,7 +42,7 @@
             z-index: 0;
         }
 
-        /* 顶部标题 */
+        /* Tiêu đề trên cùng */
         .title {
             position: relative;
             z-index: 1;
@@ -55,14 +55,14 @@
             text-align: center;
             margin-top: 80px;
             margin-bottom: 100px;
-            /* 白色描边 */
+            /* Viền trắng */
             text-shadow: -2px -2px 0 #fff,
                         2px -2px 0 #fff,
                         -2px 2px 0 #fff,
                         2px 2px 0 #fff;
         }
 
-        /* 正文区域 */
+        /* Vùng nội dung chính */
         .content {
             width: 100%;
             position: relative;
@@ -74,12 +74,12 @@
             color: #000;
             text-align: center;
             letter-spacing: 0.5px;
-            /* 白色描边 */
+            /* Viền trắng */
             text-shadow: -1px -1px 0 #fff,
                         1px -1px 0 #fff,
                         -1px 1px 0 #fff,
                         1px 1px 0 #fff;
-            /* 保留换行符 */
+            /* Giữ ký tự xuống dòng */
             white-space: pre-line;
         }
 
@@ -99,13 +99,13 @@
     </style>
 </head>
 <body>
-    <!-- 标题 -->
+    <!-- Tiêu đề -->
     <div class="title">{{title}}</div>
     
-    <!-- 正文 -->
+    <!-- Nội dung -->
     <div class="content">{{text}}</div>
 
-    <!-- 作者 -->
+    <!-- Tác giả -->
     <div class="author">{{author=@Pixelle.AI}}</div>
 </body>
 </html>

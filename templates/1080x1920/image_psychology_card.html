@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="template:media-width" content="1024">
     <meta name="template:media-height" content="1024">
     <meta name="viewport" content="width=1080, height=1920">
-    <title>心理卡片风 - 1080x1920</title>
+    <title>Phong cách thẻ tâm lý - 1080x1920</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -17,10 +17,10 @@
             display: flex;
             flex-direction: column;
             color: #fff;
-            position: relative; /* 作为整页定位上下文 */
+            position: relative; /* Làm ngữ cảnh định vị toàn trang */
         }
 
-        /* 顶部黑底标题区 */
+        /* Vùng tiêu đề nền đen trên cùng */
         .top {
             height: 20%;
             background: #0a0a0a;
@@ -41,10 +41,10 @@
             text-shadow: 0 6px 22px rgba(0,0,0,0.5);
         }
 
-        /* 中部容器可保持为空壳，仅用于分区 */
+        /* Khung giữa giữ trống, chỉ dùng để phân chia */
         .middle { height: 70%; }
 
-        /* 将图片中心对齐到整页正中心（与标题无关） */
+        /* Căn tâm hình ảnh vào giữa trang (độc lập với tiêu đề) */
         .media {
             position: absolute;
             top: 40%;
@@ -58,13 +58,13 @@
         }
         .media img { width: 100%; height: 100%; object-fit: contain; display: block; }
 
-        /* 字幕移动到上方红框区域（大致页面下部的上方位置） */
+        /* Phụ đề di chuyển lên vùng khung đỏ phía trên (khoảng phía trên phần dưới trang) */
         .caption {
             position: absolute;
             left: 50%;
-            bottom: 320px; /* 向上移动至上方槽位 */
+            bottom: 320px; /* Di chuyển lên vị trí trên */
             transform: translateX(-50%);
-            width: 86%; /* 与图片宽度对齐 */
+            width: 86%; /* Căn theo chiều rộng hình ảnh */
             max-width: 930px;
             text-align: center;
             font-size: 54px;
@@ -88,7 +88,7 @@
 
     <div class="middle"></div>
 
-    <div class="media"><img src="{{image}}" alt="内容图片"></div>
+    <div class="media"><img src="{{image}}" alt="Hình ảnh nội dung"></div>
     <div class="caption">{{text}}</div>
 </body>
 </html>

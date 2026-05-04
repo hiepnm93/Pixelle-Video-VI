@@ -27,7 +27,7 @@
             align-items: center;
         }
         
-        /* 顶部标题区域 */
+        /* Vùng tiêu đề trên cùng */
         .top-title {
             width: 100%;
             text-align: center;
@@ -44,7 +44,7 @@
             font-family: 'Ma Shan Zheng', cursive;
         }
         
-        /* 中间图片区域 */
+        /* Vùng hình ảnh ở giữa */
         .image-section {
             width: 100%;
             height: auto;
@@ -68,7 +68,7 @@
             box-sizing: border-box;
         }
         
-        /* 图片边框 - 白色，带老旧胶片感 */
+        /* Viền hình ảnh - màu trắng, mang cảm giác phim cũ */
         .image-frame::before {
             content: '';
             position: absolute;
@@ -83,7 +83,7 @@
             pointer-events: none;
         }
         
-        /* 图片容器 - 固定尺寸，强制裁剪 */
+        /* Khung chứa hình ảnh - kích thước cố định, cắt bắt buộc */
         .image-container {
             width: 984px;
             height: 784px;
@@ -99,7 +99,7 @@
             display: block;
         }
         
-        /* 底部文字区域 */
+        /* Vùng văn bản dưới cùng */
         .bottom-text-section {
             width: 100%;
             padding: 0 60px;
@@ -111,7 +111,7 @@
             z-index: 1;
         }
         
-        /* 人生感悟 - 大红色粗体 */
+        /* Suy ngẫm cuộc sống - đỏ đậm */
         .highlight-text {
             font-size: 40px;
             color: #FFFFFF;
@@ -124,12 +124,12 @@
     </style>
 </head>
 <body>
-    <!-- 顶部标题 -->
+    <!-- Tiêu đề trên cùng -->
     <div class="top-title">
         <div class="top-title-text">{{title}}</div>
     </div>
     
-    <!-- 中间图片区域 -->
+    <!-- Vùng hình ảnh ở giữa -->
     <div class="image-section">
         <div class="image-frame">
             <div class="image-container">
@@ -138,7 +138,7 @@
         </div>
     </div>
     
-    <!-- 底部文字区域 -->
+    <!-- Vùng văn bản dưới cùng -->
     <div class="bottom-text-section">
         <div class="highlight-text">{{text}}</div>
     </div>

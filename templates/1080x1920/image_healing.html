@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="vi">
 
 <head>
     <meta charset="UTF-8">
     <meta name="template:media-width" content="1024">
     <meta name="template:media-height" content="1024">
     <meta name="viewport" content="width=1080, height=1920">
-    <title>疗愈 - 1080x1920</title>
-    <!-- Google Fonts - 中文字体 -->
+    <title>Chữa lành - 1080x1920</title>
+    <!-- Google Fonts - Phông chữ tiếng Trung -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -39,7 +39,7 @@
             flex-direction: column;
         }
 
-        /* 背景遮罩层 */
+        /* Lớp phủ nền */
         /* body::before {
             content: '';
             position: absolute;
@@ -50,7 +50,7 @@
             z-index: 0;
         } */
 
-        /* 顶部标题 */
+        /* Tiêu đề trên cùng */
         .title {
             position: absolute;
             width: 500px;
@@ -75,7 +75,7 @@
                 1px 1px 0 #ddd;
         }
 
-        /* 作者 */
+        /* Tác giả */
         .author {
             z-index: 1;
             text-align: right;
@@ -89,7 +89,7 @@
                 1px 1px 0 #ddd;
         }
 
-        /* 正文区域 */
+        /* Vùng nội dung chính */
         .text {
             width: 100%;
             position: absolute;
@@ -132,10 +132,10 @@
         <div class="title-content">{{title}}</div>
     </div>
 
-    <!-- 正文内容 -->
+    <!-- Nội dung chính -->
     <div class="text">{{text}}</div>
 
-    <!-- 署名 -->
+    <!-- Chữ ký -->
     <div class="signature">{{signature=@Pixelle.AI}}</div>
     <script>
         const index = Number("{{index}}");

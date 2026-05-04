@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="template:media-width" content="1024">
@@ -30,7 +30,7 @@
             overflow: hidden;
         }
         
-        /* 卡通装饰元素 */
+        /* Phần tử trang trí hoạt hình */
         .cloud {
             position: absolute;
             background: rgba(255, 255, 255, 0.8);
@@ -87,7 +87,7 @@
             right: 20px;
         }
         
-        /* 标题样式 */
+        /* Kiểu tiêu đề */
         .title-container {
             background-color: rgba(255, 255, 255, 0.85);
             padding: 20px 40px;
@@ -107,7 +107,7 @@
             margin: 0;
         }
         
-        /* 图片容器 */
+        /* Khung chứa hình ảnh */
         .image-container {
             width: 1024px;
             height: 1024px;
@@ -130,7 +130,7 @@
             object-fit: contain;
         }
         
-        /* 字幕样式 */
+        /* Kiểu phụ đề */
         .caption-container {
             background-color: rgba(255, 255, 255, 0.9);
             padding: 25px 40px;
@@ -151,7 +151,7 @@
             margin: 0;
         }
         
-        /* 装饰元素 */
+        /* Phần tử trang trí */
         .decoration {
             position: absolute;
             z-index: 5;
@@ -232,7 +232,7 @@
     </style>
 </head>
 <body>
-    <!-- 装饰元素 -->
+    <!-- Phần tử trang trí -->
     <div class="cloud cloud-1"></div>
     <div class="cloud cloud-2"></div>
     
@@ -242,17 +242,17 @@
     <div class="decoration heart heart-1"></div>
     <div class="decoration heart heart-2"></div>
     
-    <!-- 标题区域 -->
+    <!-- Vùng tiêu đề -->
     <div class="title-container">
         <h1>{{title}}</h1>
     </div>
     
-    <!-- 图片区域 -->
+    <!-- Vùng hình ảnh -->
     <div class="image-container">
-        <img src="{{image}}" alt="卡通图片">
+        <img src="{{image}}" alt="Hình ảnh hoạt hình">
     </div>
     
-    <!-- 字幕区域 -->
+    <!-- Vùng phụ đề -->
     <div class="caption-container">
         <p>{{text}}</p>
     </div>

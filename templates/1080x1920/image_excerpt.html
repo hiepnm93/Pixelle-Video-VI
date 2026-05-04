@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="vi">
 
 <head>
     <meta charset="UTF-8">
     <meta name="template:media-width" content="1024">
     <meta name="template:media-height" content="1024">
     <meta name="viewport" content="width=1080, height=1920">
-    <title>图书摘抄 - 1080x1920</title>
-    <!-- Google Fonts - 中文字体 -->
+    <title>Trích dẫn sách - 1080x1920</title>
+    <!-- Google Fonts - Phông chữ tiếng Trung -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -46,7 +46,7 @@
             z-index: -1;
         }
 
-        /* 背景遮罩层 */
+        /* Lớp phủ nền */
         body::before {
             content: '';
             position: absolute;
@@ -57,7 +57,7 @@
             z-index: 0;
         }
 
-        /* 顶部标题 */
+        /* Tiêu đề trên cùng */
         .header {
             position: relative;
             z-index: 1;
@@ -75,7 +75,7 @@
             border-bottom: 2px solid #2a2a2a;
         }
 
-        /* 正文区域 */
+        /* Vùng nội dung chính */
         .content {
             position: relative;
             z-index: 1;
@@ -96,7 +96,7 @@
         }
 
 
-        /* 署名 */
+        /* Chữ ký */
         .author {
             position: relative;
             z-index: 1;
@@ -121,20 +121,20 @@
 
 <body>
     <img class="image" src="{{image}}" alt="{{title}}" />
-    <!-- 顶部标题 -->
+    <!-- Tiêu đề trên cùng -->
     <div class="header">
         <div class="title">{{title}}</div>
     </div>
 
-    <!-- 正文内容 -->
+    <!-- Nội dung chính -->
     <div class="content">
         <div class="excerpt">{{text}}</div>
     </div>
 
-    <!-- 作者 -->
+    <!-- Tác giả -->
     <div class="author">——{{author=Pixelle.AI}}</div>
 
-    <!-- 署名 -->
+    <!-- Chữ ký -->
     <div class="signature">{{signature=@Pixelle.AI}}</div>
 </body>
 
